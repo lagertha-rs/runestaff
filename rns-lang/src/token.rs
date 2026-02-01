@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -8,13 +9,12 @@ pub enum JasmTokenKind {
     DotEnd,
     DotLimit,
 
-    Public,
-    Static,
-    Identifier(String),
+    //Public,
+    //Static,
+    //Identifier(String),
 
-    Integer(i32),
-    StringLiteral(String),
-
+    //Integer(i32),
+    //StringLiteral(String),
     Newline,
     Eof,
 }
@@ -38,6 +38,10 @@ impl JasmTokenKind {
             _ => None,
         }
     }
+
+    pub fn all_directives_as_comma_separated_string() -> String {
+        Self::DIRECTIVES.iter().map(ToString::to_string).join(", ")
+    }
 }
 
 impl std::fmt::Display for JasmTokenKind {
@@ -48,11 +52,6 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::DotMethod => write!(f, ".method"),
             JasmTokenKind::DotEnd => write!(f, ".end"),
             JasmTokenKind::DotLimit => write!(f, ".limit"),
-            JasmTokenKind::Public => write!(f, "public"),
-            JasmTokenKind::Static => write!(f, "static"),
-            JasmTokenKind::Identifier(name) => write!(f, "identifier({})", name),
-            JasmTokenKind::Integer(value) => write!(f, "integer({})", value),
-            JasmTokenKind::StringLiteral(value) => write!(f, "string_literal({})", value),
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),
         }

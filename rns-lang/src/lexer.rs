@@ -1,5 +1,6 @@
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;
+use std::ops::Range;
 use std::str::CharIndices;
 
 enum InternalLexerError {
@@ -10,17 +11,38 @@ enum InternalLexerError {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum LexerError {
-    UnexpectedChar(usize, char),
+    UnexpectedChar(usize, char, String),
     UnknownDirective(Span, String),
-    UnexpectedEof(usize),
+    UnexpectedEof(usize, String),
 }
 
 impl LexerError {
-    pub fn message(&self) -> &str {
+    pub fn note(&self) -> String {
         match self {
-            LexerError::UnexpectedChar(_, _) => "unexpected character",
-            LexerError::UnknownDirective(_, _) => "unknown directive",
-            LexerError::UnexpectedEof(_) => "unexpected end of file",
+            LexerError::UnexpectedEof(_, context) => context.clone(),
+            LexerError::UnexpectedChar(_, _, context) => context.clone(),
+            LexerError::UnknownDirective(_, _) => format!(
+                "Valid directives are {}",
+                JasmTokenKind::all_directives_as_comma_separated_string()
+            ),
+        }
+    }
+
+    pub fn as_range(&self) -> Range<usize> {
+        match self {
+            LexerError::UnknownDirective(span, _) => span.as_range(),
+            LexerError::UnexpectedEof(pos, _) => *pos..*pos, // TODO: verify
+            LexerError::UnexpectedChar(pos, c, _) => *pos..(*pos + c.len_utf8()),
+        }
+    }
+
+    pub fn label(&self) -> String {
+        match self {
+            LexerError::UnexpectedChar(_, c, _) => {
+                format!("Unexpected character '{}'", c.escape_default())
+            }
+            LexerError::UnknownDirective(_, name) => format!("Unknown directive '{}'", name),
+            LexerError::UnexpectedEof(_, _) => "Unexpected end of file".to_string(),
         }
     }
 }
@@ -109,12 +131,22 @@ impl<'a> JasmLexer<'a> {
         };
 
         let kind = match ch {
-            '.' => self.handle_directive().map_err(|e| match e {
-                InternalLexerError::UnexpectedEof => LexerError::UnexpectedEof(start),
-                InternalLexerError::UnknownToken(name) => {
-                    LexerError::UnknownDirective(Span::new(start, self.byte_pos), name)
+            '.' => self.handle_directive().map_err(|e| {
+                let err_context = format!(
+                    "Expected one of the directives: {}",
+                    JasmTokenKind::all_directives_as_comma_separated_string()
+                );
+                match e {
+                    InternalLexerError::UnexpectedEof => {
+                        LexerError::UnexpectedEof(start, err_context)
+                    }
+                    InternalLexerError::UnknownToken(name) => {
+                        LexerError::UnknownDirective(Span::new(start, self.byte_pos), name)
+                    }
+                    InternalLexerError::UnexpectedChar(c) => {
+                        LexerError::UnexpectedChar(self.byte_pos, c, err_context)
+                    }
                 }
-                InternalLexerError::UnexpectedChar(c) => LexerError::UnexpectedChar(start, c),
             })?,
             'a'..='z' | 'A'..='Z' | '_' => {
                 // Handle identifiers and keywords
@@ -132,11 +164,15 @@ impl<'a> JasmLexer<'a> {
                 self.next_char();
                 return Ok(JasmToken {
                     kind: JasmTokenKind::Newline,
-                    span: Span::new(start, start),
+                    span: Span::new(start, self.byte_pos),
                 });
             }
             _ => {
-                return Err(LexerError::UnexpectedChar(start, ch));
+                return Err(LexerError::UnexpectedChar(
+                    start,
+                    ch,
+                    "TODO: add context".to_string(),
+                ));
             }
         };
 

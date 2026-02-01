@@ -1,34 +1,22 @@
 use crate::lexer::{JasmLexer, LexerError};
-use crate::token::JasmTokenKind;
 use ariadne::{Color, Label, Report, ReportKind, Source};
-use itertools::Itertools;
 
 mod lexer;
 mod token;
 
 fn print_comprehensive_error(filename: &str, source_code: &str, err: &LexerError) {
-    match err {
-        LexerError::UnknownDirective(span, name) => {
-            Report::build(ReportKind::Error, (filename, span.start..span.end))
-                .with_message(err.message())
-                .with_label(
-                    Label::new((filename, span.as_range()))
-                        .with_message(format!("The directive '{}' is not recognized", name))
-                        .with_color(Color::Red),
-                )
-                .with_note(format!(
-                    "Valid directives are {}",
-                    JasmTokenKind::DIRECTIVES
-                        .iter()
-                        .map(ToString::to_string)
-                        .join(", ")
-                ))
-                .finish()
-                .eprint((filename, Source::from(source_code)))
-                .unwrap();
-        }
-        _ => unimplemented!(),
-    }
+    let range = err.as_range();
+    Report::build(ReportKind::Error, (filename, range.clone()))
+        .with_message("lexing error") // TODO: customize? I feel like label is already descriptive enough
+        .with_note(err.note())
+        .with_label(
+            Label::new((filename, range))
+                .with_message(err.label())
+                .with_color(Color::Red),
+        )
+        .finish()
+        .eprint((filename, Source::from(source_code)))
+        .unwrap();
 }
 
 fn get_filename_and_contents_from_arg() -> (String, String) {

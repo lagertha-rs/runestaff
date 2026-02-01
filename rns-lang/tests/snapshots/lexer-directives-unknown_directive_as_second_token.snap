@@ -8,12 +8,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: unknown directive
+Error: lexing error
    ╭─[ tests/testdata/lexer/directives/unknown_directive_as_second_token.ja:1:8 ]
    │
  1 │ .class .unknown_directive HelloWorld
    │        ─────────┬────────  
-   │                 ╰────────── The directive '.unknown_directive' is not recognized
+   │                 ╰────────── Unknown directive '.unknown_directive'
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .limit
 ───╯

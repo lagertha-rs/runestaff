@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.method
+.
+----- STDOUT -----
+
+----- STDERR -----
+Error: lexing error
+   ╭─[ tests/testdata/lexer/directives/eof_right_after_dot.ja:2:1 ]
+   │
+ 2 │ .
+   │ │ 
+   │ ╰─ Unexpected end of file
+   │ 
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .limit
+───╯
