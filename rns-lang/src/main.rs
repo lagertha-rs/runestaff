@@ -1,30 +1,33 @@
 use crate::lexer::{JasmLexer, LexerError};
+use crate::token::JasmTokenKind;
+use ariadne::{Color, Label, Report, ReportKind, Source};
+use itertools::Itertools;
 
-mod cursor;
 mod lexer;
 mod token;
 
-// TODO: put in separate module and make reusable
-fn print_comprehensive_error(filename: &str, source: &str, err: &LexerError) {
-    eprintln!("lexer error: {}", err.name());
+fn print_comprehensive_error(filename: &str, source_code: &str, err: &LexerError) {
     match err {
         LexerError::UnknownDirective(span, name) => {
-            let line_content = source
-                .lines()
-                .nth(span.line - 1)
-                .unwrap_or("<unable to fetch line>");
-            let line_number_space = " ".repeat(span.line.to_string().len());
-            eprintln!("{line_number_space} --> <{filename}>");
-            eprintln!("{line_number_space} |");
-            eprintln!("{} | {}", span.line, line_content);
-            eprintln!(
-                "{line_number_space} | {}{}",
-                " ".repeat(span.start.checked_div(1).unwrap_or(0)),
-                "^".repeat(name.len())
-            );
-            eprintln!("{line_number_space} = unknown directive: {}", name);
+            Report::build(ReportKind::Error, (filename, span.start..span.end))
+                .with_message(err.message())
+                .with_label(
+                    Label::new((filename, span.as_range()))
+                        .with_message(format!("The directive '{}' is not recognized", name))
+                        .with_color(Color::Red),
+                )
+                .with_note(format!(
+                    "Valid directives are {}",
+                    JasmTokenKind::DIRECTIVES
+                        .iter()
+                        .map(ToString::to_string)
+                        .join(", ")
+                ))
+                .finish()
+                .eprint((filename, Source::from(source_code)))
+                .unwrap();
         }
-        _ => todo!(), // Handle other error variants here
+        _ => unimplemented!(),
     }
 }
 

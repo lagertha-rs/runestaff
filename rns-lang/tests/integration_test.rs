@@ -3,7 +3,7 @@ use insta::with_settings;
 use rstest::rstest;
 use std::path::{Path, PathBuf};
 
-const DISPLAY_SNAPSHOT_PATH: &str = "../snapshots";
+const DISPLAY_SNAPSHOT_PATH: &str = "snapshots";
 
 fn get_relative_path_for_test(absolute_path: &Path) -> PathBuf {
     let cwd = std::env::current_dir().expect("Failed to get current working directory");

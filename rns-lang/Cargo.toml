@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ariadne = { version = "0.6.0", features = ["auto-color"] }
+itertools = "0.14.0"
+
+[dev-dependencies]
 rstest = "0.26.1"
 insta = "1.46.2"
 assert_cmd = "2"
+
 

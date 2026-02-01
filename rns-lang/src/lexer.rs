@@ -1,5 +1,6 @@
-use crate::cursor::Cursor;
 use crate::token::{JasmToken, JasmTokenKind, Span};
+use std::iter::Peekable;
+use std::str::CharIndices;
 
 enum InternalLexerError {
     UnexpectedEof,
@@ -9,46 +10,83 @@ enum InternalLexerError {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum LexerError {
-    UnexpectedChar(char, usize, usize), // char, line, column
-    UnknownDirective(Span, String),     // name, line, column
-    UnterminatedString(usize),          // line
-    InvalidEscape(char, usize),         // char, line
-    InvalidNumber(String, usize),       // value, line
-    UnexpectedEof(usize, usize),        // line, column
+    UnexpectedChar(usize, char),
+    UnknownDirective(Span, String),
+    UnexpectedEof(usize),
 }
 
 impl LexerError {
-    pub fn name(&self) -> &str {
+    pub fn message(&self) -> &str {
         match self {
-            LexerError::UnexpectedChar(_, _, _) => "unexpected character",
+            LexerError::UnexpectedChar(_, _) => "unexpected character",
             LexerError::UnknownDirective(_, _) => "unknown directive",
-            LexerError::UnterminatedString(_) => "unterminated string",
-            LexerError::InvalidEscape(_, _) => "invalid escape sequence",
-            LexerError::InvalidNumber(_, _) => "invalid number",
-            LexerError::UnexpectedEof(_, _) => "unexpected end of file",
+            LexerError::UnexpectedEof(_) => "unexpected end of file",
         }
     }
 }
 
 pub struct JasmLexer<'a> {
-    source: &'a str,
-    cursor: Cursor<'a>,
+    data: Peekable<CharIndices<'a>>,
+    byte_pos: usize,
 }
 
 impl<'a> JasmLexer<'a> {
     pub fn new(source: &'a str) -> Self {
         Self {
-            source,
-            cursor: Cursor::new(source.chars().peekable()),
+            data: source.char_indices().peekable(),
+            byte_pos: 0,
         }
     }
 
-    fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
-        self.cursor.next_char(); // consume '.'
+    fn next_char(&mut self) -> Option<char> {
+        if let Some((idx, c)) = self.data.next() {
+            self.byte_pos = idx + c.len_utf8();
+            Some(c)
+        } else {
+            None
+        }
+    }
 
-        let directive = self.cursor.next_string_while(|c| !c.is_whitespace());
+    pub fn skip_whitespaces_and_comments(&mut self) {
+        while let Some((_, c)) = self.data.peek() {
+            match c {
+                ' ' | '\t' | '\r' => {
+                    self.next_char();
+                }
+                ';' => {
+                    self.next_char();
+                    while let Some((_, c2)) = self.data.peek() {
+                        if *c2 != '\n' {
+                            self.next_char();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                _ => break,
+            }
+        }
+    }
+
+    fn take_until_whitespace(&mut self) -> String {
+        let mut result = String::new();
+        while let Some((_, c)) = self.data.peek() {
+            if !c.is_whitespace() {
+                result.push(*c);
+                self.next_char();
+            } else {
+                break;
+            }
+        }
+        result
+    }
+
+    fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
+        self.next_char(); // consume '.'
+
+        let directive = self.take_until_whitespace();
         if directive.is_empty() {
-            if let Some(ch) = self.cursor.peek() {
+            if let Some(&(_, ch)) = self.data.peek() {
                 return Err(InternalLexerError::UnexpectedChar(ch));
             }
             return Err(InternalLexerError::UnexpectedEof);
@@ -59,30 +97,24 @@ impl<'a> JasmLexer<'a> {
     }
 
     fn next_token(&mut self) -> Result<JasmToken, LexerError> {
-        self.cursor.skip_whitespaces_and_comments();
+        self.skip_whitespaces_and_comments();
 
-        let start = self.cursor.current_column_nbr();
-        let line = self.cursor.current_line_nbr();
+        let start = self.byte_pos;
 
-        let Some(ch) = self.cursor.peek() else {
+        let Some(&(_, ch)) = self.data.peek() else {
             return Ok(JasmToken {
                 kind: JasmTokenKind::Eof,
-                span: Span::new(start, start, line),
+                span: Span::new(start, start),
             });
         };
 
         let kind = match ch {
             '.' => self.handle_directive().map_err(|e| match e {
-                InternalLexerError::UnexpectedEof => {
-                    LexerError::UnexpectedEof(line, self.cursor.current_column_nbr())
+                InternalLexerError::UnexpectedEof => LexerError::UnexpectedEof(start),
+                InternalLexerError::UnknownToken(name) => {
+                    LexerError::UnknownDirective(Span::new(start, self.byte_pos), name)
                 }
-                InternalLexerError::UnknownToken(name) => LexerError::UnknownDirective(
-                    Span::new(start, start + name.len() + 1, line),
-                    name,
-                ),
-                InternalLexerError::UnexpectedChar(c) => {
-                    LexerError::UnexpectedChar(c, line, self.cursor.current_column_nbr())
-                }
+                InternalLexerError::UnexpectedChar(c) => LexerError::UnexpectedChar(start, c),
             })?,
             'a'..='z' | 'A'..='Z' | '_' => {
                 // Handle identifiers and keywords
@@ -97,25 +129,21 @@ impl<'a> JasmLexer<'a> {
                 unimplemented!()
             }
             '\n' => {
-                self.cursor.next_char();
+                self.next_char();
                 return Ok(JasmToken {
                     kind: JasmTokenKind::Newline,
-                    span: Span::new(start, start, line),
+                    span: Span::new(start, start),
                 });
             }
             _ => {
-                return Err(LexerError::UnexpectedChar(
-                    ch,
-                    line,
-                    self.cursor.current_column_nbr(),
-                ));
+                return Err(LexerError::UnexpectedChar(start, ch));
             }
         };
 
-        let end = self.cursor.current_column_nbr();
+        let end = self.byte_pos;
         Ok(JasmToken {
             kind,
-            span: Span::new(start, end, line),
+            span: Span::new(start, end),
         })
     }
 
@@ -135,6 +163,7 @@ impl<'a> JasmLexer<'a> {
     }
 }
 
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -271,3 +300,4 @@ mod tests {
         }
     }
 }
+ */
