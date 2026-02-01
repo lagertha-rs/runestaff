@@ -1,0 +1,16 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class .unknown_directive HelloWorld
+.end
+----- STDOUT -----
+
+----- STDERR -----
+lexer error: unknown directive
+  --> <tests/testdata/lexer/directives/wrong_directive.ja>
+  |
+1 | .class .unknown_directive HelloWorld
+  |        ^^^^^^^^^^^^^^^^^^
+  = unknown directive: .unknown_directive

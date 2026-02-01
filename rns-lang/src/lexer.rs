@@ -17,35 +17,15 @@ pub enum LexerError {
     UnexpectedEof(usize, usize),        // line, column
 }
 
-impl std::fmt::Display for LexerError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl LexerError {
+    pub fn name(&self) -> &str {
         match self {
-            LexerError::UnexpectedChar(ch, line, col) => write!(
-                f,
-                "unexpected character '{}' at line {}, column {}",
-                ch, line, col
-            ),
-            LexerError::UnknownDirective(span, name) => write!(
-                f,
-                "unknown directive '{}' at line {}, column {}",
-                name, span.line, span.start
-            ),
-            LexerError::UnterminatedString(line) => {
-                write!(f, "unterminated string literal at line {}", line)
-            }
-            LexerError::InvalidEscape(ch, line) => {
-                write!(f, "invalid escape sequence '\\{}' at line {}", ch, line)
-            }
-            LexerError::InvalidNumber(val, line) => {
-                write!(f, "invalid number '{}' at line {}", val, line)
-            }
-            LexerError::UnexpectedEof(line, column) => {
-                write!(
-                    f,
-                    "unexpected end of file at line {}, column {}",
-                    line, column
-                )
-            }
+            LexerError::UnexpectedChar(_, _, _) => "unexpected character",
+            LexerError::UnknownDirective(_, _) => "unknown directive",
+            LexerError::UnterminatedString(_) => "unterminated string",
+            LexerError::InvalidEscape(_, _) => "invalid escape sequence",
+            LexerError::InvalidNumber(_, _) => "invalid number",
+            LexerError::UnexpectedEof(_, _) => "unexpected end of file",
         }
     }
 }
