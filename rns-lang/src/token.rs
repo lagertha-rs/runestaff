@@ -10,7 +10,7 @@ pub enum JasmTokenKind {
     DotLimit,
 
     Public,
-    //Static,
+    Static,
     Identifier(String),
 
     //Integer(i32),
@@ -28,7 +28,7 @@ impl JasmTokenKind {
         JasmTokenKind::DotLimit,
     ];
 
-    pub fn try_directive(name: &str) -> Option<Self> {
+    pub fn from_directive(name: &str) -> Option<Self> {
         match name {
             "class" => Some(JasmTokenKind::DotClass),
             "super" => Some(JasmTokenKind::DotSuper),
@@ -39,7 +39,15 @@ impl JasmTokenKind {
         }
     }
 
-    pub fn all_directives_as_comma_separated_string() -> String {
+    pub fn from_identifier(name: String) -> Self {
+        match name.as_str() {
+            "public" => JasmTokenKind::Public,
+            "static" => JasmTokenKind::Static,
+            _ => JasmTokenKind::Identifier(name),
+        }
+    }
+
+    pub fn list_directives() -> String {
         Self::DIRECTIVES.iter().map(ToString::to_string).join(", ")
     }
 }
@@ -55,6 +63,7 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),
             JasmTokenKind::Public => write!(f, "public"),
+            JasmTokenKind::Static => write!(f, "static"),
             JasmTokenKind::Identifier(name) => write!(f, "identifier({})", name),
         }
     }

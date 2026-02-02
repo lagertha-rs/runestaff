@@ -21,10 +21,9 @@ impl LexerError {
         match self {
             LexerError::UnexpectedEof(_, context) => context.clone(),
             LexerError::UnexpectedChar(_, _, context) => context.clone(),
-            LexerError::UnknownDirective(_, _) => format!(
-                "Valid directives are {}",
-                JasmTokenKind::all_directives_as_comma_separated_string()
-            ),
+            LexerError::UnknownDirective(_, _) => {
+                format!("Valid directives are {}", JasmTokenKind::list_directives())
+            }
         }
     }
 
@@ -90,10 +89,10 @@ impl<'a> JasmLexer<'a> {
         }
     }
 
-    fn take_until_whitespace_and_not_comment(&mut self) -> String {
+    fn read_to_delimiter(&mut self) -> String {
         let mut result = String::new();
         while let Some(&(_, c)) = self.data.peek() {
-            if !c.is_whitespace() && c != ';' {
+            if !c.is_whitespace() {
                 result.push(c);
                 self.next_char();
             } else {
@@ -106,7 +105,7 @@ impl<'a> JasmLexer<'a> {
     fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
         self.next_char(); // consume '.'
 
-        let directive = self.take_until_whitespace_and_not_comment();
+        let directive = self.read_to_delimiter();
         if directive.is_empty() {
             if let Some(&(_, ch)) = self.data.peek() {
                 return Err(InternalLexerError::UnexpectedChar(ch));
@@ -114,7 +113,7 @@ impl<'a> JasmLexer<'a> {
             return Err(InternalLexerError::UnexpectedEof);
         }
 
-        JasmTokenKind::try_directive(&directive)
+        JasmTokenKind::from_directive(&directive)
             .ok_or(InternalLexerError::UnknownToken(format!(".{directive}")))
     }
 
@@ -134,7 +133,7 @@ impl<'a> JasmLexer<'a> {
             '.' => self.handle_directive().map_err(|e| {
                 let err_context = format!(
                     "Expected one of the directives: {}",
-                    JasmTokenKind::all_directives_as_comma_separated_string()
+                    JasmTokenKind::list_directives()
                 );
                 match e {
                     InternalLexerError::UnexpectedEof => {
@@ -149,10 +148,10 @@ impl<'a> JasmLexer<'a> {
                 }
             })?,
             'a'..='z' | 'A'..='Z' | '_' => {
-                // Handle identifiers and keywords
-                unimplemented!()
+                let str = self.read_to_delimiter();
+                JasmTokenKind::from_identifier(str)
             }
-            '0'..='9' => {
+            '0'..='9' | '-' => {
                 // Handle numbers
                 unimplemented!()
             }
@@ -376,6 +375,47 @@ mod tests {
                     "Expected one of the directives: .class, .super, .method, .end, .limit"
                         .to_string()
                 ))
+            )
+        }
+    }
+
+    mod identifiers_and_keywords {
+        use super::*;
+
+        #[test]
+        fn test_tokenize_identifiers_and_keywords() {
+            const INPUT: &str = "public static myVar another_var _privateVar";
+            let mut lexer = JasmLexer::new(INPUT);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::Public,
+                        span: Span::new(0, 6),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Static,
+                        span: Span::new(7, 13),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("myVar".to_string()),
+                        span: Span::new(14, 19),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("another_var".to_string()),
+                        span: Span::new(20, 31),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("_privateVar".to_string()),
+                        span: Span::new(32, 43),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(43, 43),
+                    },
+                ]
             )
         }
     }
