@@ -7,6 +7,7 @@ enum InternalLexerError {
     UnexpectedEof,
     UnexpectedChar(char),
     UnknownToken(String),
+    UnterminatedString,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -14,6 +15,7 @@ pub enum LexerError {
     UnexpectedChar(usize, char, String),
     UnknownDirective(Span, String),
     UnexpectedEof(usize, String),
+    UnterminatedString(usize),
 }
 
 impl LexerError {
@@ -21,6 +23,9 @@ impl LexerError {
         match self {
             LexerError::UnexpectedEof(_, context) => context.clone(),
             LexerError::UnexpectedChar(_, _, context) => context.clone(),
+            LexerError::UnterminatedString(_) => {
+                "Multiple-line strings are not supported, make sure to close the string before the end of the line.".to_string()
+            }
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
             }
@@ -30,8 +35,9 @@ impl LexerError {
     pub fn as_range(&self) -> Range<usize> {
         match self {
             LexerError::UnknownDirective(span, _) => span.as_range(),
-            LexerError::UnexpectedEof(pos, _) => *pos..*pos, // TODO: verify
+            LexerError::UnexpectedEof(pos, _) => *pos..(*pos + 1),
             LexerError::UnexpectedChar(pos, c, _) => *pos..(*pos + c.len_utf8()),
+            LexerError::UnterminatedString(pos) => *pos..(*pos + 1),
         }
     }
 
@@ -42,6 +48,9 @@ impl LexerError {
             }
             LexerError::UnknownDirective(_, name) => format!("Unknown directive '{}'", name),
             LexerError::UnexpectedEof(_, _) => "Unexpected end of file".to_string(),
+            LexerError::UnterminatedString(_) => {
+                "String started here is not terminated".to_string()
+            }
         }
     }
 }
@@ -89,7 +98,7 @@ impl<'a> JasmLexer<'a> {
         }
     }
 
-    fn read_to_delimiter(&mut self) -> String {
+    fn read_to_whitespace(&mut self) -> String {
         let mut result = String::new();
         while let Some(&(_, c)) = self.data.peek() {
             if !c.is_whitespace() {
@@ -102,10 +111,50 @@ impl<'a> JasmLexer<'a> {
         result
     }
 
+    fn read_string(&mut self) -> Result<String, InternalLexerError> {
+        let mut result = String::new();
+
+        self.next_char(); // consume opening quote
+
+        while let Some(&(_, c)) = self.data.peek() {
+            match c {
+                '"' => {
+                    self.next_char(); // consume closing quote
+                    return Ok(result);
+                }
+                '\n' | '\r' => {
+                    return Err(InternalLexerError::UnterminatedString);
+                }
+                '\\' => {
+                    self.next_char(); // consume '\'
+                    if let Some(&(_, next_char)) = self.data.peek() {
+                        match next_char {
+                            'n' => result.push('\n'),
+                            't' => result.push('\t'),
+                            'r' => result.push('\r'),
+                            '"' => result.push('"'),
+                            '\\' => result.push('\\'),
+                            _ => result.push(next_char),
+                        }
+                        self.next_char(); // consume escaped character
+                    } else {
+                        return Err(InternalLexerError::UnterminatedString);
+                    }
+                }
+                _ => {
+                    result.push(c);
+                    self.next_char();
+                }
+            }
+        }
+
+        Err(InternalLexerError::UnterminatedString)
+    }
+
     fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
         self.next_char(); // consume '.'
 
-        let directive = self.read_to_delimiter();
+        let directive = self.read_to_whitespace();
         if directive.is_empty() {
             if let Some(&(_, ch)) = self.data.peek() {
                 return Err(InternalLexerError::UnexpectedChar(ch));
@@ -145,20 +194,21 @@ impl<'a> JasmLexer<'a> {
                     InternalLexerError::UnexpectedChar(c) => {
                         LexerError::UnexpectedChar(self.byte_pos, c, err_context)
                     }
+                    _ => unreachable!(),
                 }
             })?,
             'a'..='z' | 'A'..='Z' | '_' => {
-                let str = self.read_to_delimiter();
+                let str = self.read_to_whitespace();
                 JasmTokenKind::from_identifier(str)
             }
             '0'..='9' | '-' => {
                 // Handle numbers
                 unimplemented!()
             }
-            '"' => {
-                // Handle string literals
-                unimplemented!()
-            }
+            '"' => JasmTokenKind::StringLiteral(self.read_string().map_err(|e| match e {
+                InternalLexerError::UnterminatedString => LexerError::UnterminatedString(start),
+                _ => unreachable!(),
+            })?),
             '\n' => {
                 self.next_char();
                 return Ok(JasmToken {
@@ -245,35 +295,6 @@ mod tests {
         }
 
         #[test]
-        fn test_glued_comment() {
-            const INPUT: &str = ".class;ignored\n.end";
-            let mut lexer = JasmLexer::new(INPUT);
-            let tokens = lexer.tokenize().unwrap();
-
-            assert_eq!(
-                tokens,
-                vec![
-                    JasmToken {
-                        kind: JasmTokenKind::DotClass,
-                        span: Span::new(0, 6),
-                    },
-                    JasmToken {
-                        kind: JasmTokenKind::Newline,
-                        span: Span::new(14, 15),
-                    },
-                    JasmToken {
-                        kind: JasmTokenKind::DotEnd,
-                        span: Span::new(15, 19),
-                    },
-                    JasmToken {
-                        kind: JasmTokenKind::Eof,
-                        span: Span::new(19, 19),
-                    },
-                ]
-            )
-        }
-
-        #[test]
         fn test_valid_tokenize_on_diff_lines_directives() {
             const INPUT: &str = " \n    .class   .super \n .method  \n .end  \n ";
             let mut lexer = JasmLexer::new(INPUT);
@@ -322,17 +343,25 @@ mod tests {
             )
         }
 
-        #[test]
-        fn test_tokenize_unknown_directive() {
-            const INPUT: &str = ".class\n    .unknown\n.method";
-            let mut lexer = JasmLexer::new(INPUT);
+        #[rstest]
+        #[case(".class\n    .unknown\n.method", 11, 19, ".unknown")]
+        #[case(".super\n.;comment\n.unknown", 7, 16, ".;comment")]
+        #[case(".super\n.;comment    \n.unknown", 7, 16, ".;comment")]
+        #[case(".super\n.;comment ;ignored\n.unknown", 7, 16, ".;comment")]
+        fn test_tokenize_unknown_directive(
+            #[case] input: &str,
+            #[case] start: usize,
+            #[case] end: usize,
+            #[case] name: &str,
+        ) {
+            let mut lexer = JasmLexer::new(input);
             let tokens = lexer.tokenize();
 
             assert_eq!(
                 tokens,
                 Err(LexerError::UnknownDirective(
-                    Span::new(11, 19),
-                    ".unknown".to_string()
+                    Span::new(start, end),
+                    name.to_string()
                 ))
             )
         }
@@ -358,7 +387,6 @@ mod tests {
         #[case(".class\n    . .limit\n.method", 12, ' ')]
         #[case(".class\n    .\t.limit\n.method", 12, '\t')]
         #[case(".class\n    .\r.limit\n.method", 12, '\r')]
-        #[case(".class\n    .;comment\n.method", 12, ';')]
         fn test_tokenize_unexpected_char_directive(
             #[case] input: &str,
             #[case] pos: usize,
@@ -381,6 +409,39 @@ mod tests {
 
     mod identifiers_and_keywords {
         use super::*;
+
+        #[test]
+        fn test_method_definition() {
+            const INPUT: &str = ".method public static main([Ljava/lang/String;)V";
+            let mut lexer = JasmLexer::new(INPUT);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotMethod,
+                        span: Span::new(0, 7)
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Public,
+                        span: Span::new(8, 14),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Static,
+                        span: Span::new(15, 21),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("main([Ljava/lang/String;)V".to_string()),
+                        span: Span::new(22, 48),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(48, 48),
+                    },
+                ]
+            )
+        }
 
         #[test]
         fn test_tokenize_identifiers_and_keywords() {

@@ -14,7 +14,7 @@ pub enum JasmTokenKind {
     Identifier(String),
 
     //Integer(i32),
-    //StringLiteral(String),
+    StringLiteral(String),
     Newline,
     Eof,
 }
@@ -65,6 +65,7 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Public => write!(f, "public"),
             JasmTokenKind::Static => write!(f, "static"),
             JasmTokenKind::Identifier(name) => write!(f, "identifier({})", name),
+            JasmTokenKind::StringLiteral(value) => write!(f, "string_literal(\"{}\")", value),
         }
     }
 }
@@ -72,7 +73,7 @@ impl std::fmt::Display for JasmTokenKind {
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Span {
     pub start: usize,
-    pub end: usize,
+    pub end: usize, // is exclusive
 }
 
 impl Span {
