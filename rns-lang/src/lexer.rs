@@ -90,11 +90,11 @@ impl<'a> JasmLexer<'a> {
         }
     }
 
-    fn take_until_whitespace(&mut self) -> String {
+    fn take_until_whitespace_and_not_comment(&mut self) -> String {
         let mut result = String::new();
-        while let Some((_, c)) = self.data.peek() {
-            if !c.is_whitespace() {
-                result.push(*c);
+        while let Some(&(_, c)) = self.data.peek() {
+            if !c.is_whitespace() && c != ';' {
+                result.push(c);
                 self.next_char();
             } else {
                 break;
@@ -106,7 +106,7 @@ impl<'a> JasmLexer<'a> {
     fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
         self.next_char(); // consume '.'
 
-        let directive = self.take_until_whitespace();
+        let directive = self.take_until_whitespace_and_not_comment();
         if directive.is_empty() {
             if let Some(&(_, ch)) = self.data.peek() {
                 return Err(InternalLexerError::UnexpectedChar(ch));
@@ -246,6 +246,35 @@ mod tests {
         }
 
         #[test]
+        fn test_glued_comment() {
+            const INPUT: &str = ".class;ignored\n.end";
+            let mut lexer = JasmLexer::new(INPUT);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotClass,
+                        span: Span::new(0, 6),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Newline,
+                        span: Span::new(14, 15),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotEnd,
+                        span: Span::new(15, 19),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(19, 19),
+                    },
+                ]
+            )
+        }
+
+        #[test]
         fn test_valid_tokenize_on_diff_lines_directives() {
             const INPUT: &str = " \n    .class   .super \n .method  \n .end  \n ";
             let mut lexer = JasmLexer::new(INPUT);
@@ -330,6 +359,7 @@ mod tests {
         #[case(".class\n    . .limit\n.method", 12, ' ')]
         #[case(".class\n    .\t.limit\n.method", 12, '\t')]
         #[case(".class\n    .\r.limit\n.method", 12, '\r')]
+        #[case(".class\n    .;comment\n.method", 12, ';')]
         fn test_tokenize_unexpected_char_directive(
             #[case] input: &str,
             #[case] pos: usize,

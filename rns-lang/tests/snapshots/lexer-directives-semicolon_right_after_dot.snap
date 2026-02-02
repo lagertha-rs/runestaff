@@ -10,11 +10,11 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/directives/semicolon_right_after_dot.ja:2:5 ]
+   ╭─[ tests/testdata/lexer/directives/semicolon_right_after_dot.ja:2:6 ]
    │
  2 │     .;comment after semicolon
-   │     ────┬────  
-   │         ╰────── Unknown directive '.;comment'
+   │      ┬  
+   │      ╰── Unexpected character ';'
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .limit
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .limit
 ───╯
