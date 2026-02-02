@@ -9,9 +9,9 @@ pub enum JasmTokenKind {
     DotEnd,
     DotLimit,
 
-    //Public,
+    Public,
     //Static,
-    //Identifier(String),
+    Identifier(String),
 
     //Integer(i32),
     //StringLiteral(String),
@@ -54,6 +54,8 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::DotLimit => write!(f, ".limit"),
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),
+            JasmTokenKind::Public => write!(f, "public"),
+            JasmTokenKind::Identifier(name) => write!(f, "identifier({})", name),
         }
     }
 }

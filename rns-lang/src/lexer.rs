@@ -199,7 +199,6 @@ impl<'a> JasmLexer<'a> {
     }
 }
 
-/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -219,27 +218,27 @@ mod tests {
                 vec![
                     JasmToken {
                         kind: JasmTokenKind::DotClass,
-                        span: Span::new(0, 6, 1),
+                        span: Span::new(0, 6),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotSuper,
-                        span: Span::new(7, 13, 1),
+                        span: Span::new(7, 13),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotMethod,
-                        span: Span::new(14, 21, 1),
+                        span: Span::new(14, 21),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotEnd,
-                        span: Span::new(22, 26, 1),
+                        span: Span::new(22, 26),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotLimit,
-                        span: Span::new(27, 33, 1),
+                        span: Span::new(27, 33),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Eof,
-                        span: Span::new(33, 33, 1),
+                        span: Span::new(33, 33),
                     },
                 ]
             )
@@ -256,39 +255,39 @@ mod tests {
                 vec![
                     JasmToken {
                         kind: JasmTokenKind::Newline,
-                        span: Span::new(1, 1, 1),
+                        span: Span::new(1, 2),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotClass,
-                        span: Span::new(4, 10, 2),
+                        span: Span::new(6, 12),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotSuper,
-                        span: Span::new(13, 19, 2),
+                        span: Span::new(15, 21),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Newline,
-                        span: Span::new(20, 20, 2),
+                        span: Span::new(22, 23),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotMethod,
-                        span: Span::new(1, 8, 3),
+                        span: Span::new(24, 31),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Newline,
-                        span: Span::new(10, 10, 3),
+                        span: Span::new(33, 34),
                     },
                     JasmToken {
                         kind: JasmTokenKind::DotEnd,
-                        span: Span::new(1, 5, 4),
+                        span: Span::new(35, 39),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Newline,
-                        span: Span::new(7, 7, 4),
+                        span: Span::new(41, 42),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Eof,
-                        span: Span::new(1, 1, 5),
+                        span: Span::new(43, 43),
                     },
                 ]
             )
@@ -303,7 +302,7 @@ mod tests {
             assert_eq!(
                 tokens,
                 Err(LexerError::UnknownDirective(
-                    Span::new(4, 13, 2),
+                    Span::new(11, 19),
                     ".unknown".to_string()
                 ))
             )
@@ -315,25 +314,38 @@ mod tests {
             let mut lexer = JasmLexer::new(INPUT);
             let tokens = lexer.tokenize();
 
-            assert_eq!(tokens, Err(LexerError::UnexpectedEof(2, 5)))
+            assert_eq!(
+                tokens,
+                Err(LexerError::UnexpectedEof(
+                    11,
+                    "Expected one of the directives: .class, .super, .method, .end, .limit"
+                        .to_string()
+                ))
+            )
         }
 
         #[rstest]
-        #[case(".class\n    .\n.method", 2, 5, '\n')]
-        #[case(".class\n    . .limit\n.method", 2, 5, ' ')]
-        #[case(".class\n    .\t.limit\n.method", 2, 5, '\t')]
-        #[case(".class\n    .\r.limit\n.method", 2, 5, '\r')]
+        #[case(".class\n    .\n.method", 12, '\n')]
+        #[case(".class\n    . .limit\n.method", 12, ' ')]
+        #[case(".class\n    .\t.limit\n.method", 12, '\t')]
+        #[case(".class\n    .\r.limit\n.method", 12, '\r')]
         fn test_tokenize_unexpected_char_directive(
             #[case] input: &str,
-            #[case] line: usize,
-            #[case] column: usize,
+            #[case] pos: usize,
             #[case] c: char,
         ) {
             let mut lexer = JasmLexer::new(input);
             let tokens = lexer.tokenize();
 
-            assert_eq!(tokens, Err(LexerError::UnexpectedChar(c, line, column)))
+            assert_eq!(
+                tokens,
+                Err(LexerError::UnexpectedChar(
+                    pos,
+                    c,
+                    "Expected one of the directives: .class, .super, .method, .end, .limit"
+                        .to_string()
+                ))
+            )
         }
     }
 }
- */
