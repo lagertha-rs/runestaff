@@ -203,6 +203,7 @@ impl<'a> JasmLexer<'a> {
 mod tests {
     use super::*;
 
+    //TODO: test unicode handling
     mod directives {
         use super::*;
         use rstest::rstest;
