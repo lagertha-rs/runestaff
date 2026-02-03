@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public Test
+"String that breaks
+across lines"
+.end
+----- STDOUT -----
+
+----- STDERR -----
+Error: lexing error
+   ╭─[ tests/testdata/lexer/strings/unterminated_string_with_newline.ja:2:1 ]
+   │
+ 2 │ "String that breaks
+   │ ┬  
+   │ ╰── String started here is not terminated
+   │ 
+   │ Note: Multiple-line strings are not supported, make sure to close the string before the end of the line.
+───╯

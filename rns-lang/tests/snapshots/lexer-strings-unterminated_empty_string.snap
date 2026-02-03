@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public Test
+"
+----- STDOUT -----
+
+----- STDERR -----
+Error: lexing error
+   ╭─[ tests/testdata/lexer/strings/unterminated_empty_string.ja:2:1 ]
+   │
+ 2 │ "
+   │ ┬  
+   │ ╰── String started here is not terminated
+   │ 
+   │ Note: Multiple-line strings are not supported, make sure to close the string before the end of the line.
+───╯
