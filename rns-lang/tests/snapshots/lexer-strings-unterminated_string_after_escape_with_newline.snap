@@ -5,14 +5,15 @@ expression: "&combined"
 ---
 ----- INPUT  -----
 .class public Test
-"This string has no closing quote
+"String with backslash escape followed by newline \
+.end
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/strings/unterminated_string_at_eof.ja:2:1 ]
+   ╭─[ tests/testdata/lexer/strings/unterminated_string_after_escape_with_newline.ja:2:1 ]
    │
- 2 │ "This string has no closing quote
+ 2 │ "String with backslash escape followed by newline \
    │ ┬  
    │ ╰── String started here is not terminated
    │ 

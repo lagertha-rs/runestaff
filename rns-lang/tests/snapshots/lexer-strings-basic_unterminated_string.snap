@@ -1,5 +1,6 @@
 ---
 source: jasm/tests/integration_test.rs
+assertion_line: 80
 expression: "&combined"
 ---
 ----- INPUT  -----
@@ -16,5 +17,5 @@ Error: lexing error
    │ ┬  
    │ ╰── String started here is not terminated
    │ 
-   │ Note: Multiple-line strings are not supported, make sure to close the string before the end of the line.
+   │ Note: String literal is not terminated before the end of the line or file.
 ───╯

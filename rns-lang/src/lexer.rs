@@ -24,7 +24,7 @@ impl LexerError {
             LexerError::UnexpectedEof(_, context) => context.clone(),
             LexerError::UnexpectedChar(_, _, context) => context.clone(),
             LexerError::UnterminatedString(_) => {
-                "Multiple-line strings are not supported, make sure to close the string before the end of the line.".to_string()
+                "String literal is not terminated before the end of the line or file.".to_string()
             }
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
@@ -137,6 +137,9 @@ impl<'a> JasmLexer<'a> {
                             'f' => result.push('\x0C'), // form feed
                             '"' => result.push('"'),
                             '\\' => result.push('\\'),
+                            '\n' | '\r' => {
+                                return Err(InternalLexerError::UnterminatedString);
+                            }
                             _ => result.push(next_char),
                         }
                         self.next_char(); // consume escaped character
@@ -688,6 +691,24 @@ mod tests {
                         },
                     ]
                 );
+            }
+
+            #[test]
+            fn test_backslash_followed_by_literal_newline() {
+                // String with backslash followed by actual newline should be treated as unterminated
+                let mut lexer = JasmLexer::new("\"test\\\n");
+                let result = lexer.tokenize();
+
+                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
+            }
+
+            #[test]
+            fn test_backslash_followed_by_literal_carriage_return() {
+                // String with backslash followed by carriage return should be treated as unterminated
+                let mut lexer = JasmLexer::new("\"test\\\r");
+                let result = lexer.tokenize();
+
+                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
             }
         }
 
