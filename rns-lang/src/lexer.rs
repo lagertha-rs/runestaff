@@ -928,55 +928,24 @@ mod tests {
 
         mod errors {
             use super::*;
+            use rstest::rstest;
 
-            #[test]
-            fn test_unterminated_string_at_eof() {
-                let mut lexer = JasmLexer::new(r#""hello"#);
+            #[rstest]
+            #[case(r#""hello"#, 0, "unterminated string at EOF")]
+            #[case("\"hello\nworld\"", 0, "literal newline in string")]
+            #[case("\"hello\rworld\"", 0, "literal carriage return in string")]
+            #[case(r#""hello\"#, 0, "string ending with backslash at EOF")]
+            #[case(r#"""#, 0, "unterminated empty string")]
+            #[case(".class \"unterminated", 7, "unterminated string after token")]
+            fn test_unterminated_string(
+                #[case] input: &str,
+                #[case] expected_pos: usize,
+                #[case] _description: &str,
+            ) {
+                let mut lexer = JasmLexer::new(input);
                 let result = lexer.tokenize();
 
-                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
-            }
-
-            #[test]
-            fn test_string_with_literal_newline() {
-                let mut lexer = JasmLexer::new("\"hello\nworld\"");
-                let result = lexer.tokenize();
-
-                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
-            }
-
-            #[test]
-            fn test_string_with_literal_carriage_return() {
-                let mut lexer = JasmLexer::new("\"hello\rworld\"");
-                let result = lexer.tokenize();
-
-                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
-            }
-
-            #[test]
-            fn test_unterminated_string_after_escape() {
-                // String ending with backslash followed by EOF
-                let mut lexer = JasmLexer::new(r#""hello\"#);
-                let result = lexer.tokenize();
-
-                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
-            }
-
-            #[test]
-            fn test_unterminated_empty_string() {
-                let mut lexer = JasmLexer::new(r#"""#);
-                let result = lexer.tokenize();
-
-                assert_eq!(result, Err(LexerError::UnterminatedString(0)));
-            }
-
-            #[test]
-            fn test_unterminated_string_position_after_token() {
-                // Make sure error position is correct when string starts after another token
-                let mut lexer = JasmLexer::new(".class \"unterminated");
-                let result = lexer.tokenize();
-
-                assert_eq!(result, Err(LexerError::UnterminatedString(7)));
+                assert_eq!(result, Err(LexerError::UnterminatedString(expected_pos)));
             }
         }
     }
