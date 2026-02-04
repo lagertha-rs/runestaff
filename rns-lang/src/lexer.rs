@@ -3,6 +3,7 @@ use std::iter::Peekable;
 use std::ops::Range;
 use std::str::{CharIndices, FromStr};
 
+// TODO: Probably replace by categorized enums to avoid unreachable()
 enum InternalLexerError {
     UnexpectedEof,
     UnexpectedChar(char),
@@ -17,6 +18,7 @@ pub enum LexerError {
     UnknownDirective(Span, String),
     UnexpectedEof(usize, String),
     UnterminatedString(usize),
+    InvalidNumber(Span, String),
 }
 
 impl LexerError {
@@ -30,6 +32,7 @@ impl LexerError {
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
             }
+            LexerError::InvalidNumber(_, _) => "Expected a valid integer number.".to_string(),
         }
     }
 
@@ -39,6 +42,7 @@ impl LexerError {
             LexerError::UnexpectedEof(pos, _) => *pos..(*pos + 1),
             LexerError::UnexpectedChar(pos, c, _) => *pos..(*pos + c.len_utf8()),
             LexerError::UnterminatedString(pos) => *pos..(*pos + 1),
+            LexerError::InvalidNumber(span, _) => span.as_range(),
         }
     }
 
@@ -51,6 +55,9 @@ impl LexerError {
             LexerError::UnexpectedEof(_, _) => "Unexpected end of file".to_string(),
             LexerError::UnterminatedString(_) => {
                 "String started here is not terminated".to_string()
+            }
+            LexerError::InvalidNumber(_, value) => {
+                format!("'{}' is not a valid integer", value)
             }
         }
     }
@@ -99,10 +106,14 @@ impl<'a> JasmLexer<'a> {
         }
     }
 
-    fn read_to_whitespace(&mut self) -> String {
+    fn is_delimiter(c: char) -> bool {
+        c.is_whitespace() || matches!(c, '(' | ')' | '[')
+    }
+
+    fn read_to_delimiter(&mut self) -> String {
         let mut result = String::new();
         while let Some(&(_, c)) = self.data.peek() {
-            if !c.is_whitespace() {
+            if !Self::is_delimiter(c) {
                 result.push(c);
                 self.next_char();
             } else {
@@ -160,7 +171,7 @@ impl<'a> JasmLexer<'a> {
 
     fn read_number(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
         // TODO: implement all number formats and types, right now only integers are supported
-        let number_str = self.read_to_whitespace();
+        let number_str = self.read_to_delimiter();
         i32::from_str(&number_str)
             .map(JasmTokenKind::Integer)
             .map_err(|_| InternalLexerError::NotANumber(number_str))
@@ -169,7 +180,7 @@ impl<'a> JasmLexer<'a> {
     fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
         self.next_char(); // consume '.'
 
-        let directive = self.read_to_whitespace();
+        let directive = self.read_to_delimiter();
         if directive.is_empty() {
             if let Some(&(_, ch)) = self.data.peek() {
                 return Err(InternalLexerError::UnexpectedChar(ch));
@@ -213,10 +224,15 @@ impl<'a> JasmLexer<'a> {
                 }
             })?,
             'a'..='z' | 'A'..='Z' | '_' => {
-                let str = self.read_to_whitespace();
+                let str = self.read_to_delimiter();
                 JasmTokenKind::from_identifier(str)
             }
-            '0'..='9' | '-' => self.read_number().map_err(|_| todo!())?,
+            '0'..='9' | '-' => self.read_number().map_err(|e| match e {
+                InternalLexerError::NotANumber(value) => {
+                    LexerError::InvalidNumber(Span::new(start, self.byte_pos), value)
+                }
+                _ => unreachable!(),
+            })?,
             '"' => JasmTokenKind::StringLiteral(self.read_string().map_err(|e| match e {
                 InternalLexerError::UnterminatedString => LexerError::UnterminatedString(start),
                 _ => unreachable!(),
@@ -240,17 +256,25 @@ impl<'a> JasmLexer<'a> {
                 self.next_char();
                 JasmTokenKind::CloseParen
             }
-            _ => {
-                let token_str = self.read_to_whitespace();
-                if ch == '<' && token_str.starts_with("<init>") {
-                    Ok(JasmTokenKind::Identifier(token_str))
+            '<' => {
+                let token_str = self.read_to_delimiter();
+                if token_str.starts_with("<init>") || token_str.starts_with("<clinit>") {
+                    JasmTokenKind::Identifier(token_str)
                 } else {
-                    Err(LexerError::UnexpectedChar(
+                    return Err(LexerError::UnexpectedChar(
                         start,
                         ch,
-                        "TODO: add context".to_string(),
-                    ))
-                }?
+                        "Only <init> and <clinit> are valid identifiers starting with '<'"
+                            .to_string(),
+                    ));
+                }
+            }
+            _ => {
+                return Err(LexerError::UnexpectedChar(
+                    start,
+                    ch,
+                    "Unexpected character".to_string(),
+                ));
             }
         };
 
@@ -445,6 +469,7 @@ mod tests {
 
         #[test]
         fn test_method_definition() {
+            // With delimiter-based parsing, method signatures are tokenized into parts
             const INPUT: &str = ".method public static main([Ljava/lang/String;)V";
             let mut lexer = JasmLexer::new(INPUT);
             let tokens = lexer.tokenize().unwrap();
@@ -465,12 +490,85 @@ mod tests {
                         span: Span::new(15, 21),
                     },
                     JasmToken {
-                        kind: JasmTokenKind::Identifier("main([Ljava/lang/String;)V".to_string()),
-                        span: Span::new(22, 48),
+                        kind: JasmTokenKind::Identifier("main".to_string()),
+                        span: Span::new(22, 26),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(26, 27),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(27, 28),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("Ljava/lang/String;".to_string()),
+                        span: Span::new(28, 46),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(46, 47),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("V".to_string()),
+                        span: Span::new(47, 48),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Eof,
                         span: Span::new(48, 48),
+                    },
+                ]
+            )
+        }
+
+        #[test]
+        fn test_method_definition_with_space_after_method_name() {
+            const INPUT: &str = ".method public static main ([Ljava/lang/String;)V";
+            let mut lexer = JasmLexer::new(INPUT);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotMethod,
+                        span: Span::new(0, 7)
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Public,
+                        span: Span::new(8, 14),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Static,
+                        span: Span::new(15, 21),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("main".to_string()),
+                        span: Span::new(22, 26),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(27, 28),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(28, 29),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("Ljava/lang/String;".to_string()),
+                        span: Span::new(29, 47),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(47, 48),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("V".to_string()),
+                        span: Span::new(48, 49),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(49, 49),
                     },
                 ]
             )
@@ -1772,6 +1870,156 @@ mod tests {
             // Check last token is Eof
             assert_eq!(tokens.last().unwrap().kind, JasmTokenKind::Eof);
         }
+
+        #[test]
+        fn test_realistic_jasmin_code_with_integers() {
+            // Full example with integers
+            let input = r#".class public HelloWorld
+.super java/lang/Object
+
+.method public static main([Ljava/lang/String;)V
+    .limit stack 2
+    .limit locals 1
+.end method"#;
+
+            let mut lexer = JasmLexer::new(input);
+            let tokens = lexer.tokenize().unwrap();
+
+            // Verify key tokens
+            assert_eq!(tokens[0].kind, JasmTokenKind::DotClass);
+            assert_eq!(tokens[1].kind, JasmTokenKind::Public);
+            assert_eq!(
+                tokens[2].kind,
+                JasmTokenKind::Identifier("HelloWorld".to_string())
+            );
+
+            // Find .limit stack 2
+            let limit_stack_idx = tokens
+                .iter()
+                .position(|t| t.kind == JasmTokenKind::DotLimit)
+                .unwrap();
+            assert_eq!(
+                tokens[limit_stack_idx + 1].kind,
+                JasmTokenKind::Identifier("stack".to_string())
+            );
+            assert_eq!(tokens[limit_stack_idx + 2].kind, JasmTokenKind::Integer(2));
+
+            assert_eq!(tokens.last().unwrap().kind, JasmTokenKind::Eof);
+        }
+
+        #[test]
+        fn test_method_with_init() {
+            let input = r#".method public <init>()V
+    .limit stack 1
+    .limit locals 1
+    return
+.end method"#;
+
+            let mut lexer = JasmLexer::new(input);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(tokens[0].kind, JasmTokenKind::DotMethod);
+            assert_eq!(tokens[1].kind, JasmTokenKind::Public);
+            assert_eq!(
+                tokens[2].kind,
+                JasmTokenKind::Identifier("<init>".to_string())
+            );
+            assert_eq!(tokens[3].kind, JasmTokenKind::OpenParen);
+            assert_eq!(tokens[4].kind, JasmTokenKind::CloseParen);
+            assert_eq!(tokens[5].kind, JasmTokenKind::Identifier("V".to_string()));
+        }
+
+        #[test]
+        fn test_method_with_clinit() {
+            let input = ".method static <clinit>()V\n.end method";
+
+            let mut lexer = JasmLexer::new(input);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(tokens[0].kind, JasmTokenKind::DotMethod);
+            assert_eq!(tokens[1].kind, JasmTokenKind::Static);
+            assert_eq!(
+                tokens[2].kind,
+                JasmTokenKind::Identifier("<clinit>".to_string())
+            );
+            assert_eq!(tokens[3].kind, JasmTokenKind::OpenParen);
+            assert_eq!(tokens[4].kind, JasmTokenKind::CloseParen);
+            assert_eq!(tokens[5].kind, JasmTokenKind::Identifier("V".to_string()));
+        }
+
+        #[test]
+        fn test_complex_method_with_all_features() {
+            // Method with parens, brackets, integers, descriptors
+            let input = r#".method public static process([II)I
+    .limit stack 5
+    .limit locals 3
+    .code
+.end method"#;
+
+            let mut lexer = JasmLexer::new(input);
+            let tokens = lexer.tokenize().unwrap();
+
+            // .method public static process
+            assert_eq!(tokens[0].kind, JasmTokenKind::DotMethod);
+            assert_eq!(tokens[1].kind, JasmTokenKind::Public);
+            assert_eq!(tokens[2].kind, JasmTokenKind::Static);
+            assert_eq!(
+                tokens[3].kind,
+                JasmTokenKind::Identifier("process".to_string())
+            );
+
+            // ([II)I - parameter descriptor
+            assert_eq!(tokens[4].kind, JasmTokenKind::OpenParen);
+            assert_eq!(tokens[5].kind, JasmTokenKind::OpenBracket);
+            assert_eq!(tokens[6].kind, JasmTokenKind::Identifier("II".to_string()));
+            assert_eq!(tokens[7].kind, JasmTokenKind::CloseParen);
+            assert_eq!(tokens[8].kind, JasmTokenKind::Identifier("I".to_string()));
+
+            // .code directive should be present
+            assert!(tokens.iter().any(|t| t.kind == JasmTokenKind::DotCode));
+        }
+
+        #[test]
+        fn test_all_new_features_together() {
+            // Combines integers, parens, brackets, init/clinit, .code
+            let input = ".limit 42 (arg)[type <init> .code -10";
+
+            let mut lexer = JasmLexer::new(input);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(tokens[0].kind, JasmTokenKind::DotLimit);
+            assert_eq!(tokens[1].kind, JasmTokenKind::Integer(42));
+            assert_eq!(tokens[2].kind, JasmTokenKind::OpenParen);
+            assert_eq!(tokens[3].kind, JasmTokenKind::Identifier("arg".to_string()));
+            assert_eq!(tokens[4].kind, JasmTokenKind::CloseParen);
+            assert_eq!(tokens[5].kind, JasmTokenKind::OpenBracket);
+            assert_eq!(
+                tokens[6].kind,
+                JasmTokenKind::Identifier("type".to_string())
+            );
+            assert_eq!(
+                tokens[7].kind,
+                JasmTokenKind::Identifier("<init>".to_string())
+            );
+            assert_eq!(tokens[8].kind, JasmTokenKind::DotCode);
+            assert_eq!(tokens[9].kind, JasmTokenKind::Integer(-10));
+            assert_eq!(tokens[10].kind, JasmTokenKind::Eof);
+        }
+
+        #[test]
+        fn test_multiple_integers_with_parens() {
+            let input = "(1 2 -3)";
+
+            let mut lexer = JasmLexer::new(input);
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(tokens[0].kind, JasmTokenKind::OpenParen);
+            assert_eq!(tokens[1].kind, JasmTokenKind::Integer(1));
+            assert_eq!(tokens[2].kind, JasmTokenKind::Integer(2));
+            assert_eq!(tokens[3].kind, JasmTokenKind::Integer(-3));
+            assert_eq!(tokens[4].kind, JasmTokenKind::CloseParen);
+            assert_eq!(tokens[5].kind, JasmTokenKind::Eof);
+        }
     }
 
     mod error_handling {
@@ -1842,9 +2090,990 @@ mod tests {
             let result = lexer.tokenize();
 
             if let Err(LexerError::UnexpectedChar(_, _, context)) = result {
-                assert!(context.contains("TODO")); // Current implementation has "TODO: add context"
+                assert!(context.contains("Unexpected character"));
             } else {
                 panic!("Expected UnexpectedChar error");
+            }
+        }
+    }
+
+    mod code_directive {
+        use super::*;
+
+        #[test]
+        fn test_code_directive_basic() {
+            let mut lexer = JasmLexer::new(".code");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotCode,
+                        span: Span::new(0, 5),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(5, 5),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_code_directive_in_sequence() {
+            let mut lexer = JasmLexer::new(".method\n.code\n.end");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotMethod,
+                        span: Span::new(0, 7),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Newline,
+                        span: Span::new(7, 8),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotCode,
+                        span: Span::new(8, 13),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Newline,
+                        span: Span::new(13, 14),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotEnd,
+                        span: Span::new(14, 18),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(18, 18),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_code_directive_with_identifier() {
+            let mut lexer = JasmLexer::new(".code stack");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotCode,
+                        span: Span::new(0, 5),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("stack".to_string()),
+                        span: Span::new(6, 11),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(11, 11),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_all_directives_together() {
+            let mut lexer = JasmLexer::new(".class .super .method .code .limit .end");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::DotClass,
+                        span: Span::new(0, 6),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotSuper,
+                        span: Span::new(7, 13),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotMethod,
+                        span: Span::new(14, 21),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotCode,
+                        span: Span::new(22, 27),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotLimit,
+                        span: Span::new(28, 34),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::DotEnd,
+                        span: Span::new(35, 39),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(39, 39),
+                    },
+                ]
+            );
+        }
+    }
+
+    mod brackets_and_parens {
+        use super::*;
+
+        #[test]
+        fn test_open_paren_alone() {
+            let mut lexer = JasmLexer::new("(");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(1, 1),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_close_paren_alone() {
+            let mut lexer = JasmLexer::new(")");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(1, 1),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_open_bracket_alone() {
+            let mut lexer = JasmLexer::new("[");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(1, 1),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_parens_in_sequence() {
+            let mut lexer = JasmLexer::new("()");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(1, 2),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(2, 2),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_parens_with_content() {
+            let mut lexer = JasmLexer::new("(I)V");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("I".to_string()),
+                        span: Span::new(1, 2),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(2, 3),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("V".to_string()),
+                        span: Span::new(3, 4),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(4, 4),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_bracket_with_type() {
+            let mut lexer = JasmLexer::new("[I");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("I".to_string()),
+                        span: Span::new(1, 2),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(2, 2),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_complex_method_signature() {
+            // ([Ljava/lang/String;)V
+            let mut lexer = JasmLexer::new("([Ljava/lang/String;)V");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(1, 2),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("Ljava/lang/String;".to_string()),
+                        span: Span::new(2, 20),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(20, 21),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("V".to_string()),
+                        span: Span::new(21, 22),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(22, 22),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_parens_with_whitespace() {
+            let mut lexer = JasmLexer::new("( I ) V");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("I".to_string()),
+                        span: Span::new(2, 3),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(4, 5),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("V".to_string()),
+                        span: Span::new(6, 7),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(7, 7),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_string_followed_by_parens() {
+            let mut lexer = JasmLexer::new("\"hello\"()");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::StringLiteral("hello".to_string()),
+                        span: Span::new(0, 7),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(7, 8),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(8, 9),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(9, 9),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_identifier_then_parens_no_space() {
+            let mut lexer = JasmLexer::new("main()");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("main".to_string()),
+                        span: Span::new(0, 4),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenParen,
+                        span: Span::new(4, 5),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::CloseParen,
+                        span: Span::new(5, 6),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(6, 6),
+                    },
+                ]
+            );
+        }
+
+        #[test]
+        fn test_multiple_brackets() {
+            let mut lexer = JasmLexer::new("[[I");
+            let tokens = lexer.tokenize().unwrap();
+
+            assert_eq!(
+                tokens,
+                vec![
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(0, 1),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::OpenBracket,
+                        span: Span::new(1, 2),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Identifier("I".to_string()),
+                        span: Span::new(2, 3),
+                    },
+                    JasmToken {
+                        kind: JasmTokenKind::Eof,
+                        span: Span::new(3, 3),
+                    },
+                ]
+            );
+        }
+    }
+
+    mod integers {
+        use super::*;
+        use rstest::rstest;
+
+        mod success {
+            use super::*;
+
+            #[rstest]
+            #[case("0", 0)]
+            #[case("1", 1)]
+            #[case("42", 42)]
+            #[case("123", 123)]
+            #[case("-1", -1)]
+            #[case("-42", -42)]
+            #[case("-0", 0)]
+            #[case("007", 7)]
+            #[case("0000", 0)]
+            #[case("2147483647", i32::MAX)]
+            #[case("-2147483648", i32::MIN)]
+            fn test_valid_integer(#[case] input: &str, #[case] expected: i32) {
+                let mut lexer = JasmLexer::new(input);
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(tokens.len(), 2); // Integer + Eof
+                assert_eq!(tokens[0].kind, JasmTokenKind::Integer(expected));
+            }
+
+            #[test]
+            fn test_integer_with_directive() {
+                let mut lexer = JasmLexer::new(".limit 5");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::DotLimit,
+                            span: Span::new(0, 6),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(5),
+                            span: Span::new(7, 8),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(8, 8),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_multiple_integers() {
+                let mut lexer = JasmLexer::new("1 2 3");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(1),
+                            span: Span::new(0, 1),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(2),
+                            span: Span::new(2, 3),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(3),
+                            span: Span::new(4, 5),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(5, 5),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_integer_followed_by_paren() {
+                let mut lexer = JasmLexer::new("5)");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(5),
+                            span: Span::new(0, 1),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(1, 2),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(2, 2),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_integer_in_parens() {
+                let mut lexer = JasmLexer::new("(42)");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::OpenParen,
+                            span: Span::new(0, 1),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(42),
+                            span: Span::new(1, 3),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(3, 4),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(4, 4),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_negative_integer_followed_by_bracket() {
+                let mut lexer = JasmLexer::new("-5[");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Integer(-5),
+                            span: Span::new(0, 2),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::OpenBracket,
+                            span: Span::new(2, 3),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(3, 3),
+                        },
+                    ]
+                );
+            }
+        }
+
+        mod errors {
+            use super::*;
+
+            #[rstest]
+            #[case("2147483648", 0, 10, "overflow")]
+            #[case("-2147483649", 0, 11, "underflow")]
+            #[case("123abc", 0, 6, "invalid chars")]
+            #[case("--5", 0, 3, "double negative")]
+            #[case("-", 0, 1, "empty after minus")]
+            #[case("3.14", 0, 4, "float-like")]
+            #[case("0x1F", 0, 4, "hex format")]
+            #[case("1e5", 0, 3, "scientific notation")]
+            fn test_invalid_integer(
+                #[case] input: &str,
+                #[case] start: usize,
+                #[case] end: usize,
+                #[case] _description: &str,
+            ) {
+                let mut lexer = JasmLexer::new(input);
+                let result = lexer.tokenize();
+
+                assert!(
+                    matches!(
+                        &result,
+                        Err(LexerError::InvalidNumber(span, _)) if span.start == start && span.end == end
+                    ),
+                    "Expected InvalidNumber error for '{}', got {:?}",
+                    input,
+                    result
+                );
+            }
+
+            #[test]
+            fn test_invalid_integer_after_valid_token() {
+                let mut lexer = JasmLexer::new(".limit 999999999999999");
+                let result = lexer.tokenize();
+
+                assert!(matches!(
+                    result,
+                    Err(LexerError::InvalidNumber(span, _)) if span.start == 7
+                ));
+            }
+
+            #[test]
+            fn test_invalid_number_error_message() {
+                let mut lexer = JasmLexer::new("123abc");
+                let result = lexer.tokenize();
+
+                if let Err(LexerError::InvalidNumber(_, value)) = result {
+                    assert_eq!(value, "123abc");
+                } else {
+                    panic!("Expected InvalidNumber error");
+                }
+            }
+        }
+    }
+
+    mod init_clinit {
+        use super::*;
+
+        mod success {
+            use super::*;
+
+            #[test]
+            fn test_init_basic() {
+                let mut lexer = JasmLexer::new("<init>");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<init>".to_string()),
+                            span: Span::new(0, 6),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(6, 6),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_clinit_basic() {
+                let mut lexer = JasmLexer::new("<clinit>");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<clinit>".to_string()),
+                            span: Span::new(0, 8),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(8, 8),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_init_with_descriptor() {
+                let mut lexer = JasmLexer::new("<init>()V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<init>".to_string()),
+                            span: Span::new(0, 6),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::OpenParen,
+                            span: Span::new(6, 7),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(7, 8),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("V".to_string()),
+                            span: Span::new(8, 9),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(9, 9),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_init_with_descriptor_and_space_after() {
+                let mut lexer = JasmLexer::new("<init> ()V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<init>".to_string()),
+                            span: Span::new(0, 6),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::OpenParen,
+                            span: Span::new(7, 8),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(8, 9),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("V".to_string()),
+                            span: Span::new(9, 10),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(10, 10),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_clinit_with_descriptor() {
+                let mut lexer = JasmLexer::new("<clinit>()V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<clinit>".to_string()),
+                            span: Span::new(0, 8),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::OpenParen,
+                            span: Span::new(8, 9),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(9, 10),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("V".to_string()),
+                            span: Span::new(10, 11),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(11, 11),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_init_in_method_definition() {
+                let mut lexer = JasmLexer::new(".method public <init>()V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::DotMethod,
+                            span: Span::new(0, 7),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Public,
+                            span: Span::new(8, 14),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<init>".to_string()),
+                            span: Span::new(15, 21),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::OpenParen,
+                            span: Span::new(21, 22),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(22, 23),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("V".to_string()),
+                            span: Span::new(23, 24),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(24, 24),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_clinit_in_method_definition() {
+                let mut lexer = JasmLexer::new(".method static <clinit>()V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::DotMethod,
+                            span: Span::new(0, 7),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Static,
+                            span: Span::new(8, 14),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<clinit>".to_string()),
+                            span: Span::new(15, 23),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::OpenParen,
+                            span: Span::new(23, 24),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::CloseParen,
+                            span: Span::new(24, 25),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("V".to_string()),
+                            span: Span::new(25, 26),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(26, 26),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_init_followed_by_other_tokens() {
+                let mut lexer = JasmLexer::new("<init> public");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<init>".to_string()),
+                            span: Span::new(0, 6),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Public,
+                            span: Span::new(7, 13),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(13, 13),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_init_with_suffix() {
+                // <init>V is valid - the >V part becomes identifier
+                let mut lexer = JasmLexer::new("<init>V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<init>V".to_string()),
+                            span: Span::new(0, 7),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(7, 7),
+                        },
+                    ]
+                );
+            }
+
+            #[test]
+            fn test_clinit_with_suffix() {
+                let mut lexer = JasmLexer::new("<clinit>V");
+                let tokens = lexer.tokenize().unwrap();
+
+                assert_eq!(
+                    tokens,
+                    vec![
+                        JasmToken {
+                            kind: JasmTokenKind::Identifier("<clinit>V".to_string()),
+                            span: Span::new(0, 9),
+                        },
+                        JasmToken {
+                            kind: JasmTokenKind::Eof,
+                            span: Span::new(9, 9),
+                        },
+                    ]
+                );
+            }
+        }
+
+        mod errors {
+            use super::*;
+
+            #[test]
+            fn test_invalid_angle_bracket_identifier() {
+                let mut lexer = JasmLexer::new("<other>");
+                let result = lexer.tokenize();
+
+                assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            }
+
+            #[test]
+            fn test_just_angle_bracket() {
+                let mut lexer = JasmLexer::new("<");
+                let result = lexer.tokenize();
+
+                assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            }
+
+            #[test]
+            fn test_angle_bracket_after_token() {
+                let mut lexer = JasmLexer::new(".class <other>");
+                let result = lexer.tokenize();
+
+                assert!(matches!(result, Err(LexerError::UnexpectedChar(7, '<', _))));
+            }
+
+            #[test]
+            fn test_invalid_angle_bracket_error_message() {
+                let mut lexer = JasmLexer::new("<other>");
+                let result = lexer.tokenize();
+
+                if let Err(LexerError::UnexpectedChar(_, _, context)) = result {
+                    assert!(context.contains("<init>") && context.contains("<clinit>"));
+                } else {
+                    panic!("Expected UnexpectedChar error");
+                }
+            }
+
+            #[test]
+            fn test_init_without_closing_bracket() {
+                // <init without > is an error
+                let mut lexer = JasmLexer::new("<init");
+                let result = lexer.tokenize();
+
+                assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            }
+
+            #[test]
+            fn test_clinit_without_closing_bracket() {
+                // <clinit without > is an error
+                let mut lexer = JasmLexer::new("<clinit");
+                let result = lexer.tokenize();
+
+                assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
             }
         }
     }

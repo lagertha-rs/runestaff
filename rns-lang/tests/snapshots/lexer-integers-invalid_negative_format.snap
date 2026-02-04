@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public Test
+.limit -5xyz
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: lexing error
+   ╭─[ tests/testdata/lexer/integers/invalid_negative_format.ja:2:8 ]
+   │
+ 2 │ .limit -5xyz
+   │        ──┬──  
+   │          ╰──── '-5xyz' is not a valid integer
+   │ 
+   │ Note: Expected a valid integer number.
+───╯
