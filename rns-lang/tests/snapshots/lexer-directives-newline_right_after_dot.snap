@@ -15,5 +15,5 @@ Error: lexing error
    │  ┬  
    │  ╰── Unexpected character '\n'
    │ 
-   │ Note: Expected one of the directives: .class, .super, .method, .end, .limit
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .limit, .code
 ───╯

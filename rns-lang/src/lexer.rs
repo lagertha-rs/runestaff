@@ -1,13 +1,14 @@
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;
 use std::ops::Range;
-use std::str::CharIndices;
+use std::str::{CharIndices, FromStr};
 
 enum InternalLexerError {
     UnexpectedEof,
     UnexpectedChar(char),
     UnknownToken(String),
     UnterminatedString,
+    NotANumber(String),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -157,6 +158,14 @@ impl<'a> JasmLexer<'a> {
         Err(InternalLexerError::UnterminatedString)
     }
 
+    fn read_number(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
+        // TODO: implement all number formats and types, right now only integers are supported
+        let number_str = self.read_to_whitespace();
+        i32::from_str(&number_str)
+            .map(JasmTokenKind::Integer)
+            .map_err(|_| InternalLexerError::NotANumber(number_str))
+    }
+
     fn handle_directive(&mut self) -> Result<JasmTokenKind, InternalLexerError> {
         self.next_char(); // consume '.'
 
@@ -207,10 +216,7 @@ impl<'a> JasmLexer<'a> {
                 let str = self.read_to_whitespace();
                 JasmTokenKind::from_identifier(str)
             }
-            '0'..='9' | '-' => {
-                // Handle numbers
-                unimplemented!()
-            }
+            '0'..='9' | '-' => self.read_number().map_err(|_| todo!())?,
             '"' => JasmTokenKind::StringLiteral(self.read_string().map_err(|e| match e {
                 InternalLexerError::UnterminatedString => LexerError::UnterminatedString(start),
                 _ => unreachable!(),
@@ -222,12 +228,29 @@ impl<'a> JasmLexer<'a> {
                     span: Span::new(start, self.byte_pos),
                 });
             }
+            '[' => {
+                self.next_char();
+                JasmTokenKind::OpenBracket
+            }
+            '(' => {
+                self.next_char();
+                JasmTokenKind::OpenParen
+            }
+            ')' => {
+                self.next_char();
+                JasmTokenKind::CloseParen
+            }
             _ => {
-                return Err(LexerError::UnexpectedChar(
-                    start,
-                    ch,
-                    "TODO: add context".to_string(),
-                ));
+                let token_str = self.read_to_whitespace();
+                if ch == '<' && token_str.starts_with("<init>") {
+                    Ok(JasmTokenKind::Identifier(token_str))
+                } else {
+                    Err(LexerError::UnexpectedChar(
+                        start,
+                        ch,
+                        "TODO: add context".to_string(),
+                    ))
+                }?
             }
         };
 
@@ -382,8 +405,10 @@ mod tests {
                 tokens,
                 Err(LexerError::UnexpectedEof(
                     11,
-                    "Expected one of the directives: .class, .super, .method, .end, .limit"
-                        .to_string()
+                    format!(
+                        "Expected one of the directives: {}",
+                        JasmTokenKind::list_directives()
+                    )
                 ))
             )
         }
@@ -406,8 +431,10 @@ mod tests {
                 Err(LexerError::UnexpectedChar(
                     pos,
                     c,
-                    "Expected one of the directives: .class, .super, .method, .end, .limit"
-                        .to_string()
+                    format!(
+                        "Expected one of the directives: {}",
+                        JasmTokenKind::list_directives()
+                    )
                 ))
             )
         }
@@ -1757,9 +1784,6 @@ mod tests {
         #[case("$", 0, '$')]
         #[case("%", 0, '%')]
         #[case("&", 0, '&')]
-        #[case("(", 0, '(')]
-        #[case(")", 0, ')')]
-        #[case("[", 0, '[')]
         #[case("]", 0, ']')]
         #[case("{", 0, '{')]
         #[case("}", 0, '}')]

@@ -45,5 +45,5 @@ fn main() {
         }
     };
 
-    println!("Tokens: {:?}", tokens);
+    tokens.iter().for_each(|v| println!("{v:?}"));
 }

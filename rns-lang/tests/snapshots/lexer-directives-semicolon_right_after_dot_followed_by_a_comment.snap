@@ -17,5 +17,5 @@ Error: lexing error
    │     ──────┬──────  
    │           ╰──────── Unknown directive '.;not_comment'
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .limit
+   │ Note: Valid directives are .class, .super, .method, .end, .limit, .code
 ───╯

@@ -6,6 +6,7 @@ pub enum JasmTokenKind {
     DotClass,
     DotSuper,
     DotMethod,
+    DotCode,
     DotEnd,
     DotLimit,
 
@@ -13,8 +14,11 @@ pub enum JasmTokenKind {
     Static,
     Identifier(String),
 
-    //Integer(i32),
+    Integer(i32),
     StringLiteral(String),
+    OpenParen,
+    CloseParen,
+    OpenBracket,
     Newline,
     Eof,
 }
@@ -26,6 +30,7 @@ impl JasmTokenKind {
         JasmTokenKind::DotMethod,
         JasmTokenKind::DotEnd,
         JasmTokenKind::DotLimit,
+        JasmTokenKind::DotCode,
     ];
 
     pub fn from_directive(name: &str) -> Option<Self> {
@@ -35,6 +40,7 @@ impl JasmTokenKind {
             "method" => Some(JasmTokenKind::DotMethod),
             "end" => Some(JasmTokenKind::DotEnd),
             "limit" => Some(JasmTokenKind::DotLimit),
+            "code" => Some(JasmTokenKind::DotCode),
             _ => None,
         }
     }
@@ -60,12 +66,17 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::DotMethod => write!(f, ".method"),
             JasmTokenKind::DotEnd => write!(f, ".end"),
             JasmTokenKind::DotLimit => write!(f, ".limit"),
+            JasmTokenKind::DotCode => write!(f, ".code"),
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),
             JasmTokenKind::Public => write!(f, "public"),
             JasmTokenKind::Static => write!(f, "static"),
             JasmTokenKind::Identifier(name) => write!(f, "identifier({})", name),
             JasmTokenKind::StringLiteral(value) => write!(f, "string_literal(\"{}\")", value),
+            JasmTokenKind::OpenParen => write!(f, "("),
+            JasmTokenKind::CloseParen => write!(f, ")"),
+            JasmTokenKind::OpenBracket => write!(f, "["),
+            JasmTokenKind::Integer(value) => write!(f, "integer({})", value),
         }
     }
 }
