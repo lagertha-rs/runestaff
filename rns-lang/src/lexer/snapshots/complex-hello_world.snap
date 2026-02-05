@@ -6,53 +6,107 @@ expression: formatted
 .class public HelloWorld
 .super java/lang/Object
 
-.method public static main([Ljava/lang/String;)V
-.code
-    getstatic java/lang/System/out Ljava/io/PrintStream;
-    ldc "Hello, World!"
-    invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-    return
+.method public <init>()V
+   .code stack 10 locals 10
+     aload_0
+     invokespecial java/lang/Object <init> ()V
+     return
+   .end code
+.end method
+
+
+.method public static main ([Ljava/lang/String;)V
+   .code stack 10 locals 10
+
+     getstatic java/lang/System out Ljava/io/PrintStream;
+     ldc "Hello World!"
+     invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
+
+     return
+   .code end
 .end method
 ----- TOKENS -----
-KIND                                       | SPAN      | TEXT
-----                                       | ----      | ----
-DotClass                                   | 0..6      | .class
-Public                                     | 7..13     | public
-Identifier("HelloWorld")                   | 14..24    | HelloWorld
-Newline                                    | 24..25    | \n
-DotSuper                                   | 25..31    | .super
-Identifier("java/lang/Object")             | 32..48    | java/lang/Object
-Newline                                    | 48..49    | \n
-Newline                                    | 49..50    | \n
-DotMethod                                  | 50..57    | .method
-Public                                     | 58..64    | public
-Static                                     | 65..71    | static
-Identifier("main")                         | 72..76    | main
-OpenParen                                  | 76..77    | (
-OpenBracket                                | 77..78    | [
-Identifier("Ljava/lang/String;")           | 78..96    | Ljava/lang/String;
-CloseParen                                 | 96..97    | )
-Identifier("V")                            | 97..98    | V
-Newline                                    | 98..99    | \n
-DotCode                                    | 99..104   | .code
-Newline                                    | 104..105  | \n
-Identifier("getstatic")                    | 109..118  | getstatic
-Identifier("java/lang/System/out")         | 119..139  | java/lang/System/out
-Identifier("Ljava/io/PrintStream;")        | 140..161  | Ljava/io/PrintStream;
-Newline                                    | 161..162  | \n
-Identifier("ldc")                          | 166..169  | ldc
-StringLiteral("Hello, World!")             | 170..185  | "Hello, World!"
-Newline                                    | 185..186  | \n
-Identifier("invokevirtual")                | 190..203  | invokevirtual
-Identifier("java/io/PrintStream/println")  | 204..231  | java/io/PrintStream/println
-OpenParen                                  | 231..232  | (
-Identifier("Ljava/lang/String;")           | 232..250  | Ljava/lang/String;
-CloseParen                                 | 250..251  | )
-Identifier("V")                            | 251..252  | V
-Newline                                    | 252..253  | \n
-Identifier("return")                       | 257..263  | return
-Newline                                    | 263..264  | \n
-DotEnd                                     | 264..268  | .end
-Identifier("method")                       | 269..275  | method
-Newline                                    | 275..276  | \n
-Eof                                        | 276..276  |
+KIND                                 | SPAN      | TEXT
+----                                 | ----      | ----
+DotClass                             | 0..6      | .class
+Public                               | 7..13     | public
+Identifier("HelloWorld")             | 14..24    | HelloWorld
+Newline                              | 24..25    | \n
+DotSuper                             | 25..31    | .super
+Identifier("java/lang/Object")       | 32..48    | java/lang/Object
+Newline                              | 48..49    | \n
+Newline                              | 49..50    | \n
+DotMethod                            | 50..57    | .method
+Public                               | 58..64    | public
+Identifier("<init>")                 | 65..71    | <init>
+OpenParen                            | 71..72    | (
+CloseParen                           | 72..73    | )
+Identifier("V")                      | 73..74    | V
+Newline                              | 74..75    | \n
+DotCode                              | 78..83    | .code
+Identifier("stack")                  | 84..89    | stack
+Integer(10)                          | 90..92    | 10
+Identifier("locals")                 | 93..99    | locals
+Integer(10)                          | 100..102  | 10
+Newline                              | 102..103  | \n
+Identifier("aload_0")                | 108..115  | aload_0
+Newline                              | 115..116  | \n
+Identifier("invokespecial")          | 121..134  | invokespecial
+Identifier("java/lang/Object")       | 135..151  | java/lang/Object
+Identifier("<init>")                 | 152..158  | <init>
+OpenParen                            | 159..160  | (
+CloseParen                           | 160..161  | )
+Identifier("V")                      | 161..162  | V
+Newline                              | 162..163  | \n
+Identifier("return")                 | 168..174  | return
+Newline                              | 174..175  | \n
+DotEnd                               | 178..182  | .end
+Identifier("code")                   | 183..187  | code
+Newline                              | 187..188  | \n
+DotEnd                               | 188..192  | .end
+Identifier("method")                 | 193..199  | method
+Newline                              | 199..200  | \n
+Newline                              | 200..201  | \n
+Newline                              | 201..202  | \n
+DotMethod                            | 202..209  | .method
+Public                               | 210..216  | public
+Static                               | 217..223  | static
+Identifier("main")                   | 224..228  | main
+OpenParen                            | 229..230  | (
+OpenBracket                          | 230..231  | [
+Identifier("Ljava/lang/String;")     | 231..249  | Ljava/lang/String;
+CloseParen                           | 249..250  | )
+Identifier("V")                      | 250..251  | V
+Newline                              | 251..252  | \n
+DotCode                              | 255..260  | .code
+Identifier("stack")                  | 261..266  | stack
+Integer(10)                          | 267..269  | 10
+Identifier("locals")                 | 270..276  | locals
+Integer(10)                          | 277..279  | 10
+Newline                              | 279..280  | \n
+Newline                              | 280..281  | \n
+Identifier("getstatic")              | 286..295  | getstatic
+Identifier("java/lang/System")       | 296..312  | java/lang/System
+Identifier("out")                    | 313..316  | out
+Identifier("Ljava/io/PrintStream;")  | 317..338  | Ljava/io/PrintStream;
+Newline                              | 338..339  | \n
+Identifier("ldc")                    | 344..347  | ldc
+StringLiteral("Hello World!")        | 348..362  | "Hello World!"
+Newline                              | 362..363  | \n
+Identifier("invokevirtual")          | 368..381  | invokevirtual
+Identifier("java/io/PrintStream")    | 382..401  | java/io/PrintStream
+Identifier("println")                | 402..409  | println
+OpenParen                            | 410..411  | (
+Identifier("Ljava/lang/String;")     | 411..429  | Ljava/lang/String;
+CloseParen                           | 429..430  | )
+Identifier("V")                      | 430..431  | V
+Newline                              | 431..432  | \n
+Newline                              | 432..433  | \n
+Identifier("return")                 | 438..444  | return
+Newline                              | 444..445  | \n
+DotCode                              | 448..453  | .code
+Identifier("end")                    | 454..457  | end
+Newline                              | 457..458  | \n
+DotEnd                               | 458..462  | .end
+Identifier("method")                 | 463..469  | method
+Eof                                  | 469..469  |
