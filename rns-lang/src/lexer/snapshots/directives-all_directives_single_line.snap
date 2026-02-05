@@ -3,7 +3,7 @@ source: jasm/src/lexer/tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
-.class .super .method .end .limit
+.class .super .method .end .code
 ----- TOKENS -----
 KIND       | SPAN    | TEXT
 ----       | ----    | ----
@@ -11,5 +11,6 @@ DotClass   | 0..6    | .class
 DotSuper   | 7..13   | .super
 DotMethod  | 14..21  | .method
 DotEnd     | 22..26  | .end
-DotLimit   | 27..33  | .limit
+DotCode    | 27..32  | .code
+Newline    | 32..33  | \n
 Eof        | 33..33  |

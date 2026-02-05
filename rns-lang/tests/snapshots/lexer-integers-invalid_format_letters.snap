@@ -4,17 +4,17 @@ expression: "&combined"
 ---
 ----- INPUT  -----
 .class public Test
-.limit 123abc
+.code 123abc
 
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ test_data/integration/lexer/integers/invalid_format_letters.ja:2:8 ]
+   ╭─[ test_data/integration/lexer/integers/invalid_format_letters.ja:2:7 ]
    │
- 2 │ .limit 123abc
-   │        ───┬──  
-   │           ╰──── '123abc' is not a valid integer
+ 2 │ .code 123abc
+   │       ───┬──  
+   │          ╰──── '123abc' is not a valid integer
    │ 
    │ Note: Expected a valid integer number.
 ───╯

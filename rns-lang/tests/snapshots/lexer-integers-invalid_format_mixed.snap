@@ -3,17 +3,17 @@ source: jasm/tests/integration_test.rs
 expression: "&combined"
 ---
 ----- INPUT  -----
-.limit 12a34
+.code 12a34
 
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ test_data/integration/lexer/integers/invalid_format_mixed.ja:1:8 ]
+   ╭─[ test_data/integration/lexer/integers/invalid_format_mixed.ja:1:7 ]
    │
- 1 │ .limit 12a34
-   │        ──┬──  
-   │          ╰──── '12a34' is not a valid integer
+ 1 │ .code 12a34
+   │       ──┬──  
+   │         ╰──── '12a34' is not a valid integer
    │ 
    │ Note: Expected a valid integer number.
 ───╯

@@ -7,8 +7,7 @@ expression: formatted
 .super java/lang/Object
 
 .method public static main([Ljava/lang/String;)V
-.limit stack 2
-.limit locals 1
+.code
     getstatic java/lang/System/out Ljava/io/PrintStream;
     ldc "Hello, World!"
     invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
@@ -35,31 +34,25 @@ Identifier("Ljava/lang/String;")           | 78..96    | Ljava/lang/String;
 CloseParen                                 | 96..97    | )
 Identifier("V")                            | 97..98    | V
 Newline                                    | 98..99    | \n
-DotLimit                                   | 99..105   | .limit
-Identifier("stack")                        | 106..111  | stack
-Integer(2)                                 | 112..113  | 2
-Newline                                    | 113..114  | \n
-DotLimit                                   | 114..120  | .limit
-Identifier("locals")                       | 121..127  | locals
-Integer(1)                                 | 128..129  | 1
-Newline                                    | 129..130  | \n
-Identifier("getstatic")                    | 134..143  | getstatic
-Identifier("java/lang/System/out")         | 144..164  | java/lang/System/out
-Identifier("Ljava/io/PrintStream;")        | 165..186  | Ljava/io/PrintStream;
-Newline                                    | 186..187  | \n
-Identifier("ldc")                          | 191..194  | ldc
-StringLiteral("Hello, World!")             | 195..210  | "Hello, World!"
-Newline                                    | 210..211  | \n
-Identifier("invokevirtual")                | 215..228  | invokevirtual
-Identifier("java/io/PrintStream/println")  | 229..256  | java/io/PrintStream/println
-OpenParen                                  | 256..257  | (
-Identifier("Ljava/lang/String;")           | 257..275  | Ljava/lang/String;
-CloseParen                                 | 275..276  | )
-Identifier("V")                            | 276..277  | V
-Newline                                    | 277..278  | \n
-Identifier("return")                       | 282..288  | return
-Newline                                    | 288..289  | \n
-DotEnd                                     | 289..293  | .end
-Identifier("method")                       | 294..300  | method
-Newline                                    | 300..301  | \n
-Eof                                        | 301..301  |
+DotCode                                    | 99..104   | .code
+Newline                                    | 104..105  | \n
+Identifier("getstatic")                    | 109..118  | getstatic
+Identifier("java/lang/System/out")         | 119..139  | java/lang/System/out
+Identifier("Ljava/io/PrintStream;")        | 140..161  | Ljava/io/PrintStream;
+Newline                                    | 161..162  | \n
+Identifier("ldc")                          | 166..169  | ldc
+StringLiteral("Hello, World!")             | 170..185  | "Hello, World!"
+Newline                                    | 185..186  | \n
+Identifier("invokevirtual")                | 190..203  | invokevirtual
+Identifier("java/io/PrintStream/println")  | 204..231  | java/io/PrintStream/println
+OpenParen                                  | 231..232  | (
+Identifier("Ljava/lang/String;")           | 232..250  | Ljava/lang/String;
+CloseParen                                 | 250..251  | )
+Identifier("V")                            | 251..252  | V
+Newline                                    | 252..253  | \n
+Identifier("return")                       | 257..263  | return
+Newline                                    | 263..264  | \n
+DotEnd                                     | 264..268  | .end
+Identifier("method")                       | 269..275  | method
+Newline                                    | 275..276  | \n
+Eof                                        | 276..276  |

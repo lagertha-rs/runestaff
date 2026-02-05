@@ -3,17 +3,17 @@ source: jasm/tests/integration_test.rs
 expression: "&combined"
 ---
 ----- INPUT  -----
-.limit 99999999999999999999
+.code 99999999999999999999
 
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ test_data/integration/lexer/integers/overflow_positive.ja:1:8 ]
+   ╭─[ test_data/integration/lexer/integers/overflow_positive.ja:1:7 ]
    │
- 1 │ .limit 99999999999999999999
-   │        ──────────┬─────────  
-   │                  ╰─────────── '99999999999999999999' is not a valid integer
+ 1 │ .code 99999999999999999999
+   │       ──────────┬─────────  
+   │                 ╰─────────── '99999999999999999999' is not a valid integer
    │ 
    │ Note: Expected a valid integer number.
 ───╯

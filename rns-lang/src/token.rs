@@ -8,7 +8,6 @@ pub enum JasmTokenKind {
     DotMethod,
     DotCode,
     DotEnd,
-    DotLimit,
 
     Public,
     Static,
@@ -29,7 +28,6 @@ impl JasmTokenKind {
         JasmTokenKind::DotSuper,
         JasmTokenKind::DotMethod,
         JasmTokenKind::DotEnd,
-        JasmTokenKind::DotLimit,
         JasmTokenKind::DotCode,
     ];
 
@@ -39,7 +37,6 @@ impl JasmTokenKind {
             "super" => Some(JasmTokenKind::DotSuper),
             "method" => Some(JasmTokenKind::DotMethod),
             "end" => Some(JasmTokenKind::DotEnd),
-            "limit" => Some(JasmTokenKind::DotLimit),
             "code" => Some(JasmTokenKind::DotCode),
             _ => None,
         }
@@ -65,7 +62,6 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::DotSuper => write!(f, ".super"),
             JasmTokenKind::DotMethod => write!(f, ".method"),
             JasmTokenKind::DotEnd => write!(f, ".end"),
-            JasmTokenKind::DotLimit => write!(f, ".limit"),
             JasmTokenKind::DotCode => write!(f, ".code"),
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),

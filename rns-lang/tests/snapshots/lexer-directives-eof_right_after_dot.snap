@@ -15,5 +15,5 @@ Error: lexing error
    │ ┬  
    │ ╰── Unexpected end of file
    │ 
-   │ Note: Expected one of the directives: .class, .super, .method, .end, .limit, .code
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .code
 ───╯

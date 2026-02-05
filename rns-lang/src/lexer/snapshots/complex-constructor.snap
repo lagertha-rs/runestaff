@@ -7,8 +7,7 @@ expression: formatted
 .super java/lang/Object
 
 .method public <init>()V
-.limit stack 1
-.limit locals 1
+.code
     aload_0
     invokespecial java/lang/Object/<init>()V
     return
@@ -31,25 +30,19 @@ OpenParen                              | 68..69    | (
 CloseParen                             | 69..70    | )
 Identifier("V")                        | 70..71    | V
 Newline                                | 71..72    | \n
-DotLimit                               | 72..78    | .limit
-Identifier("stack")                    | 79..84    | stack
-Integer(1)                             | 85..86    | 1
-Newline                                | 86..87    | \n
-DotLimit                               | 87..93    | .limit
-Identifier("locals")                   | 94..100   | locals
-Integer(1)                             | 101..102  | 1
-Newline                                | 102..103  | \n
-Identifier("aload_0")                  | 107..114  | aload_0
-Newline                                | 114..115  | \n
-Identifier("invokespecial")            | 119..132  | invokespecial
-Identifier("java/lang/Object/<init>")  | 133..156  | java/lang/Object/<init>
-OpenParen                              | 156..157  | (
-CloseParen                             | 157..158  | )
-Identifier("V")                        | 158..159  | V
-Newline                                | 159..160  | \n
-Identifier("return")                   | 164..170  | return
-Newline                                | 170..171  | \n
-DotEnd                                 | 171..175  | .end
-Identifier("method")                   | 176..182  | method
-Newline                                | 182..183  | \n
-Eof                                    | 183..183  |
+DotCode                                | 72..77    | .code
+Newline                                | 77..78    | \n
+Identifier("aload_0")                  | 82..89    | aload_0
+Newline                                | 89..90    | \n
+Identifier("invokespecial")            | 94..107   | invokespecial
+Identifier("java/lang/Object/<init>")  | 108..131  | java/lang/Object/<init>
+OpenParen                              | 131..132  | (
+CloseParen                             | 132..133  | )
+Identifier("V")                        | 133..134  | V
+Newline                                | 134..135  | \n
+Identifier("return")                   | 139..145  | return
+Newline                                | 145..146  | \n
+DotEnd                                 | 146..150  | .end
+Identifier("method")                   | 151..157  | method
+Newline                                | 157..158  | \n
+Eof                                    | 158..158  |

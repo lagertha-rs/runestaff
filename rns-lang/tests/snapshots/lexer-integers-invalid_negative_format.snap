@@ -4,17 +4,17 @@ expression: "&combined"
 ---
 ----- INPUT  -----
 .class public Test
-.limit -5xyz
+.code -5xyz
 
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ test_data/integration/lexer/integers/invalid_negative_format.ja:2:8 ]
+   ╭─[ test_data/integration/lexer/integers/invalid_negative_format.ja:2:7 ]
    │
- 2 │ .limit -5xyz
-   │        ──┬──  
-   │          ╰──── '-5xyz' is not a valid integer
+ 2 │ .code -5xyz
+   │       ──┬──  
+   │         ╰──── '-5xyz' is not a valid integer
    │ 
    │ Note: Expected a valid integer number.
 ───╯

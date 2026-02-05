@@ -2,22 +2,21 @@
 .super java/lang/Object
 
 .method static <clinit>()V
-.limit stack 2
+.code
     ldc 42
     putstatic MixedFeatures/counter I
     return
 .end method
 
 .method public <init>()V
-.limit stack 1
+.code
     aload_0
     invokespecial java/lang/Object/<init>()V
     return
 .end method
 
 .method public static process([I)V
-.limit stack 3
-.limit locals 2
+.code
     iconst_0
     istore_1
     return

@@ -7,22 +7,21 @@ expression: formatted
 .super java/lang/Object
 
 .method static <clinit>()V
-.limit stack 2
+.code
     ldc 42
     putstatic MixedFeatures/counter I
     return
 .end method
 
 .method public <init>()V
-.limit stack 1
+.code
     aload_0
     invokespecial java/lang/Object/<init>()V
     return
 .end method
 
 .method public static process([I)V
-.limit stack 3
-.limit locals 2
+.code
     iconst_0
     istore_1
     return
@@ -45,73 +44,63 @@ OpenParen                              | 76..77    | (
 CloseParen                             | 77..78    | )
 Identifier("V")                        | 78..79    | V
 Newline                                | 79..80    | \n
-DotLimit                               | 80..86    | .limit
-Identifier("stack")                    | 87..92    | stack
-Integer(2)                             | 93..94    | 2
-Newline                                | 94..95    | \n
-Identifier("ldc")                      | 99..102   | ldc
-Integer(42)                            | 103..105  | 42
-Newline                                | 105..106  | \n
-Identifier("putstatic")                | 110..119  | putstatic
-Identifier("MixedFeatures/counter")    | 120..141  | MixedFeatures/counter
-Identifier("I")                        | 142..143  | I
-Newline                                | 143..144  | \n
-Identifier("return")                   | 148..154  | return
-Newline                                | 154..155  | \n
-DotEnd                                 | 155..159  | .end
-Identifier("method")                   | 160..166  | method
-Newline                                | 166..167  | \n
-Newline                                | 167..168  | \n
-DotMethod                              | 168..175  | .method
-Public                                 | 176..182  | public
-Identifier("<init>")                   | 183..189  | <init>
-OpenParen                              | 189..190  | (
-CloseParen                             | 190..191  | )
-Identifier("V")                        | 191..192  | V
-Newline                                | 192..193  | \n
-DotLimit                               | 193..199  | .limit
-Identifier("stack")                    | 200..205  | stack
-Integer(1)                             | 206..207  | 1
-Newline                                | 207..208  | \n
-Identifier("aload_0")                  | 212..219  | aload_0
-Newline                                | 219..220  | \n
-Identifier("invokespecial")            | 224..237  | invokespecial
-Identifier("java/lang/Object/<init>")  | 238..261  | java/lang/Object/<init>
-OpenParen                              | 261..262  | (
-CloseParen                             | 262..263  | )
-Identifier("V")                        | 263..264  | V
-Newline                                | 264..265  | \n
-Identifier("return")                   | 269..275  | return
-Newline                                | 275..276  | \n
-DotEnd                                 | 276..280  | .end
-Identifier("method")                   | 281..287  | method
-Newline                                | 287..288  | \n
-Newline                                | 288..289  | \n
-DotMethod                              | 289..296  | .method
-Public                                 | 297..303  | public
-Static                                 | 304..310  | static
-Identifier("process")                  | 311..318  | process
-OpenParen                              | 318..319  | (
-OpenBracket                            | 319..320  | [
-Identifier("I")                        | 320..321  | I
-CloseParen                             | 321..322  | )
-Identifier("V")                        | 322..323  | V
-Newline                                | 323..324  | \n
-DotLimit                               | 324..330  | .limit
-Identifier("stack")                    | 331..336  | stack
-Integer(3)                             | 337..338  | 3
-Newline                                | 338..339  | \n
-DotLimit                               | 339..345  | .limit
-Identifier("locals")                   | 346..352  | locals
-Integer(2)                             | 353..354  | 2
-Newline                                | 354..355  | \n
-Identifier("iconst_0")                 | 359..367  | iconst_0
-Newline                                | 367..368  | \n
-Identifier("istore_1")                 | 372..380  | istore_1
-Newline                                | 380..381  | \n
-Identifier("return")                   | 385..391  | return
-Newline                                | 391..392  | \n
-DotEnd                                 | 392..396  | .end
-Identifier("method")                   | 397..403  | method
-Newline                                | 403..404  | \n
-Eof                                    | 404..404  |
+DotCode                                | 80..85    | .code
+Newline                                | 85..86    | \n
+Identifier("ldc")                      | 90..93    | ldc
+Integer(42)                            | 94..96    | 42
+Newline                                | 96..97    | \n
+Identifier("putstatic")                | 101..110  | putstatic
+Identifier("MixedFeatures/counter")    | 111..132  | MixedFeatures/counter
+Identifier("I")                        | 133..134  | I
+Newline                                | 134..135  | \n
+Identifier("return")                   | 139..145  | return
+Newline                                | 145..146  | \n
+DotEnd                                 | 146..150  | .end
+Identifier("method")                   | 151..157  | method
+Newline                                | 157..158  | \n
+Newline                                | 158..159  | \n
+DotMethod                              | 159..166  | .method
+Public                                 | 167..173  | public
+Identifier("<init>")                   | 174..180  | <init>
+OpenParen                              | 180..181  | (
+CloseParen                             | 181..182  | )
+Identifier("V")                        | 182..183  | V
+Newline                                | 183..184  | \n
+DotCode                                | 184..189  | .code
+Newline                                | 189..190  | \n
+Identifier("aload_0")                  | 194..201  | aload_0
+Newline                                | 201..202  | \n
+Identifier("invokespecial")            | 206..219  | invokespecial
+Identifier("java/lang/Object/<init>")  | 220..243  | java/lang/Object/<init>
+OpenParen                              | 243..244  | (
+CloseParen                             | 244..245  | )
+Identifier("V")                        | 245..246  | V
+Newline                                | 246..247  | \n
+Identifier("return")                   | 251..257  | return
+Newline                                | 257..258  | \n
+DotEnd                                 | 258..262  | .end
+Identifier("method")                   | 263..269  | method
+Newline                                | 269..270  | \n
+Newline                                | 270..271  | \n
+DotMethod                              | 271..278  | .method
+Public                                 | 279..285  | public
+Static                                 | 286..292  | static
+Identifier("process")                  | 293..300  | process
+OpenParen                              | 300..301  | (
+OpenBracket                            | 301..302  | [
+Identifier("I")                        | 302..303  | I
+CloseParen                             | 303..304  | )
+Identifier("V")                        | 304..305  | V
+Newline                                | 305..306  | \n
+DotCode                                | 306..311  | .code
+Newline                                | 311..312  | \n
+Identifier("iconst_0")                 | 316..324  | iconst_0
+Newline                                | 324..325  | \n
+Identifier("istore_1")                 | 329..337  | istore_1
+Newline                                | 337..338  | \n
+Identifier("return")                   | 342..348  | return
+Newline                                | 348..349  | \n
+DotEnd                                 | 349..353  | .end
+Identifier("method")                   | 354..360  | method
+Newline                                | 360..361  | \n
+Eof                                    | 361..361  |

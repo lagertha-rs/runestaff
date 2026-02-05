@@ -15,5 +15,5 @@ Error: lexing error
    │     ─────────┬────────  
    │              ╰────────── Unknown directive '.unknown_directive'
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .limit, .code
+   │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

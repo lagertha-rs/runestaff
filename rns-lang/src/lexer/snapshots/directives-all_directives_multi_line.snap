@@ -7,7 +7,7 @@ expression: formatted
 .super
 .method
 .end
-.limit
+.code
 ----- TOKENS -----
 KIND       | SPAN    | TEXT
 ----       | ----    | ----
@@ -19,5 +19,6 @@ DotMethod  | 14..21  | .method
 Newline    | 21..22  | \n
 DotEnd     | 22..26  | .end
 Newline    | 26..27  | \n
-DotLimit   | 27..33  | .limit
+DotCode    | 27..32  | .code
+Newline    | 32..33  | \n
 Eof        | 33..33  |

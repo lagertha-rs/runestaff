@@ -105,7 +105,7 @@ mod directives {
 
     #[test]
     fn test_valid_tokenize_directives() {
-        const INPUT: &str = ".class .super .method .end .limit";
+        const INPUT: &str = ".class .super .method .end .code";
         let mut lexer = JasmLexer::new(INPUT);
         let tokens = lexer.tokenize().unwrap();
 
@@ -129,12 +129,12 @@ mod directives {
                     span: Span::new(22, 26),
                 },
                 JasmToken {
-                    kind: JasmTokenKind::DotLimit,
-                    span: Span::new(27, 33),
+                    kind: JasmTokenKind::DotCode,
+                    span: Span::new(27, 32),
                 },
                 JasmToken {
                     kind: JasmTokenKind::Eof,
-                    span: Span::new(33, 33),
+                    span: Span::new(32, 32),
                 },
             ]
         )
@@ -232,9 +232,9 @@ mod directives {
 
     #[rstest]
     #[case(".class\n    .\n.method", 12, '\n')]
-    #[case(".class\n    . .limit\n.method", 12, ' ')]
-    #[case(".class\n    .\t.limit\n.method", 12, '\t')]
-    #[case(".class\n    .\r.limit\n.method", 12, '\r')]
+    #[case(".class\n    . .code\n.method", 12, ' ')]
+    #[case(".class\n    .\t.code\n.method", 12, '\t')]
+    #[case(".class\n    .\r.code\n.method", 12, '\r')]
     fn test_tokenize_unexpected_char_directive(
         #[case] input: &str,
         #[case] pos: usize,
@@ -1634,13 +1634,11 @@ mod complex_sequences {
 
     #[test]
     fn test_realistic_jasmin_code() {
-        // Note: avoiding numbers as they are unimplemented
         let input = r#".class public HelloWorld
 .super java/lang/Object
 
 .method public static main([Ljava/lang/String;)V
-.limit stack
-.limit locals
+.code
 .end method"#;
 
         let mut lexer = JasmLexer::new(input);
@@ -1671,8 +1669,9 @@ mod complex_sequences {
 .super java/lang/Object
 
 .method public static main([Ljava/lang/String;)V
-.limit stack 2
-.limit locals 1
+.code
+    iconst_2
+    istore_1
 .end method"#;
 
         let mut lexer = JasmLexer::new(input);
@@ -1686,16 +1685,12 @@ mod complex_sequences {
             JasmTokenKind::Identifier("HelloWorld".to_string())
         );
 
-        // Find .limit stack 2
-        let limit_stack_idx = tokens
+        // Find .code
+        let code_idx = tokens
             .iter()
-            .position(|t| t.kind == JasmTokenKind::DotLimit)
+            .position(|t| t.kind == JasmTokenKind::DotCode)
             .unwrap();
-        assert_eq!(
-            tokens[limit_stack_idx + 1].kind,
-            JasmTokenKind::Identifier("stack".to_string())
-        );
-        assert_eq!(tokens[limit_stack_idx + 2].kind, JasmTokenKind::Integer(2));
+        assert!(code_idx > 0);
 
         assert_eq!(tokens.last().unwrap().kind, JasmTokenKind::Eof);
     }
@@ -1703,8 +1698,7 @@ mod complex_sequences {
     #[test]
     fn test_method_with_init() {
         let input = r#".method public <init>()V
-.limit stack 1
-.limit locals 1
+.code
 return
 .end method"#;
 
@@ -1744,8 +1738,6 @@ return
     fn test_complex_method_with_all_features() {
         // Method with parens, brackets, integers, descriptors
         let input = r#".method public static process([II)I
-.limit stack 5
-.limit locals 3
 .code
 .end method"#;
 
@@ -1775,28 +1767,27 @@ return
     #[test]
     fn test_all_new_features_together() {
         // Combines integers, parens, brackets, init/clinit, .code
-        let input = ".limit 42 (arg)[type <init> .code -10";
+        let input = "42 (arg)[type <init> .code -10";
 
         let mut lexer = JasmLexer::new(input);
         let tokens = lexer.tokenize().unwrap();
 
-        assert_eq!(tokens[0].kind, JasmTokenKind::DotLimit);
-        assert_eq!(tokens[1].kind, JasmTokenKind::Integer(42));
-        assert_eq!(tokens[2].kind, JasmTokenKind::OpenParen);
-        assert_eq!(tokens[3].kind, JasmTokenKind::Identifier("arg".to_string()));
-        assert_eq!(tokens[4].kind, JasmTokenKind::CloseParen);
-        assert_eq!(tokens[5].kind, JasmTokenKind::OpenBracket);
+        assert_eq!(tokens[0].kind, JasmTokenKind::Integer(42));
+        assert_eq!(tokens[1].kind, JasmTokenKind::OpenParen);
+        assert_eq!(tokens[2].kind, JasmTokenKind::Identifier("arg".to_string()));
+        assert_eq!(tokens[3].kind, JasmTokenKind::CloseParen);
+        assert_eq!(tokens[4].kind, JasmTokenKind::OpenBracket);
         assert_eq!(
-            tokens[6].kind,
+            tokens[5].kind,
             JasmTokenKind::Identifier("type".to_string())
         );
         assert_eq!(
-            tokens[7].kind,
+            tokens[6].kind,
             JasmTokenKind::Identifier("<init>".to_string())
         );
-        assert_eq!(tokens[8].kind, JasmTokenKind::DotCode);
-        assert_eq!(tokens[9].kind, JasmTokenKind::Integer(-10));
-        assert_eq!(tokens[10].kind, JasmTokenKind::Eof);
+        assert_eq!(tokens[7].kind, JasmTokenKind::DotCode);
+        assert_eq!(tokens[8].kind, JasmTokenKind::Integer(-10));
+        assert_eq!(tokens[9].kind, JasmTokenKind::Eof);
     }
 
     #[test]
@@ -1975,7 +1966,7 @@ mod code_directive {
 
     #[test]
     fn test_all_directives_together() {
-        let mut lexer = JasmLexer::new(".class .super .method .code .limit .end");
+        let mut lexer = JasmLexer::new(".class .super .method .code .end");
         let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
@@ -1998,16 +1989,12 @@ mod code_directive {
                     span: Span::new(22, 27),
                 },
                 JasmToken {
-                    kind: JasmTokenKind::DotLimit,
-                    span: Span::new(28, 34),
-                },
-                JasmToken {
                     kind: JasmTokenKind::DotEnd,
-                    span: Span::new(35, 39),
+                    span: Span::new(28, 32),
                 },
                 JasmToken {
                     kind: JasmTokenKind::Eof,
-                    span: Span::new(39, 39),
+                    span: Span::new(32, 32),
                 },
             ]
         );
@@ -2340,23 +2327,23 @@ mod integers {
 
         #[test]
         fn test_integer_with_directive() {
-            let mut lexer = JasmLexer::new(".limit 5");
+            let mut lexer = JasmLexer::new(".code 5");
             let tokens = lexer.tokenize().unwrap();
 
             assert_eq!(
                 tokens,
                 vec![
                     JasmToken {
-                        kind: JasmTokenKind::DotLimit,
-                        span: Span::new(0, 6),
+                        kind: JasmTokenKind::DotCode,
+                        span: Span::new(0, 5),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Integer(5),
-                        span: Span::new(7, 8),
+                        span: Span::new(6, 7),
                     },
                     JasmToken {
                         kind: JasmTokenKind::Eof,
-                        span: Span::new(8, 8),
+                        span: Span::new(7, 7),
                     },
                 ]
             );
@@ -2501,12 +2488,12 @@ mod integers {
 
         #[test]
         fn test_invalid_integer_after_valid_token() {
-            let mut lexer = JasmLexer::new(".limit 999999999999999");
+            let mut lexer = JasmLexer::new(".code 999999999999999");
             let result = lexer.tokenize();
 
             assert!(matches!(
                 result,
-                Err(LexerError::InvalidNumber(span, _)) if span.start == 7
+                Err(LexerError::InvalidNumber(span, _)) if span.start == 6
             ));
         }
 
