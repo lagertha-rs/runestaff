@@ -1,0 +1,14 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.class public Test
+----- TOKENS -----
+KIND                | SPAN    | TEXT
+----                | ----    | ----
+DotClass            | 0..6    | .class
+Public              | 7..13   | public
+Identifier("Test")  | 14..18  | Test
+Newline             | 18..19  | \n
+Eof                 | 19..19  |

@@ -1,0 +1,19 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.method public static main([Ljava/lang/String;)V
+----- TOKENS -----
+KIND                              | SPAN    | TEXT
+----                              | ----    | ----
+DotMethod                         | 0..7    | .method
+Public                            | 8..14   | public
+Static                            | 15..21  | static
+Identifier("main")                | 22..26  | main
+OpenParen                         | 26..27  | (
+OpenBracket                       | 27..28  | [
+Identifier("Ljava/lang/String;")  | 28..46  | Ljava/lang/String;
+CloseParen                        | 46..47  | )
+Identifier("V")                   | 47..48  | V
+Eof                               | 48..48  |

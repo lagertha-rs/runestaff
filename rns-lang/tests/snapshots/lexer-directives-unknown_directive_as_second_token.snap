@@ -9,7 +9,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/directives/unknown_directive_as_second_token.ja:1:8 ]
+   ╭─[ test_data/integration/lexer/directives/unknown_directive_as_second_token.ja:1:8 ]
    │
  1 │ .class .unknown_directive HelloWorld
    │        ─────────┬────────  

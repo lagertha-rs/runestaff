@@ -1,0 +1,12 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+identifier;followed_by_comment
+----- TOKENS -----
+KIND                                          | SPAN    | TEXT
+----                                          | ----    | ----
+Identifier("identifier;followed_by_comment")  | 0..30   | identifier;followed_by_comment
+Newline                                       | 30..31  | \n
+Eof                                           | 31..31  |

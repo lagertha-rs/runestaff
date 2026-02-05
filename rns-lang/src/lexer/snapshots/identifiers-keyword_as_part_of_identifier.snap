@@ -1,0 +1,12 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+publicStatic staticPublic
+----- TOKENS -----
+KIND                        | SPAN    | TEXT
+----                        | ----    | ----
+Identifier("publicStatic")  | 0..12   | publicStatic
+Identifier("staticPublic")  | 13..25  | staticPublic
+Eof                         | 25..25  |

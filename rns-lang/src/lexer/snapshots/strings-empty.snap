@@ -1,0 +1,12 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+""
+----- TOKENS -----
+KIND               | SPAN  | TEXT
+----               | ----  | ----
+StringLiteral("")  | 0..2  | ""
+Newline            | 2..3  | \n
+Eof                | 3..3  |

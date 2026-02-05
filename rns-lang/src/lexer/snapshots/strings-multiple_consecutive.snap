@@ -1,0 +1,13 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+"first" "second" "third"
+----- TOKENS -----
+KIND                     | SPAN    | TEXT
+----                     | ----    | ----
+StringLiteral("first")   | 0..7    | "first"
+StringLiteral("second")  | 8..16   | "second"
+StringLiteral("third")   | 17..24  | "third"
+Eof                      | 24..24  |

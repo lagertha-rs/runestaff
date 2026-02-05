@@ -1,0 +1,12 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+"hello world with spaces"
+----- TOKENS -----
+KIND                                      | SPAN    | TEXT
+----                                      | ----    | ----
+StringLiteral("hello world with spaces")  | 0..25   | "hello world with spaces"
+Newline                                   | 25..26  | \n
+Eof                                       | 26..26  |

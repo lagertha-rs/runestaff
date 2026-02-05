@@ -1,0 +1,20 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+"line1\nline2"
+"tab\there"
+"quote\"inside"
+"backslash\\"
+----- TOKENS -----
+KIND                            | SPAN    | TEXT
+----                            | ----    | ----
+StringLiteral("line1\nline2")   | 0..14   | "line1\nline2"
+Newline                         | 14..15  | \n
+StringLiteral("tab\there")      | 15..26  | "tab\there"
+Newline                         | 26..27  | \n
+StringLiteral("quote\"inside")  | 27..42  | "quote\"inside"
+Newline                         | 42..43  | \n
+StringLiteral("backslash\\")    | 43..56  | "backslash\\"
+Eof                             | 56..56  |

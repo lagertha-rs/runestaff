@@ -1,0 +1,17 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.method
+.code
+.end
+----- TOKENS -----
+KIND       | SPAN    | TEXT
+----       | ----    | ----
+DotMethod  | 0..7    | .method
+Newline    | 7..8    | \n
+DotCode    | 8..13   | .code
+Newline    | 13..14  | \n
+DotEnd     | 14..18  | .end
+Eof        | 18..18  |

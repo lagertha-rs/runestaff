@@ -11,7 +11,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/directives/semicolon_right_after_dot_followed_by_a_comment.ja:3:5 ]
+   ╭─[ test_data/integration/lexer/directives/semicolon_right_after_dot_followed_by_a_comment.ja:3:5 ]
    │
  3 │     .;not_comment ;this is also a comment
    │     ──────┬──────  

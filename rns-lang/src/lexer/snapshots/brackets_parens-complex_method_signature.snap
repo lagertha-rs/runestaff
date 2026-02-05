@@ -1,0 +1,16 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+([Ljava/lang/String;)V
+----- TOKENS -----
+KIND                              | SPAN    | TEXT
+----                              | ----    | ----
+OpenParen                         | 0..1    | (
+OpenBracket                       | 1..2    | [
+Identifier("Ljava/lang/String;")  | 2..20   | Ljava/lang/String;
+CloseParen                        | 20..21  | )
+Identifier("V")                   | 21..22  | V
+Newline                           | 22..23  | \n
+Eof                               | 23..23  |

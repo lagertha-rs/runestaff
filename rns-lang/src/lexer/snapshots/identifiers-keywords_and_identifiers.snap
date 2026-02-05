@@ -1,0 +1,15 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+public myVariable static someMethod final
+----- TOKENS -----
+KIND                      | SPAN    | TEXT
+----                      | ----    | ----
+Public                    | 0..6    | public
+Identifier("myVariable")  | 7..17   | myVariable
+Static                    | 18..24  | static
+Identifier("someMethod")  | 25..35  | someMethod
+Identifier("final")       | 36..41  | final
+Eof                       | 41..41  |

@@ -1,0 +1,21 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.limit 42 (arg)[type <init> .code -10
+----- TOKENS -----
+KIND                  | SPAN    | TEXT
+----                  | ----    | ----
+DotLimit              | 0..6    | .limit
+Integer(42)           | 7..9    | 42
+OpenParen             | 10..11  | (
+Identifier("arg")     | 11..14  | arg
+CloseParen            | 14..15  | )
+OpenBracket           | 15..16  | [
+Identifier("type")    | 16..20  | type
+Identifier("<init>")  | 21..27  | <init>
+DotCode               | 28..33  | .code
+Integer(-10)          | 34..37  | -10
+Newline               | 37..38  | \n
+Eof                   | 38..38  |

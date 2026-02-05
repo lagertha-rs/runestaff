@@ -10,7 +10,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/integers/invalid_negative_format.ja:2:8 ]
+   ╭─[ test_data/integration/lexer/integers/invalid_negative_format.ja:2:8 ]
    │
  2 │ .limit -5xyz
    │        ──┬──  

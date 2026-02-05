@@ -1,0 +1,13 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.limit 5
+----- TOKENS -----
+KIND        | SPAN  | TEXT
+----        | ----  | ----
+DotLimit    | 0..6  | .limit
+Integer(5)  | 7..8  | 5
+Newline     | 8..9  | \n
+Eof         | 9..9  |

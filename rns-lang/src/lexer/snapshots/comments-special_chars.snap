@@ -1,0 +1,11 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+; comment with special chars !@#$%^&*()
+----- TOKENS -----
+KIND     | SPAN    | TEXT
+----     | ----    | ----
+Newline  | 39..40  | \n
+Eof      | 40..40  |

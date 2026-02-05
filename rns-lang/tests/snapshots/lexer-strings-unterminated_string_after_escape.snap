@@ -1,6 +1,5 @@
 ---
 source: jasm/tests/integration_test.rs
-assertion_line: 80
 expression: "&combined"
 ---
 ----- INPUT  -----
@@ -10,7 +9,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/strings/unterminated_string_after_escape.ja:2:1 ]
+   ╭─[ test_data/integration/lexer/strings/unterminated_string_after_escape.ja:2:1 ]
    │
  2 │ "String ending with backslash\
    │ ┬  

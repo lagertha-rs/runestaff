@@ -11,5 +11,6 @@ itertools = "0.14.0"
 rstest = "0.26.1"
 insta = "1.46.2"
 assert_cmd = "2"
+tabwriter = "1"
 
 

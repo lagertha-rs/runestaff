@@ -1,0 +1,13 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+; first comment
+; second comment
+----- TOKENS -----
+KIND     | SPAN    | TEXT
+----     | ----    | ----
+Newline  | 15..16  | \n
+Newline  | 32..33  | \n
+Eof      | 33..33  |

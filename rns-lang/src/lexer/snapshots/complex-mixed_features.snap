@@ -1,0 +1,117 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.class public MixedFeatures
+.super java/lang/Object
+
+.method static <clinit>()V
+.limit stack 2
+    ldc 42
+    putstatic MixedFeatures/counter I
+    return
+.end method
+
+.method public <init>()V
+.limit stack 1
+    aload_0
+    invokespecial java/lang/Object/<init>()V
+    return
+.end method
+
+.method public static process([I)V
+.limit stack 3
+.limit locals 2
+    iconst_0
+    istore_1
+    return
+.end method
+----- TOKENS -----
+KIND                                   | SPAN      | TEXT
+----                                   | ----      | ----
+DotClass                               | 0..6      | .class
+Public                                 | 7..13     | public
+Identifier("MixedFeatures")            | 14..27    | MixedFeatures
+Newline                                | 27..28    | \n
+DotSuper                               | 28..34    | .super
+Identifier("java/lang/Object")         | 35..51    | java/lang/Object
+Newline                                | 51..52    | \n
+Newline                                | 52..53    | \n
+DotMethod                              | 53..60    | .method
+Static                                 | 61..67    | static
+Identifier("<clinit>")                 | 68..76    | <clinit>
+OpenParen                              | 76..77    | (
+CloseParen                             | 77..78    | )
+Identifier("V")                        | 78..79    | V
+Newline                                | 79..80    | \n
+DotLimit                               | 80..86    | .limit
+Identifier("stack")                    | 87..92    | stack
+Integer(2)                             | 93..94    | 2
+Newline                                | 94..95    | \n
+Identifier("ldc")                      | 99..102   | ldc
+Integer(42)                            | 103..105  | 42
+Newline                                | 105..106  | \n
+Identifier("putstatic")                | 110..119  | putstatic
+Identifier("MixedFeatures/counter")    | 120..141  | MixedFeatures/counter
+Identifier("I")                        | 142..143  | I
+Newline                                | 143..144  | \n
+Identifier("return")                   | 148..154  | return
+Newline                                | 154..155  | \n
+DotEnd                                 | 155..159  | .end
+Identifier("method")                   | 160..166  | method
+Newline                                | 166..167  | \n
+Newline                                | 167..168  | \n
+DotMethod                              | 168..175  | .method
+Public                                 | 176..182  | public
+Identifier("<init>")                   | 183..189  | <init>
+OpenParen                              | 189..190  | (
+CloseParen                             | 190..191  | )
+Identifier("V")                        | 191..192  | V
+Newline                                | 192..193  | \n
+DotLimit                               | 193..199  | .limit
+Identifier("stack")                    | 200..205  | stack
+Integer(1)                             | 206..207  | 1
+Newline                                | 207..208  | \n
+Identifier("aload_0")                  | 212..219  | aload_0
+Newline                                | 219..220  | \n
+Identifier("invokespecial")            | 224..237  | invokespecial
+Identifier("java/lang/Object/<init>")  | 238..261  | java/lang/Object/<init>
+OpenParen                              | 261..262  | (
+CloseParen                             | 262..263  | )
+Identifier("V")                        | 263..264  | V
+Newline                                | 264..265  | \n
+Identifier("return")                   | 269..275  | return
+Newline                                | 275..276  | \n
+DotEnd                                 | 276..280  | .end
+Identifier("method")                   | 281..287  | method
+Newline                                | 287..288  | \n
+Newline                                | 288..289  | \n
+DotMethod                              | 289..296  | .method
+Public                                 | 297..303  | public
+Static                                 | 304..310  | static
+Identifier("process")                  | 311..318  | process
+OpenParen                              | 318..319  | (
+OpenBracket                            | 319..320  | [
+Identifier("I")                        | 320..321  | I
+CloseParen                             | 321..322  | )
+Identifier("V")                        | 322..323  | V
+Newline                                | 323..324  | \n
+DotLimit                               | 324..330  | .limit
+Identifier("stack")                    | 331..336  | stack
+Integer(3)                             | 337..338  | 3
+Newline                                | 338..339  | \n
+DotLimit                               | 339..345  | .limit
+Identifier("locals")                   | 346..352  | locals
+Integer(2)                             | 353..354  | 2
+Newline                                | 354..355  | \n
+Identifier("iconst_0")                 | 359..367  | iconst_0
+Newline                                | 367..368  | \n
+Identifier("istore_1")                 | 372..380  | istore_1
+Newline                                | 380..381  | \n
+Identifier("return")                   | 385..391  | return
+Newline                                | 391..392  | \n
+DotEnd                                 | 392..396  | .end
+Identifier("method")                   | 397..403  | method
+Newline                                | 403..404  | \n
+Eof                                    | 404..404  |

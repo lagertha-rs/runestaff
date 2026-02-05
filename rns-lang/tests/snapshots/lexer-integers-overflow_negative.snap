@@ -9,7 +9,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/integers/overflow_negative.ja:1:8 ]
+   ╭─[ test_data/integration/lexer/integers/overflow_negative.ja:1:8 ]
    │
  1 │ .limit -99999999999999999999
    │        ──────────┬──────────  

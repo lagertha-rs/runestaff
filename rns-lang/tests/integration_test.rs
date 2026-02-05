@@ -15,10 +15,10 @@ fn get_relative_path_for_test(absolute_path: &Path) -> PathBuf {
 }
 
 fn to_snapshot_name(path: &Path) -> String {
-    let marker = Path::new("tests/testdata");
+    let marker = Path::new("test_data/integration");
     let components = path.components().collect::<Vec<_>>();
 
-    // Find index of "tests/testdata"
+    // Find index of "test_data/integration"
     let marker_parts = marker.components().collect::<Vec<_>>();
     let idx = components
         .windows(marker_parts.len())
@@ -48,7 +48,7 @@ fn get_file_contents(path: &PathBuf) -> String {
 #[rstest]
 #[trace]
 fn error_cases(
-    #[base_dir = "tests/testdata/"]
+    #[base_dir = "test_data/integration/"]
     #[files("**/*.ja")]
     path: PathBuf,
 ) {

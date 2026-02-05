@@ -9,7 +9,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/integers/invalid_format_mixed.ja:1:8 ]
+   ╭─[ test_data/integration/lexer/integers/invalid_format_mixed.ja:1:8 ]
    │
  1 │ .limit 12a34
    │        ──┬──  

@@ -1,0 +1,14 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+-1 -42 -0
+----- TOKENS -----
+KIND          | SPAN    | TEXT
+----          | ----    | ----
+Integer(-1)   | 0..2    | -1
+Integer(-42)  | 3..6    | -42
+Integer(0)    | 7..9    | -0
+Newline       | 9..10   | \n
+Eof           | 10..10  |

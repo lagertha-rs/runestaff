@@ -1,0 +1,12 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+"abc123!@#"
+----- TOKENS -----
+KIND                        | SPAN    | TEXT
+----                        | ----    | ----
+StringLiteral("abc123!@#")  | 0..11   | "abc123!@#"
+Newline                     | 11..12  | \n
+Eof                         | 12..12  |

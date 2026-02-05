@@ -1,0 +1,15 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+( I ) V
+----- TOKENS -----
+KIND             | SPAN  | TEXT
+----             | ----  | ----
+OpenParen        | 0..1  | (
+Identifier("I")  | 2..3  | I
+CloseParen       | 4..5  | )
+Identifier("V")  | 6..7  | V
+Newline          | 7..8  | \n
+Eof              | 8..8  |

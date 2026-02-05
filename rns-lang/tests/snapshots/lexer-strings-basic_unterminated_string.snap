@@ -1,6 +1,5 @@
 ---
 source: jasm/tests/integration_test.rs
-assertion_line: 80
 expression: "&combined"
 ---
 ----- INPUT  -----
@@ -11,7 +10,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/strings/basic_unterminated_string.ja:2:1 ]
+   ╭─[ test_data/integration/lexer/strings/basic_unterminated_string.ja:2:1 ]
    │
  2 │ "String with no ending quote
    │ ┬  

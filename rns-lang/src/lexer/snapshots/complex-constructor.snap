@@ -1,0 +1,55 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.class public Example
+.super java/lang/Object
+
+.method public <init>()V
+.limit stack 1
+.limit locals 1
+    aload_0
+    invokespecial java/lang/Object/<init>()V
+    return
+.end method
+----- TOKENS -----
+KIND                                   | SPAN      | TEXT
+----                                   | ----      | ----
+DotClass                               | 0..6      | .class
+Public                                 | 7..13     | public
+Identifier("Example")                  | 14..21    | Example
+Newline                                | 21..22    | \n
+DotSuper                               | 22..28    | .super
+Identifier("java/lang/Object")         | 29..45    | java/lang/Object
+Newline                                | 45..46    | \n
+Newline                                | 46..47    | \n
+DotMethod                              | 47..54    | .method
+Public                                 | 55..61    | public
+Identifier("<init>")                   | 62..68    | <init>
+OpenParen                              | 68..69    | (
+CloseParen                             | 69..70    | )
+Identifier("V")                        | 70..71    | V
+Newline                                | 71..72    | \n
+DotLimit                               | 72..78    | .limit
+Identifier("stack")                    | 79..84    | stack
+Integer(1)                             | 85..86    | 1
+Newline                                | 86..87    | \n
+DotLimit                               | 87..93    | .limit
+Identifier("locals")                   | 94..100   | locals
+Integer(1)                             | 101..102  | 1
+Newline                                | 102..103  | \n
+Identifier("aload_0")                  | 107..114  | aload_0
+Newline                                | 114..115  | \n
+Identifier("invokespecial")            | 119..132  | invokespecial
+Identifier("java/lang/Object/<init>")  | 133..156  | java/lang/Object/<init>
+OpenParen                              | 156..157  | (
+CloseParen                             | 157..158  | )
+Identifier("V")                        | 158..159  | V
+Newline                                | 159..160  | \n
+Identifier("return")                   | 164..170  | return
+Newline                                | 170..171  | \n
+DotEnd                                 | 171..175  | .end
+Identifier("method")                   | 176..182  | method
+Newline                                | 182..183  | \n
+Eof                                    | 183..183  |

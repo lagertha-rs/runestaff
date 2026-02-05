@@ -10,7 +10,7 @@ expression: "&combined"
 
 ----- STDERR -----
 Error: lexing error
-   ╭─[ tests/testdata/lexer/directives/space_right_after_dot.ja:2:6 ]
+   ╭─[ test_data/integration/lexer/directives/space_right_after_dot.ja:2:6 ]
    │
  2 │     . whaaat?
    │      ┬  

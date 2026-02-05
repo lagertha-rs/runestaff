@@ -1,0 +1,12 @@
+---
+source: jasm/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.code myLabel
+----- TOKENS -----
+KIND                   | SPAN    | TEXT
+----                   | ----    | ----
+DotCode                | 0..5    | .code
+Identifier("myLabel")  | 6..13   | myLabel
+Eof                    | 13..13  |
