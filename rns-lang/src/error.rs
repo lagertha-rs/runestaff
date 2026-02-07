@@ -103,7 +103,7 @@ impl JasmDiagnostic {
 impl From<LexerError> for JasmError {
     fn from(err: LexerError) -> Self {
         JasmError::Diagnostic(JasmDiagnostic::new(
-            "lexing error",
+            err.message().unwrap_or("lexing error".to_string()),
             err.as_range(),
             err.note(),
             err.label(),
@@ -116,7 +116,7 @@ impl From<ParserError> for JasmError {
         match err {
             ParserError::Internal(msg) => JasmError::Internal(msg),
             _ => JasmError::Diagnostic(JasmDiagnostic::new(
-                "parsing error",
+                err.message().unwrap_or("parsing error".to_string()),
                 err.as_range(),
                 err.note(),
                 err.label(),

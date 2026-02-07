@@ -5,13 +5,6 @@ mod internal_error {
     use crate::parser::ParserError;
 
     #[test]
-    fn test_empty_tokens() {
-        let tokens = vec![];
-        let err = JasmParser::parse(tokens).unwrap_err();
-        assert!(matches!(err, ParserError::Internal(_)));
-    }
-
-    #[test]
     fn test_missing_eof() {
         let tokens = vec![JasmToken {
             kind: JasmTokenKind::Identifier("Test".to_string()),

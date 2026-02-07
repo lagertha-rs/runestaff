@@ -13,6 +13,11 @@ pub(crate) enum LexerError {
 }
 
 impl LexerError {
+    // TODO: add messages
+    pub fn message(&self) -> Option<String> {
+        None
+    }
+
     pub fn note(&self) -> Option<String> {
         let note = match self {
             LexerError::UnexpectedEof(_) => format!(

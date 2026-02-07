@@ -54,6 +54,25 @@ impl JasmTokenKind {
     pub fn list_directives() -> String {
         Self::DIRECTIVES.iter().map(ToString::to_string).join(", ")
     }
+
+    pub fn as_string_token_type(&self) -> String {
+        match self {
+            JasmTokenKind::DotClass
+            | JasmTokenKind::DotSuper
+            | JasmTokenKind::DotMethod
+            | JasmTokenKind::DotEnd
+            | JasmTokenKind::DotCode => "directive".to_string(),
+            JasmTokenKind::Public | JasmTokenKind::Static => "keyword".to_string(),
+            JasmTokenKind::Identifier(_) => "identifier".to_string(),
+            JasmTokenKind::StringLiteral(_) => "string iteral".to_string(),
+            JasmTokenKind::OpenParen | JasmTokenKind::CloseParen | JasmTokenKind::OpenBracket => {
+                "symbol".to_string()
+            }
+            JasmTokenKind::Integer(_) => "integer".to_string(),
+            JasmTokenKind::Newline => "newline".to_string(),
+            JasmTokenKind::Eof => "eof".to_string(),
+        }
+    }
 }
 
 impl std::fmt::Display for JasmTokenKind {
