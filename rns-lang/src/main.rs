@@ -1,15 +1,18 @@
-use crate::lexer::{JasmLexer, LexerError};
+use crate::lexer::JasmLexer;
 use ariadne::{Color, Label, Report, ReportKind, Source};
 
 mod ast;
+mod error;
 mod lexer;
 mod parser;
 mod token;
 
-fn print_comprehensive_error(filename: &str, source_code: &str, err: &LexerError) {
-    let range = err.as_range();
+use crate::error::JasmError;
+
+fn print_comprehensive_error(filename: &str, source_code: &str, err: JasmError) {
+    let range = err.range().clone();
     Report::build(ReportKind::Error, (filename, range.clone()))
-        .with_message("lexing error") // TODO: customize? I feel like label is already descriptive enough
+        .with_message(err.message())
         .with_note(err.note())
         .with_label(
             Label::new((filename, range))
@@ -42,7 +45,7 @@ fn main() {
     let tokens = match lexer.tokenize() {
         Ok(tokens) => tokens,
         Err(err) => {
-            print_comprehensive_error(&filename, &contents, &err);
+            print_comprehensive_error(&filename, &contents, err.into());
             std::process::exit(1);
         }
     };
