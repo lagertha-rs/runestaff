@@ -1,7 +1,9 @@
 use crate::lexer::{JasmLexer, LexerError};
 use ariadne::{Color, Label, Report, ReportKind, Source};
 
+mod ast;
 mod lexer;
+mod parser;
 mod token;
 
 fn print_comprehensive_error(filename: &str, source_code: &str, err: &LexerError) {

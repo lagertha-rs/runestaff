@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use std::ops::Range;
 
+//TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum JasmTokenKind {
     DotClass,
