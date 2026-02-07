@@ -33,8 +33,19 @@ impl JasmError {
             .unwrap();
     }
 
-    fn print_internal_error(message: &str) {
-        eprintln!("Internal error: {}", message);
+    fn format_internal_error(message: &str) -> String {
+        [
+            "",
+            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+            "!            INTERNAL ASSEMBLER ERROR             !",
+            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+            "",
+            "This is a bug in the jasm assembler.",
+            "Please report it at: https://github.com/Obito-git/lagertha-vm/issues",
+            "",
+            &format!("Details: {message}"),
+        ]
+        .join("\n")
     }
 
     pub fn print(&self, filename: &str, source_code: &str) {
@@ -42,7 +53,9 @@ impl JasmError {
             JasmError::Diagnostic(diag) => {
                 Self::print_diagnostic_error(filename, source_code, diag.clone())
             }
-            JasmError::Internal(msg) => Self::print_internal_error(msg),
+            JasmError::Internal(msg) => {
+                eprintln!("{}", Self::format_internal_error(msg));
+            }
         }
     }
 }
@@ -109,5 +122,25 @@ impl From<ParserError> for JasmError {
                 err.label(),
             )),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_internal_error() {
+        let output = JasmError::format_internal_error("unexpected state in parser");
+
+        insta::assert_snapshot!(output);
+    }
+
+    #[test]
+    fn test_parser_internal_error_converts_to_jasm_internal() {
+        let parser_err = ParserError::Internal("parser broke".to_string());
+        let jasm_err = JasmError::from(parser_err);
+
+        assert!(matches!(jasm_err, JasmError::Internal(msg) if msg == "parser broke"));
     }
 }

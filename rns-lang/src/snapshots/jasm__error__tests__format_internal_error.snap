@@ -1,0 +1,12 @@
+---
+source: jasm/src/error.rs
+expression: output
+---
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!            INTERNAL ASSEMBLER ERROR             !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+This is a bug in the jasm assembler.
+Please report it at: https://github.com/Obito-git/lagertha-vm/issues
+
+Details: unexpected state in parser
