@@ -7,6 +7,7 @@ use std::vec::IntoIter;
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(crate) enum ParserError {
     ClassDirectiveExpected(Span, JasmTokenKind),
+    EmptyFile(Span),
     Internal(String),
 }
 
@@ -16,6 +17,7 @@ impl ParserError {
             ParserError::ClassDirectiveExpected(_, token) => {
                 Some(format!("unexpected {}", token.as_string_token_type()))
             }
+            ParserError::EmptyFile(_) => Some("empty file".to_string()),
             ParserError::Internal(msg) => Some(format!("Internal parser error: {}", msg)),
         }
     }
@@ -24,6 +26,9 @@ impl ParserError {
         match self {
             ParserError::ClassDirectiveExpected(_, _) => {
                 //TODO: actually it is false. I guess the source file name or class file version could be added to the note when implemented
+                Some("A Java assembly file must start with a '.class' definition.".to_string())
+            }
+            ParserError::EmptyFile(_) => {
                 Some("A Java assembly file must start with a '.class' definition.".to_string())
             }
             ParserError::Internal(_) => None,
@@ -41,6 +46,7 @@ impl ParserError {
                 token,
                 token.as_string_token_type()
             )),
+            ParserError::EmptyFile(_) => Some("The file contains no class definition.".to_string()),
             ParserError::Internal(_) => None,
         }
     }
@@ -48,6 +54,7 @@ impl ParserError {
     fn span(&self) -> Option<&Span> {
         match self {
             ParserError::ClassDirectiveExpected(span, _) => Some(span),
+            ParserError::EmptyFile(span) => Some(span),
             ParserError::Internal(_) => None,
         }
     }
@@ -84,6 +91,9 @@ impl JasmParser {
     fn parse_class(&mut self) -> Result<JasmClass, ParserError> {
         self.skip_newlines();
         let class_token = self.next()?;
+        if matches!(class_token.kind, JasmTokenKind::Eof) {
+            return Err(ParserError::EmptyFile(class_token.span));
+        }
         if !matches!(class_token.kind, JasmTokenKind::DotClass) {
             return Err(ParserError::ClassDirectiveExpected(
                 class_token.span,

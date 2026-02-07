@@ -49,7 +49,6 @@ mod class_directive_expected {
     #[case::open_paren(JasmTokenKind::OpenParen, Span::new(0, 1))]
     #[case::close_paren(JasmTokenKind::CloseParen, Span::new(0, 1))]
     #[case::open_bracket(JasmTokenKind::OpenBracket, Span::new(0, 1))]
-    #[case::eof(JasmTokenKind::Eof, Span::new(0, 0))]
     fn test_non_class_token_returns_error(#[case] token_kind: JasmTokenKind, #[case] span: Span) {
         let tokens = vec![
             JasmToken {
@@ -61,16 +60,6 @@ mod class_directive_expected {
                 span: Span::new(100, 100),
             },
         ];
-
-        // For Eof token kind, remove the duplicate Eof at the end
-        let tokens = if matches!(token_kind, JasmTokenKind::Eof) {
-            vec![JasmToken {
-                kind: JasmTokenKind::Eof,
-                span: span.clone(),
-            }]
-        } else {
-            tokens
-        };
 
         let err = JasmParser::parse(tokens).unwrap_err();
         assert_eq!(err, ParserError::ClassDirectiveExpected(span, token_kind));
@@ -126,10 +115,18 @@ mod class_directive_expected {
         ];
 
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(
-            err,
-            ParserError::ClassDirectiveExpected(Span::new(2, 2), JasmTokenKind::Eof)
-        );
+        assert_eq!(err, ParserError::EmptyFile(Span::new(2, 2)));
+    }
+
+    #[test]
+    fn test_eof_as_first_token() {
+        let tokens = vec![JasmToken {
+            kind: JasmTokenKind::Eof,
+            span: Span::new(0, 0),
+        }];
+
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::EmptyFile(Span::new(0, 0)));
     }
 
     #[test]
@@ -227,14 +224,38 @@ mod parser_error_messages {
     }
 
     #[test]
-    fn test_eof_error_message() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 0), JasmTokenKind::Eof);
-        assert_eq!(err.message(), Some("unexpected eof".to_string()));
+    fn test_empty_file_error_message() {
+        let err = ParserError::EmptyFile(Span::new(0, 0));
+        assert_eq!(err.message(), Some("empty file".to_string()));
+    }
+
+    #[test]
+    fn test_empty_file_label() {
+        let err = ParserError::EmptyFile(Span::new(0, 0));
+        assert_eq!(
+            err.label(),
+            Some("The file contains no class definition.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_empty_file_span() {
+        let err = ParserError::EmptyFile(Span::new(5, 5));
+        assert_eq!(err.as_range(), Some(5..5));
     }
 
     #[test]
     fn test_note_is_always_present() {
         let err = ParserError::ClassDirectiveExpected(Span::new(0, 5), JasmTokenKind::DotCode);
+        assert_eq!(
+            err.note(),
+            Some("A Java assembly file must start with a '.class' definition.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_note_is_present_for_empty_file() {
+        let err = ParserError::EmptyFile(Span::new(0, 0));
         assert_eq!(
             err.note(),
             Some("A Java assembly file must start with a '.class' definition.".to_string())

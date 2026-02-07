@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+; only a comment, no class at all
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: empty file
+   ╭─[ test_data/integration/parser/outside_class_directive/eof_outside.ja:1:35 ]
+   │
+ 1 │ ; only a comment, no class at all
+   │                                   │ 
+   │                                   ╰─ The file contains no class definition.
+   │ 
+   │ Note: A Java assembly file must start with a '.class' definition.
+───╯
