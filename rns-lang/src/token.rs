@@ -64,7 +64,7 @@ impl JasmTokenKind {
             | JasmTokenKind::DotCode => "directive".to_string(),
             JasmTokenKind::Public | JasmTokenKind::Static => "keyword".to_string(),
             JasmTokenKind::Identifier(_) => "identifier".to_string(),
-            JasmTokenKind::StringLiteral(_) => "string iteral".to_string(),
+            JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
             JasmTokenKind::OpenParen | JasmTokenKind::CloseParen | JasmTokenKind::OpenBracket => {
                 "symbol".to_string()
             }

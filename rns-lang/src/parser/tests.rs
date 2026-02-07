@@ -214,7 +214,7 @@ mod parser_error_messages {
             Span::new(0, 7),
             JasmTokenKind::StringLiteral("hello".to_string()),
         );
-        assert_eq!(err.message(), Some("unexpected string iteral".to_string()));
+        assert_eq!(err.message(), Some("unexpected string literal".to_string()));
     }
 
     #[test]

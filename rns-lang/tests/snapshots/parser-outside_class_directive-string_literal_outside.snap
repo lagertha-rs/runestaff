@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: unexpected string iteral
+Error: unexpected string literal
    ╭─[ test_data/integration/parser/outside_class_directive/string_literal_outside.ja:1:1 ]
    │
  1 │ "Hello World"
    │ ──────┬──────  
-   │       ╰──────── The 'Hello World' string iteral cannot appear before a class is defined.
+   │       ╰──────── The 'Hello World' string literal cannot appear before a class is defined.
    │ 
    │ Note: A Java assembly file must start with a '.class' definition.
 ───╯
