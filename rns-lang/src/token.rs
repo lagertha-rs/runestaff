@@ -89,7 +89,7 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Static => write!(f, "static"),
             JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
             JasmTokenKind::StringLiteral(value) => {
-                write!(f, "string_literal({}", value.escape_default())
+                write!(f, "{}", value.escape_default())
             }
             JasmTokenKind::OpenParen => write!(f, "("),
             JasmTokenKind::CloseParen => write!(f, ")"),

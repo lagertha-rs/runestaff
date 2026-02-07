@@ -68,6 +68,10 @@ impl JasmParser {
         }
     }
 
+    fn peek(&mut self) -> Option<&JasmToken> {
+        self.tokens.peek()
+    }
+
     fn next(&mut self) -> Result<JasmToken, ParserError> {
         match self.tokens.next() {
             Some(token) => Ok(token),
