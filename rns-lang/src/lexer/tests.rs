@@ -1877,7 +1877,10 @@ mod error_handling {
         let result = lexer.tokenize();
 
         if let Err(ref err @ LexerError::UnexpectedChar(_, _, _)) = result {
-            assert!(err.note().contains("Unexpected character"));
+            assert!(err
+                .note()
+                .expect("Expected note for UnexpectedChar")
+                .contains("Unexpected character"));
         } else {
             panic!("Expected UnexpectedChar error");
         }

@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub(crate) struct JasmClass {
     pub name: String,
     pub super_name: String,

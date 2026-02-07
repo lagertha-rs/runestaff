@@ -4,7 +4,7 @@ use std::ops::Range;
 use std::str::{CharIndices, FromStr};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum LexerError {
+pub(crate) enum LexerError {
     UnexpectedChar(Span, char, Option<String>),
     UnknownDirective(Span, String),
     UnexpectedEof(Span),
@@ -13,17 +13,16 @@ pub enum LexerError {
 }
 
 impl LexerError {
-    pub fn note(&self) -> String {
-        match self {
-            LexerError::UnexpectedEof(_) => {
-                format!(
-                    "Expected one of the directives: {}",
-                    JasmTokenKind::list_directives()
-                )
-            }
+    pub fn note(&self) -> Option<String> {
+        let note = match self {
+            LexerError::UnexpectedEof(_) => format!(
+                "Expected one of the directives: {}",
+                JasmTokenKind::list_directives()
+            ),
             LexerError::UnexpectedChar(_, _, context) => context
                 .clone()
                 .unwrap_or_else(|| "Unexpected character".to_string()),
+
             LexerError::UnterminatedString(_) => {
                 "String literal is not terminated before the end of the line or file.".to_string()
             }
@@ -31,15 +30,16 @@ impl LexerError {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
             }
             LexerError::InvalidNumber(_, _) => "Expected a valid integer number.".to_string(),
-        }
+        };
+        Some(note)
     }
 
-    pub fn as_range(&self) -> Range<usize> {
-        self.span().as_range()
+    pub fn as_range(&self) -> Option<Range<usize>> {
+        self.span().map(|s| s.as_range())
     }
 
-    pub fn label(&self) -> String {
-        match self {
+    pub fn label(&self) -> Option<String> {
+        let res = match self {
             LexerError::UnexpectedChar(_, c, _) => {
                 format!("Unexpected character '{}'", c.escape_default())
             }
@@ -48,19 +48,18 @@ impl LexerError {
             LexerError::UnterminatedString(_) => {
                 "String started here is not terminated".to_string()
             }
-            LexerError::InvalidNumber(_, value) => {
-                format!("'{}' is not a valid integer", value)
-            }
-        }
+            LexerError::InvalidNumber(_, value) => format!("'{}' is not a valid integer", value),
+        };
+        Some(res)
     }
 
-    fn span(&self) -> &Span {
+    fn span(&self) -> Option<&Span> {
         match self {
             LexerError::UnexpectedChar(span, _, _)
             | LexerError::UnknownDirective(span, _)
             | LexerError::UnexpectedEof(span)
             | LexerError::UnterminatedString(span)
-            | LexerError::InvalidNumber(span, _) => span,
+            | LexerError::InvalidNumber(span, _) => Some(span),
         }
     }
 }
@@ -71,6 +70,7 @@ pub struct JasmLexer<'a> {
 }
 
 impl<'a> JasmLexer<'a> {
+    // TODO: do I really need an instance?
     pub fn new(source: &'a str) -> Self {
         Self {
             data: source.char_indices().peekable(),
