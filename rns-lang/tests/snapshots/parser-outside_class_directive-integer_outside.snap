@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+42 ; the answer
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected integer
+   ╭─[ test_data/integration/parser/outside_class_directive/integer_outside.ja:1:1 ]
+   │
+ 1 │ 42 ; the answer
+   │ ─┬  
+   │  ╰── The '42' integer cannot appear before a class is defined.
+   │ 
+   │ Note: A Java assembly file must start with a '.class' definition.
+───╯

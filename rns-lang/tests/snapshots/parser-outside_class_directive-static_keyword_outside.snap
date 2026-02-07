@@ -1,0 +1,22 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+; some comment
+; another comment
+static
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected keyword
+   ╭─[ test_data/integration/parser/outside_class_directive/static_keyword_outside.ja:3:1 ]
+   │
+ 3 │ static
+   │ ───┬──  
+   │    ╰──── The 'static' keyword cannot appear before a class is defined.
+   │ 
+   │ Note: A Java assembly file must start with a '.class' definition.
+───╯

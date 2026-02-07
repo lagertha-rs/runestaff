@@ -1,6 +1,7 @@
 use itertools::Itertools;
 use std::ops::Range;
 
+//TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum JasmTokenKind {
     DotClass,
@@ -53,6 +54,25 @@ impl JasmTokenKind {
     pub fn list_directives() -> String {
         Self::DIRECTIVES.iter().map(ToString::to_string).join(", ")
     }
+
+    pub fn as_string_token_type(&self) -> String {
+        match self {
+            JasmTokenKind::DotClass
+            | JasmTokenKind::DotSuper
+            | JasmTokenKind::DotMethod
+            | JasmTokenKind::DotEnd
+            | JasmTokenKind::DotCode => "directive".to_string(),
+            JasmTokenKind::Public | JasmTokenKind::Static => "keyword".to_string(),
+            JasmTokenKind::Identifier(_) => "identifier".to_string(),
+            JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
+            JasmTokenKind::OpenParen | JasmTokenKind::CloseParen | JasmTokenKind::OpenBracket => {
+                "symbol".to_string()
+            }
+            JasmTokenKind::Integer(_) => "integer".to_string(),
+            JasmTokenKind::Newline => "newline".to_string(),
+            JasmTokenKind::Eof => "eof".to_string(),
+        }
+    }
 }
 
 impl std::fmt::Display for JasmTokenKind {
@@ -67,12 +87,14 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Eof => write!(f, "eof"),
             JasmTokenKind::Public => write!(f, "public"),
             JasmTokenKind::Static => write!(f, "static"),
-            JasmTokenKind::Identifier(name) => write!(f, "identifier({})", name),
-            JasmTokenKind::StringLiteral(value) => write!(f, "string_literal(\"{}\")", value),
+            JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
+            JasmTokenKind::StringLiteral(value) => {
+                write!(f, "{}", value.escape_default())
+            }
             JasmTokenKind::OpenParen => write!(f, "("),
             JasmTokenKind::CloseParen => write!(f, ")"),
             JasmTokenKind::OpenBracket => write!(f, "["),
-            JasmTokenKind::Integer(value) => write!(f, "integer({})", value),
+            JasmTokenKind::Integer(value) => write!(f, "{}", value),
         }
     }
 }

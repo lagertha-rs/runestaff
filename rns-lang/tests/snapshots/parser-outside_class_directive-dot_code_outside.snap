@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code
+.class public HelloWorld
+
+.end method
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected directive
+   ╭─[ test_data/integration/parser/outside_class_directive/dot_code_outside.ja:1:1 ]
+   │
+ 1 │ .code
+   │ ──┬──  
+   │   ╰──── The '.code' directive cannot appear before a class is defined.
+   │ 
+   │ Note: A Java assembly file must start with a '.class' definition.
+───╯

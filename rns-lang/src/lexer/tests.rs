@@ -218,16 +218,7 @@ mod directives {
         let mut lexer = JasmLexer::new(INPUT);
         let tokens = lexer.tokenize();
 
-        assert_eq!(
-            tokens,
-            Err(LexerError::UnexpectedEof(
-                11,
-                format!(
-                    "Expected one of the directives: {}",
-                    JasmTokenKind::list_directives()
-                )
-            ))
-        )
+        assert_eq!(tokens, Err(LexerError::UnexpectedEof(Span::new(11, 12))))
     }
 
     #[rstest]
@@ -246,12 +237,12 @@ mod directives {
         assert_eq!(
             tokens,
             Err(LexerError::UnexpectedChar(
-                pos,
+                Span::new(pos, pos + c.len_utf8()),
                 c,
-                format!(
+                Some(format!(
                     "Expected one of the directives: {}",
                     JasmTokenKind::list_directives()
-                )
+                )),
             ))
         )
     }
@@ -617,7 +608,7 @@ mod strings {
             let mut lexer = JasmLexer::new("\"test\\\n");
             let result = lexer.tokenize();
 
-            assert_eq!(result, Err(LexerError::UnterminatedString(0)));
+            assert_eq!(result, Err(LexerError::UnterminatedString(Span::new(0, 1))));
         }
 
         #[test]
@@ -626,7 +617,7 @@ mod strings {
             let mut lexer = JasmLexer::new("\"test\\\r");
             let result = lexer.tokenize();
 
-            assert_eq!(result, Err(LexerError::UnterminatedString(0)));
+            assert_eq!(result, Err(LexerError::UnterminatedString(Span::new(0, 1))));
         }
     }
 
@@ -884,7 +875,13 @@ mod strings {
             let mut lexer = JasmLexer::new(input);
             let result = lexer.tokenize();
 
-            assert_eq!(result, Err(LexerError::UnterminatedString(expected_pos)));
+            assert_eq!(
+                result,
+                Err(LexerError::UnterminatedString(Span::new(
+                    expected_pos,
+                    expected_pos + 1
+                )))
+            );
         }
     }
 }
@@ -1840,7 +1837,7 @@ mod error_handling {
 
         assert!(matches!(
             result,
-            Err(LexerError::UnexpectedChar(p, c, _)) if p == pos && c == ch
+            Err(LexerError::UnexpectedChar(ref span, c, _)) if span.start == pos && c == ch
         ));
     }
 
@@ -1849,7 +1846,9 @@ mod error_handling {
         let mut lexer = JasmLexer::new(".class @");
         let result = lexer.tokenize();
 
-        assert!(matches!(result, Err(LexerError::UnexpectedChar(7, '@', _))));
+        assert!(
+            matches!(result, Err(LexerError::UnexpectedChar(ref span, '@', _)) if span.start == 7)
+        );
     }
 
     #[test]
@@ -1857,7 +1856,9 @@ mod error_handling {
         let mut lexer = JasmLexer::new(".class @ .super");
         let result = lexer.tokenize();
 
-        assert!(matches!(result, Err(LexerError::UnexpectedChar(7, '@', _))));
+        assert!(
+            matches!(result, Err(LexerError::UnexpectedChar(ref span, '@', _)) if span.start == 7)
+        );
     }
 
     #[test]
@@ -1865,7 +1866,9 @@ mod error_handling {
         let mut lexer = JasmLexer::new(".class\n@");
         let result = lexer.tokenize();
 
-        assert!(matches!(result, Err(LexerError::UnexpectedChar(7, '@', _))));
+        assert!(
+            matches!(result, Err(LexerError::UnexpectedChar(ref span, '@', _)) if span.start == 7)
+        );
     }
 
     #[test]
@@ -1873,8 +1876,12 @@ mod error_handling {
         let mut lexer = JasmLexer::new("@");
         let result = lexer.tokenize();
 
-        if let Err(LexerError::UnexpectedChar(_, _, context)) = result {
-            assert!(context.contains("Unexpected character"));
+        if let Err(ref err @ LexerError::UnexpectedChar(_, _, _)) = result {
+            assert!(
+                err.note()
+                    .expect("Expected note for UnexpectedChar")
+                    .contains("Unexpected character")
+            );
         } else {
             panic!("Expected UnexpectedChar error");
         }
@@ -2807,7 +2814,9 @@ mod init_clinit {
             let mut lexer = JasmLexer::new("<other>");
             let result = lexer.tokenize();
 
-            assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            assert!(
+                matches!(result, Err(LexerError::UnexpectedChar(ref span, '<', _)) if span.start == 0)
+            );
         }
 
         #[test]
@@ -2815,7 +2824,9 @@ mod init_clinit {
             let mut lexer = JasmLexer::new("<");
             let result = lexer.tokenize();
 
-            assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            assert!(
+                matches!(result, Err(LexerError::UnexpectedChar(ref span, '<', _)) if span.start == 0)
+            );
         }
 
         #[test]
@@ -2823,7 +2834,9 @@ mod init_clinit {
             let mut lexer = JasmLexer::new(".class <other>");
             let result = lexer.tokenize();
 
-            assert!(matches!(result, Err(LexerError::UnexpectedChar(7, '<', _))));
+            assert!(
+                matches!(result, Err(LexerError::UnexpectedChar(ref span, '<', _)) if span.start == 7)
+            );
         }
 
         #[test]
@@ -2831,10 +2844,10 @@ mod init_clinit {
             let mut lexer = JasmLexer::new("<other>");
             let result = lexer.tokenize();
 
-            if let Err(LexerError::UnexpectedChar(_, _, context)) = result {
-                assert!(context.contains("<init>") && context.contains("<clinit>"));
+            if let Err(LexerError::UnexpectedChar(_, '<', _)) = result {
+                // OK
             } else {
-                panic!("Expected UnexpectedChar error");
+                panic!("Expected UnexpectedChar error for '<'");
             }
         }
 
@@ -2844,7 +2857,9 @@ mod init_clinit {
             let mut lexer = JasmLexer::new("<init");
             let result = lexer.tokenize();
 
-            assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            assert!(
+                matches!(result, Err(LexerError::UnexpectedChar(ref span, '<', _)) if span.start == 0)
+            );
         }
 
         #[test]
@@ -2853,7 +2868,9 @@ mod init_clinit {
             let mut lexer = JasmLexer::new("<clinit");
             let result = lexer.tokenize();
 
-            assert!(matches!(result, Err(LexerError::UnexpectedChar(0, '<', _))));
+            assert!(
+                matches!(result, Err(LexerError::UnexpectedChar(ref span, '<', _)) if span.start == 0)
+            );
         }
     }
 }

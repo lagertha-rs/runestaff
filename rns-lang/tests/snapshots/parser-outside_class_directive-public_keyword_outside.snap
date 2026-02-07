@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+   public
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected keyword
+   ╭─[ test_data/integration/parser/outside_class_directive/public_keyword_outside.ja:1:4 ]
+   │
+ 1 │    public
+   │    ───┬──  
+   │       ╰──── The 'public' keyword cannot appear before a class is defined.
+   │ 
+   │ Note: A Java assembly file must start with a '.class' definition.
+───╯

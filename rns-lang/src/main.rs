@@ -1,23 +1,11 @@
-use crate::lexer::{JasmLexer, LexerError};
-use ariadne::{Color, Label, Report, ReportKind, Source};
+use crate::error::JasmError;
+use crate::lexer::JasmLexer;
 
+mod ast;
+mod error;
 mod lexer;
+mod parser;
 mod token;
-
-fn print_comprehensive_error(filename: &str, source_code: &str, err: &LexerError) {
-    let range = err.as_range();
-    Report::build(ReportKind::Error, (filename, range.clone()))
-        .with_message("lexing error") // TODO: customize? I feel like label is already descriptive enough
-        .with_note(err.note())
-        .with_label(
-            Label::new((filename, range))
-                .with_message(err.label())
-                .with_color(Color::Red),
-        )
-        .finish()
-        .eprint((filename, Source::from(source_code)))
-        .unwrap();
-}
 
 fn get_filename_and_contents_from_arg() -> (String, String) {
     let args: Vec<String> = std::env::args().collect();
@@ -37,13 +25,19 @@ fn main() {
     let (filename, contents) = get_filename_and_contents_from_arg();
     let mut lexer = JasmLexer::new(&contents);
 
-    let tokens = match lexer.tokenize() {
+    let tokens = match lexer.tokenize().map_err(JasmError::from) {
         Ok(tokens) => tokens,
         Err(err) => {
-            print_comprehensive_error(&filename, &contents, &err);
+            err.print(&filename, &contents);
             std::process::exit(1);
         }
     };
 
-    tokens.iter().for_each(|v| println!("{v:?}"));
+    let ast = match parser::JasmParser::parse(tokens).map_err(JasmError::from) {
+        Ok(ast) => ast,
+        Err(err) => {
+            err.print(&filename, &contents);
+            std::process::exit(1);
+        }
+    };
 }
