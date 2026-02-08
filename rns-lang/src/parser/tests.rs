@@ -177,6 +177,343 @@ mod class_directive_expected {
     }
 }
 
+mod class_name_expected {
+    use super::*;
+    use crate::parser::ParserError;
+    use rstest::rstest;
+
+    /// Helper: builds a token stream of [.class, ...access_flags, name_token, Eof]
+    fn make_tokens_with_flags_and_name(
+        access_flags: &[JasmTokenKind],
+        name_token: JasmToken,
+    ) -> Vec<JasmToken> {
+        // ".class" at 0..6
+        let mut tokens = vec![JasmToken {
+            kind: JasmTokenKind::DotClass,
+            span: Span::new(0, 6),
+        }];
+        // access flags start after ".class " (pos 7)
+        let mut pos = 7;
+        for flag in access_flags {
+            let len = match flag {
+                JasmTokenKind::Public => 6,
+                JasmTokenKind::Static => 6,
+                _ => panic!("unexpected access flag"),
+            };
+            tokens.push(JasmToken {
+                kind: flag.clone(),
+                span: Span::new(pos, pos + len),
+            });
+            pos += len + 1; // +1 for space
+        }
+        tokens.push(name_token);
+        tokens.push(JasmToken {
+            kind: JasmTokenKind::Eof,
+            span: Span::new(200, 200),
+        });
+        tokens
+    }
+
+    #[rstest]
+    #[case::dot_class(JasmTokenKind::DotClass, Span::new(14, 20))]
+    #[case::dot_super(JasmTokenKind::DotSuper, Span::new(14, 20))]
+    #[case::dot_method(JasmTokenKind::DotMethod, Span::new(14, 21))]
+    #[case::dot_code(JasmTokenKind::DotCode, Span::new(14, 19))]
+    #[case::dot_end(JasmTokenKind::DotEnd, Span::new(14, 18))]
+    #[case::integer(JasmTokenKind::Integer(42), Span::new(14, 16))]
+    #[case::open_paren(JasmTokenKind::OpenParen, Span::new(14, 15))]
+    #[case::close_paren(JasmTokenKind::CloseParen, Span::new(14, 15))]
+    #[case::open_bracket(JasmTokenKind::OpenBracket, Span::new(14, 15))]
+    fn test_non_identifier_after_class_with_flags(
+        #[case] token_kind: JasmTokenKind,
+        #[case] span: Span,
+    ) {
+        let name_token = JasmToken {
+            kind: token_kind,
+            span,
+        };
+        // .class public <token>
+        let tokens = make_tokens_with_flags_and_name(&[JasmTokenKind::Public], name_token);
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(span));
+    }
+
+    #[test]
+    fn test_eof_after_class_with_flags() {
+        // .class public static<EOF>
+        // ".class" 0..6, "public" 7..13, "static" 14..20
+        // access_flag_end = 20 (last_span.end after consuming "static")
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Public,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Static,
+                span: Span::new(14, 20),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(20, 20),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(Span::new(20, 20)));
+    }
+
+    #[test]
+    fn test_newline_after_class_with_flags() {
+        // .class public\n
+        // ".class" 0..6, "public" 7..13, "\n" 13..14
+        // access_flag_end = 13 (last_span.end after consuming "public"; no static)
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Public,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Newline,
+                span: Span::new(13, 14),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(14, 14),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(Span::new(13, 13)));
+    }
+
+    #[test]
+    fn test_eof_after_class_no_flags() {
+        // .class<EOF>
+        // ".class" 0..6
+        // access_flag_end = 6 (last_span.end after consuming ".class", no flags consumed)
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(6, 6),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(Span::new(6, 6)));
+    }
+
+    #[test]
+    fn test_newline_after_class_no_flags() {
+        // .class\n
+        // ".class" 0..6, "\n" 6..7
+        // access_flag_end = 6 (no flags consumed)
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Newline,
+                span: Span::new(6, 7),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(7, 7),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(Span::new(6, 6)));
+    }
+
+    #[test]
+    fn test_directive_after_class_no_flags() {
+        // .class .super
+        // ".class" 0..6, ".super" 7..13
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::DotSuper,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(13, 13),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(Span::new(7, 13)));
+    }
+
+    #[test]
+    fn test_integer_after_class_no_flags() {
+        // .class 42
+        // ".class" 0..6, "42" 7..9
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Integer(42),
+                span: Span::new(7, 9),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(9, 9),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::ClassNameExpected(Span::new(7, 9)));
+    }
+}
+
+mod string_literal_as_class_name {
+    use super::*;
+    use crate::parser::ParserError;
+
+    #[test]
+    fn test_string_literal_after_class_with_flags() {
+        // .class public "HelloWorld"
+        // ".class" 0..6, "public" 7..13, "\"HelloWorld\"" 14..26
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Public,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::StringLiteral("HelloWorld".to_string()),
+                span: Span::new(14, 26),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(26, 26),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::StringLiteralAsClassName(Span::new(14, 26))
+        );
+    }
+
+    #[test]
+    fn test_string_literal_after_class_no_flags() {
+        // .class "HelloWorld"
+        // ".class" 0..6, "\"HelloWorld\"" 7..19
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::StringLiteral("HelloWorld".to_string()),
+                span: Span::new(7, 19),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(19, 19),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::StringLiteralAsClassName(Span::new(7, 19)));
+    }
+
+    #[test]
+    fn test_string_literal_after_class_with_multiple_flags() {
+        // .class public static "HelloWorld"
+        // ".class" 0..6, "public" 7..13, "static" 14..20, "\"HelloWorld\"" 21..33
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Public,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Static,
+                span: Span::new(14, 20),
+            },
+            JasmToken {
+                kind: JasmTokenKind::StringLiteral("HelloWorld".to_string()),
+                span: Span::new(21, 33),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(33, 33),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::StringLiteralAsClassName(Span::new(21, 33))
+        );
+    }
+
+    #[test]
+    fn test_string_literal_span_preserves_offset() {
+        // String literal at an arbitrary offset
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(50, 56),
+            },
+            JasmToken {
+                kind: JasmTokenKind::StringLiteral("com/myapp/Main".to_string()),
+                span: Span::new(57, 73),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(73, 73),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::StringLiteralAsClassName(Span::new(57, 73))
+        );
+    }
+
+    #[test]
+    fn test_empty_string_literal_as_class_name() {
+        // .class ""
+        // ".class" 0..6, "\"\"" 7..9
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::StringLiteral("".to_string()),
+                span: Span::new(7, 9),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(9, 9),
+            },
+        ];
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(err, ParserError::StringLiteralAsClassName(Span::new(7, 9)));
+    }
+}
+
 mod parser_error_messages {
     use super::*;
     use crate::parser::ParserError;
@@ -254,12 +591,9 @@ mod parser_error_messages {
     }
 
     #[test]
-    fn test_note_is_present_for_empty_file() {
+    fn test_note_is_not_present_for_empty_file() {
         let err = ParserError::EmptyFile(Span::new(0, 0));
-        assert_eq!(
-            err.note(),
-            Some("A Java assembly file must start with a '.class' definition.".to_string())
-        );
+        assert!(err.note().is_none());
     }
 
     #[test]
@@ -332,5 +666,77 @@ mod parser_error_messages {
     fn test_internal_error_has_no_range() {
         let err = ParserError::Internal("bug".to_string());
         assert_eq!(err.as_range(), None);
+    }
+
+    #[test]
+    fn test_class_name_expected_message() {
+        let err = ParserError::ClassNameExpected(Span::new(7, 13));
+        assert_eq!(
+            err.message(),
+            Some("incomplete class definition".to_string())
+        );
+    }
+
+    #[test]
+    fn test_class_name_expected_note() {
+        let err = ParserError::ClassNameExpected(Span::new(7, 13));
+        assert_eq!(
+            err.note(),
+            Some("The .class directive requires a name:\n.class [access_flags] <name>".to_string())
+        );
+    }
+
+    #[test]
+    fn test_class_name_expected_label() {
+        let err = ParserError::ClassNameExpected(Span::new(7, 13));
+        assert_eq!(
+            err.label(),
+            Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
+        );
+    }
+
+    #[test]
+    fn test_class_name_expected_span() {
+        let err = ParserError::ClassNameExpected(Span::new(14, 20));
+        assert_eq!(err.as_range(), Some(14..20));
+    }
+
+    #[test]
+    fn test_class_name_expected_zero_width_span() {
+        let err = ParserError::ClassNameExpected(Span::new(6, 6));
+        assert_eq!(err.as_range(), Some(6..6));
+    }
+
+    #[test]
+    fn test_string_literal_as_class_name_message() {
+        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        assert_eq!(
+            err.message(),
+            Some("incorrect class definition".to_string())
+        );
+    }
+
+    #[test]
+    fn test_string_literal_as_class_name_note() {
+        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        assert_eq!(
+            err.note(),
+            Some("Consider removing the quotes around the value".to_string())
+        );
+    }
+
+    #[test]
+    fn test_string_literal_as_class_name_label() {
+        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        assert_eq!(
+            err.label(),
+            Some("Class names cannot be string literals. They should be identifiers (e.g., 'com/myapp/Main').".to_string())
+        );
+    }
+
+    #[test]
+    fn test_string_literal_as_class_name_span() {
+        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        assert_eq!(err.as_range(), Some(14..21));
     }
 }

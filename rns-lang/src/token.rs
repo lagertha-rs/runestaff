@@ -99,7 +99,7 @@ impl std::fmt::Display for JasmTokenKind {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct Span {
     pub start: usize,
     pub end: usize, // is exclusive
