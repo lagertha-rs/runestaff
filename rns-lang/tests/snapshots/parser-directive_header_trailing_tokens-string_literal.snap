@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld "extra string"
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: trailing characters after 'HelloWorld'
+   ╭─[ test_data/integration/parser/directive_header_trailing_tokens/string_literal.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld "extra string"
+   │                          ───────┬──────  
+   │                                 ╰──────── Class headers must end after the name.
+   │ 
+   │ Note: The class definition should end after the class name 'HelloWorld'.
+   │       Unexpected tokens after class name. Consider starting a new line for the next directive.
+───╯

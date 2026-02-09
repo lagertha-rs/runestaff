@@ -379,6 +379,263 @@ mod class_name_expected {
     }
 }
 
+mod class_directive_trailing_tokens {
+    use super::*;
+    use crate::parser::ParserError;
+    use rstest::rstest;
+
+    /// Helper: builds [.class, ...access_flags, Identifier(class_name), ...trailing, Newline, Eof]
+    fn make_tokens_with_trailing(
+        access_flags: &[JasmTokenKind],
+        class_name: &str,
+        trailing: Vec<JasmToken>,
+    ) -> Vec<JasmToken> {
+        // ".class" at 0..6
+        let mut tokens = vec![JasmToken {
+            kind: JasmTokenKind::DotClass,
+            span: Span::new(0, 6),
+        }];
+        let mut pos = 7;
+        for flag in access_flags {
+            let len = match flag {
+                JasmTokenKind::Public => 6,
+                JasmTokenKind::Static => 6,
+                _ => panic!("unexpected access flag"),
+            };
+            tokens.push(JasmToken {
+                kind: flag.clone(),
+                span: Span::new(pos, pos + len),
+            });
+            pos += len + 1;
+        }
+        // class name identifier
+        let name_len = class_name.len();
+        tokens.push(JasmToken {
+            kind: JasmTokenKind::Identifier(class_name.to_string()),
+            span: Span::new(pos, pos + name_len),
+        });
+        pos += name_len + 1;
+        // trailing tokens (use the spans from the provided tokens, but shift them)
+        for t in &trailing {
+            tokens.push(t.clone());
+        }
+        // newline + eof at the end
+        tokens.push(JasmToken {
+            kind: JasmTokenKind::Newline,
+            span: Span::new(200, 201),
+        });
+        tokens.push(JasmToken {
+            kind: JasmTokenKind::Eof,
+            span: Span::new(201, 201),
+        });
+        tokens
+    }
+
+    #[rstest]
+    #[case::dot_class(JasmTokenKind::DotClass, Span::new(24, 30))]
+    #[case::dot_super(JasmTokenKind::DotSuper, Span::new(24, 30))]
+    #[case::dot_method(JasmTokenKind::DotMethod, Span::new(24, 31))]
+    #[case::dot_code(JasmTokenKind::DotCode, Span::new(24, 29))]
+    #[case::dot_end(JasmTokenKind::DotEnd, Span::new(24, 28))]
+    #[case::public(JasmTokenKind::Public, Span::new(24, 30))]
+    #[case::static_kw(JasmTokenKind::Static, Span::new(24, 30))]
+    #[case::identifier(JasmTokenKind::Identifier("extra".to_string()), Span::new(24, 29))]
+    #[case::integer(JasmTokenKind::Integer(42), Span::new(24, 26))]
+    #[case::string_literal(JasmTokenKind::StringLiteral("hello".to_string()), Span::new(24, 31))]
+    #[case::open_paren(JasmTokenKind::OpenParen, Span::new(24, 25))]
+    #[case::close_paren(JasmTokenKind::CloseParen, Span::new(24, 25))]
+    #[case::open_bracket(JasmTokenKind::OpenBracket, Span::new(24, 25))]
+    fn test_single_trailing_token(#[case] token_kind: JasmTokenKind, #[case] span: Span) {
+        // .class public HelloWorld <trailing_token>\n<EOF>
+        let trailing_token = JasmToken {
+            kind: token_kind,
+            span,
+        };
+        let trailing = vec![trailing_token.clone()];
+        let tokens =
+            make_tokens_with_trailing(&[JasmTokenKind::Public], "HelloWorld", trailing.clone());
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string())
+        );
+    }
+
+    #[test]
+    fn test_trailing_without_access_flags() {
+        // .class HelloWorld .super
+        // ".class" 0..6, "HelloWorld" 7..17, ".super" 18..24
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(18, 24),
+        }];
+        let tokens = make_tokens_with_trailing(&[], "HelloWorld", trailing.clone());
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string())
+        );
+    }
+
+    #[test]
+    fn test_multiple_trailing_tokens() {
+        // .class public HelloWorld extra tokens here\n<EOF>
+        let trailing = vec![
+            JasmToken {
+                kind: JasmTokenKind::Identifier("extra".to_string()),
+                span: Span::new(24, 29),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Identifier("tokens".to_string()),
+                span: Span::new(30, 36),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Identifier("here".to_string()),
+                span: Span::new(37, 41),
+            },
+        ];
+        let tokens =
+            make_tokens_with_trailing(&[JasmTokenKind::Public], "HelloWorld", trailing.clone());
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string())
+        );
+    }
+
+    #[test]
+    fn test_trailing_span_covers_all_tokens() {
+        // Span should go from first trailing token start to last trailing token end
+        let trailing = vec![
+            JasmToken {
+                kind: JasmTokenKind::Identifier("extra".to_string()),
+                span: Span::new(24, 29),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Integer(42),
+                span: Span::new(30, 32),
+            },
+        ];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "Test".to_string());
+        assert_eq!(err.as_range(), Some(24..32));
+    }
+
+    #[test]
+    fn test_trailing_single_token_span() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(18, 24),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "Test".to_string());
+        assert_eq!(err.as_range(), Some(18..24));
+    }
+
+    #[test]
+    fn test_no_trailing_tokens_is_ok() {
+        // .class public HelloWorld\n<EOF>
+        // No trailing tokens → no ClassDirectiveTrailingTokens error
+        // (parser continues past trailing check; may panic on todo!() further down)
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Public,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Identifier("HelloWorld".to_string()),
+                span: Span::new(14, 24),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Newline,
+                span: Span::new(24, 25),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(25, 25),
+            },
+        ];
+        let result = std::panic::catch_unwind(|| JasmParser::parse(tokens));
+        match result {
+            Ok(Err(ParserError::ClassDirectiveTrailingTokens(..))) => {
+                panic!("Should not produce ClassDirectiveTrailingTokens when no trailing tokens")
+            }
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn test_eof_immediately_after_class_name_is_ok() {
+        // .class public HelloWorld<EOF>
+        // No newline before EOF → no trailing tokens
+        let tokens = vec![
+            JasmToken {
+                kind: JasmTokenKind::DotClass,
+                span: Span::new(0, 6),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Public,
+                span: Span::new(7, 13),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Identifier("HelloWorld".to_string()),
+                span: Span::new(14, 24),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Eof,
+                span: Span::new(24, 24),
+            },
+        ];
+        let result = std::panic::catch_unwind(|| JasmParser::parse(tokens));
+        match result {
+            Ok(Err(ParserError::ClassDirectiveTrailingTokens(..))) => {
+                panic!(
+                    "Should not produce ClassDirectiveTrailingTokens when EOF follows class name"
+                )
+            }
+            _ => {}
+        }
+    }
+
+    #[test]
+    fn test_trailing_with_multiple_flags() {
+        // .class public static HelloWorld .super\n<EOF>
+        // ".class" 0..6, "public" 7..13, "static" 14..20, "HelloWorld" 21..31, ".super" 32..38
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(32, 38),
+        }];
+        let tokens = make_tokens_with_trailing(
+            &[JasmTokenKind::Public, JasmTokenKind::Static],
+            "HelloWorld",
+            trailing.clone(),
+        );
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string())
+        );
+    }
+
+    #[test]
+    fn test_class_name_preserved_in_error() {
+        // Verify the class name string is correctly captured
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::Integer(99),
+            span: Span::new(30, 32),
+        }];
+        let tokens =
+            make_tokens_with_trailing(&[JasmTokenKind::Public], "com/myapp/Main", trailing.clone());
+        let err = JasmParser::parse(tokens).unwrap_err();
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveTrailingTokens(trailing, "com/myapp/Main".to_string())
+        );
+    }
+}
+
 mod string_literal_as_class_name {
     use super::*;
     use crate::parser::ParserError;
@@ -738,5 +995,156 @@ mod parser_error_messages {
     fn test_string_literal_as_class_name_span() {
         let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
         assert_eq!(err.as_range(), Some(14..21));
+    }
+
+    #[test]
+    fn test_trailing_tokens_message() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(18, 24),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.message(),
+            Some("trailing characters after 'HelloWorld'".to_string())
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_label() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(18, 24),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.label(),
+            Some("Class headers must end after the name.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_note_dot_super() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(18, 24),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.note(),
+            Some(
+                "The class definition should end after the class name 'HelloWorld'.\nConsider starting a new line for the '.super' directive."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_note_dot_method() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotMethod,
+            span: Span::new(18, 25),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.note(),
+            Some(
+                "The class definition should end after the class name 'HelloWorld'.\nConsider starting a new line for the '.method' directive."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_note_open_paren() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::OpenParen,
+            span: Span::new(18, 19),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.note(),
+            Some(
+                "The class definition should end after the class name 'HelloWorld'.\nIf you're trying to define a method, use the '.method' directive instead."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_note_public() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::Public,
+            span: Span::new(18, 24),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.note(),
+            Some(
+                "The class definition should end after the class name 'HelloWorld'.\nAccess flags must appear before the class name:\n.class [access_flags] <name>"
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_note_static() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::Static,
+            span: Span::new(18, 24),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.note(),
+            Some(
+                "The class definition should end after the class name 'HelloWorld'.\nAccess flags must appear before the class name:\n.class [access_flags] <name>"
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_note_generic_token() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::Integer(42),
+            span: Span::new(18, 20),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(
+            err.note(),
+            Some(
+                "The class definition should end after the class name 'HelloWorld'.\nUnexpected tokens after class name. Consider starting a new line for the next directive."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_trailing_tokens_span() {
+        let trailing = vec![
+            JasmToken {
+                kind: JasmTokenKind::Identifier("extra".to_string()),
+                span: Span::new(24, 29),
+            },
+            JasmToken {
+                kind: JasmTokenKind::Integer(42),
+                span: Span::new(30, 32),
+            },
+        ];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
+        assert_eq!(err.as_range(), Some(24..32));
+    }
+
+    #[test]
+    fn test_trailing_tokens_message_with_path_class_name() {
+        let trailing = vec![JasmToken {
+            kind: JasmTokenKind::DotSuper,
+            span: Span::new(30, 36),
+        }];
+        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "com/myapp/Main".to_string());
+        assert_eq!(
+            err.message(),
+            Some("trailing characters after 'com/myapp/Main'".to_string())
+        );
     }
 }
