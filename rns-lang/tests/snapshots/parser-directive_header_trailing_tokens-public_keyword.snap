@@ -1,0 +1,22 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class HelloWorld public
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: trailing characters after 'HelloWorld'
+   ╭─[ test_data/integration/parser/directive_header_trailing_tokens/public_keyword.ja:1:19 ]
+   │
+ 1 │ .class HelloWorld public
+   │                   ───┬──  
+   │                      ╰──── Class headers must end after the name.
+   │ 
+   │ Note: The class definition should end after the class name 'HelloWorld'.
+   │       Access flags must appear before the class name:
+   │       .class [access_flags] <name>
+───╯

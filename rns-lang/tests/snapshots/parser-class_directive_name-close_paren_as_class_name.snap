@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class static )
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: incomplete class definition
+   ╭─[ test_data/integration/parser/class_directive_name/close_paren_as_class_name.ja:1:15 ]
+   │
+ 1 │ .class static )
+   │               ┬  
+   │               ╰── Expected a class identifier (e.g., 'com/myapp/Main')
+   │ 
+   │ Note: The .class directive requires a name:
+   │       .class [access_flags] <name>
+───╯

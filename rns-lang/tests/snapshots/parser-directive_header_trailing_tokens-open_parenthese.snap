@@ -1,0 +1,22 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld ( ; should be here
+.super java/lang/Object
+
+.end method
+----- STDOUT -----
+
+----- STDERR -----
+Error: trailing characters after 'HelloWorld'
+   ╭─[ test_data/integration/parser/directive_header_trailing_tokens/open_parenthese.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld ( ; should be here
+   │                          ┬  
+   │                          ╰── Class headers must end after the name.
+   │ 
+   │ Note: The class definition should end after the class name 'HelloWorld'.
+   │       If you're trying to define a method, use the '.method' directive instead.
+───╯

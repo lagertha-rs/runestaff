@@ -1,0 +1,22 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+   .class    HelloWorld    .method public <init>()V .end method
+.super java/lang/Object
+
+.end method
+----- STDOUT -----
+
+----- STDERR -----
+Error: trailing characters after 'HelloWorld'
+   ╭─[ test_data/integration/parser/directive_header_trailing_tokens/dot_method.ja:1:28 ]
+   │
+ 1 │    .class    HelloWorld    .method public <init>()V .end method
+   │                            ──────────────────┬─────────────────  
+   │                                              ╰─────────────────── Class headers must end after the name.
+   │ 
+   │ Note: The class definition should end after the class name 'HelloWorld'.
+   │       Consider starting a new line for the '.method' directive.
+───╯

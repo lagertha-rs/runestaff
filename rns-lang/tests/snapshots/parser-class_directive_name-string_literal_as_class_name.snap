@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class  "HelloWorld"
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: incomplete class definition
+   ╭─[ test_data/integration/parser/class_directive_name/string_literal_as_class_name.ja:1:9 ]
+   │
+ 1 │ .class  "HelloWorld"
+   │         ──────┬─────  
+   │               ╰─────── Expected a class identifier (e.g., 'com/myapp/Main')
+   │ 
+   │ Note: Consider removing the quotes around the class name
+───╯
