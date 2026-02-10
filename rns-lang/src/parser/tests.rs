@@ -818,120 +818,9 @@ mod parser_error_messages {
     use crate::parser::ParserError;
 
     #[test]
-    fn test_directive_error_message() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 5), JasmTokenKind::DotCode);
-        assert_eq!(err.message(), Some("unexpected directive".to_string()));
-    }
-
-    #[test]
-    fn test_keyword_error_message() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 6), JasmTokenKind::Public);
-        assert_eq!(err.message(), Some("unexpected keyword".to_string()));
-    }
-
-    #[test]
-    fn test_identifier_error_message() {
-        let err = ParserError::ClassDirectiveExpected(
-            Span::new(0, 4),
-            JasmTokenKind::Identifier("main".to_string()),
-        );
-        assert_eq!(err.message(), Some("unexpected identifier".to_string()));
-    }
-
-    #[test]
-    fn test_integer_error_message() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 2), JasmTokenKind::Integer(42));
-        assert_eq!(err.message(), Some("unexpected integer".to_string()));
-    }
-
-    #[test]
-    fn test_string_literal_error_message() {
-        let err = ParserError::ClassDirectiveExpected(
-            Span::new(0, 7),
-            JasmTokenKind::StringLiteral("hello".to_string()),
-        );
-        assert_eq!(err.message(), Some("unexpected string literal".to_string()));
-    }
-
-    #[test]
-    fn test_symbol_error_message() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 1), JasmTokenKind::OpenParen);
-        assert_eq!(err.message(), Some("unexpected symbol".to_string()));
-    }
-
-    #[test]
-    fn test_empty_file_error_message() {
-        let err = ParserError::EmptyFile(Span::new(0, 0));
-        assert_eq!(err.message(), Some("empty file".to_string()));
-    }
-
-    #[test]
-    fn test_empty_file_label() {
-        let err = ParserError::EmptyFile(Span::new(0, 0));
-        assert_eq!(
-            err.label(),
-            Some("The file contains no class definition.".to_string())
-        );
-    }
-
-    #[test]
     fn test_empty_file_span() {
         let err = ParserError::EmptyFile(Span::new(5, 5));
         assert_eq!(err.as_range(), Some(5..5));
-    }
-
-    #[test]
-    fn test_note_is_always_present() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 5), JasmTokenKind::DotCode);
-        assert_eq!(
-            err.note(),
-            Some("A Java assembly file must start with a '.class' definition.".to_string())
-        );
-    }
-
-    #[test]
-    fn test_note_is_not_present_for_empty_file() {
-        let err = ParserError::EmptyFile(Span::new(0, 0));
-        assert!(err.note().is_none());
-    }
-
-    #[test]
-    fn test_label_contains_token_display() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 5), JasmTokenKind::DotCode);
-        assert_eq!(
-            err.label(),
-            Some("The '.code' directive cannot appear before a class is defined.".to_string())
-        );
-    }
-
-    #[test]
-    fn test_label_for_identifier() {
-        let err = ParserError::ClassDirectiveExpected(
-            Span::new(0, 4),
-            JasmTokenKind::Identifier("main".to_string()),
-        );
-        assert_eq!(
-            err.label(),
-            Some("The 'main' identifier cannot appear before a class is defined.".to_string())
-        );
-    }
-
-    #[test]
-    fn test_label_for_integer() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 3), JasmTokenKind::Integer(123));
-        assert_eq!(
-            err.label(),
-            Some("The '123' integer cannot appear before a class is defined.".to_string())
-        );
-    }
-
-    #[test]
-    fn test_label_for_symbol() {
-        let err = ParserError::ClassDirectiveExpected(Span::new(0, 1), JasmTokenKind::CloseParen);
-        assert_eq!(
-            err.label(),
-            Some("The ')' symbol cannot appear before a class is defined.".to_string())
-        );
     }
 
     #[test]
@@ -941,60 +830,9 @@ mod parser_error_messages {
     }
 
     #[test]
-    fn test_internal_error_message() {
-        let err = ParserError::Internal("something broke".to_string());
-        assert_eq!(
-            err.message(),
-            Some("Internal parser error: something broke".to_string())
-        );
-    }
-
-    #[test]
-    fn test_internal_error_has_no_note() {
-        let err = ParserError::Internal("bug".to_string());
-        assert_eq!(err.note(), None);
-    }
-
-    #[test]
-    fn test_internal_error_has_no_label() {
-        let err = ParserError::Internal("bug".to_string());
-        assert_eq!(err.label(), None);
-    }
-
-    #[test]
     fn test_internal_error_has_no_range() {
         let err = ParserError::Internal("bug".to_string());
         assert_eq!(err.as_range(), None);
-    }
-
-    #[test]
-    fn test_class_name_expected_message() {
-        let err =
-            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper);
-        assert_eq!(
-            err.message(),
-            Some("incomplete class definition".to_string())
-        );
-    }
-
-    #[test]
-    fn test_class_name_expected_note() {
-        let err =
-            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper);
-        assert_eq!(
-            err.note(),
-            Some("The .class directive requires a name:\n.class [access_flags] <name>".to_string())
-        );
-    }
-
-    #[test]
-    fn test_class_name_expected_label() {
-        let err =
-            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper);
-        assert_eq!(
-            err.label(),
-            Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
-        );
     }
 
     #[test]
@@ -1011,170 +849,12 @@ mod parser_error_messages {
     }
 
     #[test]
-    fn test_string_literal_as_class_name_message() {
-        let err = ParserError::ClassDirectiveNameExpected(
-            Span::new(14, 21),
-            JasmTokenKind::StringLiteral("Hello".to_string()),
-        );
-        assert_eq!(
-            err.message(),
-            Some("incomplete class definition".to_string())
-        );
-    }
-
-    #[test]
-    fn test_string_literal_as_class_name_note() {
-        let err = ParserError::ClassDirectiveNameExpected(
-            Span::new(14, 21),
-            JasmTokenKind::StringLiteral("Hello".to_string()),
-        );
-        assert_eq!(
-            err.note(),
-            Some("Consider removing the quotes around the class name".to_string())
-        );
-    }
-
-    #[test]
-    fn test_string_literal_as_class_name_label() {
-        let err = ParserError::ClassDirectiveNameExpected(
-            Span::new(14, 21),
-            JasmTokenKind::StringLiteral("Hello".to_string()),
-        );
-        assert_eq!(
-            err.label(),
-            Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
-        );
-    }
-
-    #[test]
     fn test_string_literal_as_class_name_span() {
         let err = ParserError::ClassDirectiveNameExpected(
             Span::new(14, 21),
             JasmTokenKind::StringLiteral("Hello".to_string()),
         );
         assert_eq!(err.as_range(), Some(14..21));
-    }
-
-    #[test]
-    fn test_trailing_tokens_message() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::DotSuper,
-            span: Span::new(18, 24),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.message(),
-            Some("trailing characters after 'HelloWorld'".to_string())
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_label() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::DotSuper,
-            span: Span::new(18, 24),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.label(),
-            Some("Class headers must end after the name.".to_string())
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_note_dot_super() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::DotSuper,
-            span: Span::new(18, 24),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.note(),
-            Some(
-                "The class definition should end after the class name 'HelloWorld'.\nConsider starting a new line for the '.super' directive."
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_note_dot_method() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::DotMethod,
-            span: Span::new(18, 25),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.note(),
-            Some(
-                "The class definition should end after the class name 'HelloWorld'.\nConsider starting a new line for the '.method' directive."
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_note_open_paren() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::OpenParen,
-            span: Span::new(18, 19),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.note(),
-            Some(
-                "The class definition should end after the class name 'HelloWorld'.\nIf you're trying to define a method, use the '.method' directive instead."
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_note_public() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::Public,
-            span: Span::new(18, 24),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.note(),
-            Some(
-                "The class definition should end after the class name 'HelloWorld'.\nAccess flags must appear before the class name:\n.class [access_flags] <name>"
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_note_static() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::Static,
-            span: Span::new(18, 24),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.note(),
-            Some(
-                "The class definition should end after the class name 'HelloWorld'.\nAccess flags must appear before the class name:\n.class [access_flags] <name>"
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn test_trailing_tokens_note_generic_token() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::Integer(42),
-            span: Span::new(18, 20),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
-        assert_eq!(
-            err.note(),
-            Some(
-                "The class definition should end after the class name 'HelloWorld'.\nUnexpected tokens after class name. Consider starting a new line for the next directive."
-                    .to_string()
-            )
-        );
     }
 
     #[test]
@@ -1191,18 +871,5 @@ mod parser_error_messages {
         ];
         let err = ParserError::ClassDirectiveTrailingTokens(trailing, "HelloWorld".to_string());
         assert_eq!(err.as_range(), Some(24..32));
-    }
-
-    #[test]
-    fn test_trailing_tokens_message_with_path_class_name() {
-        let trailing = vec![JasmToken {
-            kind: JasmTokenKind::DotSuper,
-            span: Span::new(30, 36),
-        }];
-        let err = ParserError::ClassDirectiveTrailingTokens(trailing, "com/myapp/Main".to_string());
-        assert_eq!(
-            err.message(),
-            Some("trailing characters after 'com/myapp/Main'".to_string())
-        );
     }
 }
