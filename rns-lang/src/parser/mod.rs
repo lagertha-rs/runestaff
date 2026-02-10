@@ -8,8 +8,7 @@ use std::vec::IntoIter;
 pub(crate) enum ParserError {
     ClassDirectiveExpected(Span, JasmTokenKind),
     ClassDirectiveTrailingTokens(Vec<JasmToken>, String),
-    ClassNameExpected(Span),
-    StringLiteralAsClassName(Span),
+    ClassDirectiveNameExpected(Span, JasmTokenKind),
     EmptyFile(Span),
     Internal(String),
 }
@@ -23,12 +22,29 @@ impl ParserError {
             ParserError::ClassDirectiveTrailingTokens(_, class_name) => {
                 Some(format!("trailing characters after '{class_name}'"))
             }
-            ParserError::StringLiteralAsClassName(_) => {
-                Some("incorrect class definition".to_string())
+            ParserError::ClassDirectiveNameExpected(_, _) => {
+                Some("incomplete class definition".to_string())
             }
-            ParserError::ClassNameExpected(_) => Some("incomplete class definition".to_string()),
             ParserError::EmptyFile(_) => Some("empty file".to_string()),
             ParserError::Internal(msg) => Some(format!("Internal parser error: {}", msg)),
+        }
+    }
+
+    pub fn label(&self) -> Option<String> {
+        match self {
+            ParserError::ClassDirectiveTrailingTokens(_, _) => {
+                Some("Class headers must end after the name.".to_string())
+            }
+            ParserError::ClassDirectiveExpected(_, token) => Some(format!(
+                "The '{}' {} cannot appear before a class is defined.",
+                token,
+                token.as_string_token_type()
+            )),
+            ParserError::ClassDirectiveNameExpected(_, _) => {
+                Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
+            }
+            ParserError::EmptyFile(_) => Some("The file contains no class definition.".to_string()),
+            ParserError::Internal(_) => None,
         }
     }
 
@@ -53,12 +69,15 @@ impl ParserError {
                         "Unexpected tokens after class name. Consider starting a new line for the next directive.",
                 }
             )),
-            ParserError::ClassNameExpected(_) => Some(
-                "The .class directive requires a name:\n.class [access_flags] <name>".to_string(),
-            ),
-            ParserError::StringLiteralAsClassName(_) => {
-                Some("Consider removing the quotes around the value".to_string())
-            }
+            ParserError::ClassDirectiveNameExpected(_, kind) => match kind {
+                JasmTokenKind::StringLiteral(_) => {
+                    Some("Consider removing the quotes around the class name".to_string())
+                }
+                _ => Some(
+                    "The .class directive requires a name:\n.class [access_flags] <name>"
+                        .to_string(),
+                ),
+            },
             ParserError::Internal(_) | ParserError::EmptyFile(_) => None,
         }
     }
@@ -67,34 +86,11 @@ impl ParserError {
         self.span().map(|s| s.as_range())
     }
 
-    pub fn label(&self) -> Option<String> {
-        match self {
-            ParserError::ClassDirectiveTrailingTokens(_, _) => {
-                Some("Class headers must end after the name.".to_string())
-            },
-            ParserError::ClassDirectiveExpected(_, token) => Some(format!(
-                "The '{}' {} cannot appear before a class is defined.",
-                token,
-                token.as_string_token_type()
-            )),
-            ParserError::StringLiteralAsClassName(_) => Some(
-                "Class names cannot be string literals. They should be identifiers (e.g., 'com/myapp/Main')."
-                    .to_string(),
-            ),
-            ParserError::ClassNameExpected(_) => {
-                Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
-            }
-            ParserError::EmptyFile(_) => Some("The file contains no class definition.".to_string()),
-            ParserError::Internal(_) => None,
-        }
-    }
-
     fn span(&self) -> Option<Span> {
         match self {
             ParserError::ClassDirectiveExpected(span, _)
             | ParserError::EmptyFile(span)
-            | ParserError::StringLiteralAsClassName(span)
-            | ParserError::ClassNameExpected(span) => Some(*span),
+            | ParserError::ClassDirectiveNameExpected(span, _) => Some(*span),
             ParserError::ClassDirectiveTrailingTokens(tokens, _) => Some(Span::new(
                 tokens[0].span.start,
                 tokens.last().map(|v| v.span.end).unwrap_or(0),
@@ -185,21 +181,14 @@ impl JasmParser {
         let access_flag_end = self.last_span.end;
         let name_token = self.next_token()?;
 
-        // TODO: make a reusable function
-        let class_name = if let JasmTokenKind::Identifier(name) = name_token.kind {
-            name
-        } else {
-            if matches!(name_token.kind, JasmTokenKind::StringLiteral(_)) {
-                return Err(ParserError::StringLiteralAsClassName(name_token.span));
+        let class_name = match name_token.kind {
+            JasmTokenKind::Identifier(name) => Ok(name),
+            JasmTokenKind::Eof | JasmTokenKind::Newline => {
+                Err((Span::new(access_flag_end, access_flag_end), name_token.kind))
             }
-            let right_span = match name_token.kind {
-                JasmTokenKind::Eof | JasmTokenKind::Newline => {
-                    Span::new(access_flag_end, access_flag_end)
-                }
-                _ => name_token.span,
-            };
-            return Err(ParserError::ClassNameExpected(right_span));
-        };
+            _ => Err((name_token.span, name_token.kind)),
+        }
+        .map_err(|(s, t)| ParserError::ClassDirectiveNameExpected(s, t))?;
 
         // TODO: test EOF right after class name and check for correct span in error
         let trailing_tokens = self.next_until_newline()?;

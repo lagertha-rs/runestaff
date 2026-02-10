@@ -229,13 +229,16 @@ mod class_name_expected {
         #[case] span: Span,
     ) {
         let name_token = JasmToken {
-            kind: token_kind,
+            kind: token_kind.clone(),
             span,
         };
         // .class public <token>
         let tokens = make_tokens_with_flags_and_name(&[JasmTokenKind::Public], name_token);
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(span));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(span, token_kind)
+        );
     }
 
     #[test]
@@ -262,7 +265,10 @@ mod class_name_expected {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(Span::new(20, 20)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(Span::new(20, 20), JasmTokenKind::Eof)
+        );
     }
 
     #[test]
@@ -289,7 +295,10 @@ mod class_name_expected {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(Span::new(13, 13)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(Span::new(13, 13), JasmTokenKind::Newline)
+        );
     }
 
     #[test]
@@ -308,7 +317,10 @@ mod class_name_expected {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(Span::new(6, 6)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(Span::new(6, 6), JasmTokenKind::Eof)
+        );
     }
 
     #[test]
@@ -331,7 +343,10 @@ mod class_name_expected {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(Span::new(6, 6)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(Span::new(6, 6), JasmTokenKind::Newline)
+        );
     }
 
     #[test]
@@ -353,7 +368,10 @@ mod class_name_expected {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(Span::new(7, 13)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper)
+        );
     }
 
     #[test]
@@ -375,7 +393,10 @@ mod class_name_expected {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::ClassNameExpected(Span::new(7, 9)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(Span::new(7, 9), JasmTokenKind::Integer(42))
+        );
     }
 }
 
@@ -665,7 +686,10 @@ mod string_literal_as_class_name {
         let err = JasmParser::parse(tokens).unwrap_err();
         assert_eq!(
             err,
-            ParserError::StringLiteralAsClassName(Span::new(14, 26))
+            ParserError::ClassDirectiveNameExpected(
+                Span::new(14, 26),
+                JasmTokenKind::StringLiteral("HelloWorld".to_string())
+            )
         );
     }
 
@@ -688,7 +712,13 @@ mod string_literal_as_class_name {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::StringLiteralAsClassName(Span::new(7, 19)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(
+                Span::new(7, 19),
+                JasmTokenKind::StringLiteral("HelloWorld".to_string())
+            )
+        );
     }
 
     #[test]
@@ -720,7 +750,10 @@ mod string_literal_as_class_name {
         let err = JasmParser::parse(tokens).unwrap_err();
         assert_eq!(
             err,
-            ParserError::StringLiteralAsClassName(Span::new(21, 33))
+            ParserError::ClassDirectiveNameExpected(
+                Span::new(21, 33),
+                JasmTokenKind::StringLiteral("HelloWorld".to_string())
+            )
         );
     }
 
@@ -744,7 +777,10 @@ mod string_literal_as_class_name {
         let err = JasmParser::parse(tokens).unwrap_err();
         assert_eq!(
             err,
-            ParserError::StringLiteralAsClassName(Span::new(57, 73))
+            ParserError::ClassDirectiveNameExpected(
+                Span::new(57, 73),
+                JasmTokenKind::StringLiteral("com/myapp/Main".to_string())
+            )
         );
     }
 
@@ -767,7 +803,13 @@ mod string_literal_as_class_name {
             },
         ];
         let err = JasmParser::parse(tokens).unwrap_err();
-        assert_eq!(err, ParserError::StringLiteralAsClassName(Span::new(7, 9)));
+        assert_eq!(
+            err,
+            ParserError::ClassDirectiveNameExpected(
+                Span::new(7, 9),
+                JasmTokenKind::StringLiteral("".to_string())
+            )
+        );
     }
 }
 
@@ -927,7 +969,8 @@ mod parser_error_messages {
 
     #[test]
     fn test_class_name_expected_message() {
-        let err = ParserError::ClassNameExpected(Span::new(7, 13));
+        let err =
+            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper);
         assert_eq!(
             err.message(),
             Some("incomplete class definition".to_string())
@@ -936,7 +979,8 @@ mod parser_error_messages {
 
     #[test]
     fn test_class_name_expected_note() {
-        let err = ParserError::ClassNameExpected(Span::new(7, 13));
+        let err =
+            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper);
         assert_eq!(
             err.note(),
             Some("The .class directive requires a name:\n.class [access_flags] <name>".to_string())
@@ -945,7 +989,8 @@ mod parser_error_messages {
 
     #[test]
     fn test_class_name_expected_label() {
-        let err = ParserError::ClassNameExpected(Span::new(7, 13));
+        let err =
+            ParserError::ClassDirectiveNameExpected(Span::new(7, 13), JasmTokenKind::DotSuper);
         assert_eq!(
             err.label(),
             Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
@@ -954,46 +999,59 @@ mod parser_error_messages {
 
     #[test]
     fn test_class_name_expected_span() {
-        let err = ParserError::ClassNameExpected(Span::new(14, 20));
+        let err =
+            ParserError::ClassDirectiveNameExpected(Span::new(14, 20), JasmTokenKind::Integer(42));
         assert_eq!(err.as_range(), Some(14..20));
     }
 
     #[test]
     fn test_class_name_expected_zero_width_span() {
-        let err = ParserError::ClassNameExpected(Span::new(6, 6));
+        let err = ParserError::ClassDirectiveNameExpected(Span::new(6, 6), JasmTokenKind::Eof);
         assert_eq!(err.as_range(), Some(6..6));
     }
 
     #[test]
     fn test_string_literal_as_class_name_message() {
-        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        let err = ParserError::ClassDirectiveNameExpected(
+            Span::new(14, 21),
+            JasmTokenKind::StringLiteral("Hello".to_string()),
+        );
         assert_eq!(
             err.message(),
-            Some("incorrect class definition".to_string())
+            Some("incomplete class definition".to_string())
         );
     }
 
     #[test]
     fn test_string_literal_as_class_name_note() {
-        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        let err = ParserError::ClassDirectiveNameExpected(
+            Span::new(14, 21),
+            JasmTokenKind::StringLiteral("Hello".to_string()),
+        );
         assert_eq!(
             err.note(),
-            Some("Consider removing the quotes around the value".to_string())
+            Some("Consider removing the quotes around the class name".to_string())
         );
     }
 
     #[test]
     fn test_string_literal_as_class_name_label() {
-        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        let err = ParserError::ClassDirectiveNameExpected(
+            Span::new(14, 21),
+            JasmTokenKind::StringLiteral("Hello".to_string()),
+        );
         assert_eq!(
             err.label(),
-            Some("Class names cannot be string literals. They should be identifiers (e.g., 'com/myapp/Main').".to_string())
+            Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
         );
     }
 
     #[test]
     fn test_string_literal_as_class_name_span() {
-        let err = ParserError::StringLiteralAsClassName(Span::new(14, 21));
+        let err = ParserError::ClassDirectiveNameExpected(
+            Span::new(14, 21),
+            JasmTokenKind::StringLiteral("Hello".to_string()),
+        );
         assert_eq!(err.as_range(), Some(14..21));
     }
 

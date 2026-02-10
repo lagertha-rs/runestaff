@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: incorrect class definition
+Error: incomplete class definition
    ╭─[ test_data/integration/parser/class_directive_name/string_literal_as_class_name.ja:1:9 ]
    │
  1 │ .class  "HelloWorld"
    │         ──────┬─────  
-   │               ╰─────── Class names cannot be string literals. They should be identifiers (e.g., 'com/myapp/Main').
+   │               ╰─────── Expected a class identifier (e.g., 'com/myapp/Main')
    │ 
-   │ Note: Consider removing the quotes around the value
+   │ Note: Consider removing the quotes around the class name
 ───╯
