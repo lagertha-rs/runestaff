@@ -30,9 +30,7 @@ impl LexerError {
                 "Expected one of the directives: {}",
                 JasmTokenKind::list_directives()
             ),
-            LexerError::UnexpectedChar(_, _, context) => context
-                .clone()
-                .unwrap_or_else(|| "Unexpected character".to_string()),
+            LexerError::UnexpectedChar(_, _, context) => return context.clone(),
 
             LexerError::UnterminatedString(_) => {
                 "String literal is not terminated before the end of the line or file.".to_string()
@@ -40,8 +38,13 @@ impl LexerError {
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
             }
-            LexerError::InvalidNumber(_, _) => {
-                "Integers must be between -2147483648 and 2147483647".to_string()
+            LexerError::InvalidNumber(_, value) => {
+                if value.starts_with("0x") || value.starts_with("0X") {
+                    "Hexadecimal numbers are not supported yet, but are planned for the future."
+                        .to_string()
+                } else {
+                    "Integers must be between -2147483648 and 2147483647".to_string()
+                }
             }
         };
         Some(note)
