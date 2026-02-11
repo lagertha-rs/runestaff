@@ -1,4 +1,5 @@
 use crate::ast::JasmClass;
+use crate::instruction::{INSTRUCTION_SPECS, InstructionArgKind};
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;
 use std::ops::Range;
@@ -15,6 +16,8 @@ pub(crate) enum ParserError {
     UnexpectedCodeDirectiveArg(Span, JasmTokenKind),
 
     NonNegativeIntegerExpected(Span, JasmTokenKind, NonNegativeIntegerContext),
+
+    UnknownInstruction(Span, String),
 
     EmptyFile(Span),
     Internal(String),
@@ -39,6 +42,11 @@ pub(crate) enum IdentifierContext {
     ClassDirective,
     SuperDirective,
     MethodDirectiveName,
+    InstructionName,
+    ClassNameInstructionArg,
+    MethodNameInstructionArg,
+    FieldNameInstructionArg,
+    FieldDescriptorInstructionArg,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -313,11 +321,61 @@ impl JasmParser {
         }
     }
 
+    fn parse_instruction(&mut self) -> Result<(), ParserError> {
+        let instruction_name =
+            self.expect_next_identifier(IdentifierContext::InstructionName, self.last_span.end)?;
+        let instruction_pos = self.last_span;
+        let instruction_spec = INSTRUCTION_SPECS
+            .get(instruction_name.as_str())
+            .ok_or_else(|| {
+                ParserError::UnknownInstruction(instruction_pos, instruction_name.clone())
+            })?;
+        for arg_spec in instruction_spec.args {
+            match arg_spec {
+                InstructionArgKind::ClassName => self.expect_next_identifier(
+                    IdentifierContext::ClassNameInstructionArg,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::MethodName => self.expect_next_identifier(
+                    IdentifierContext::MethodNameInstructionArg,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::MethodDescriptor => self.expect_next_method_descriptor(
+                    MethodDescriptorContext::Instruction,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::StringLiteral => {
+                    // TODO: stub for ldc
+                    let token = self.next_token()?;
+                    match token.kind {
+                        JasmTokenKind::StringLiteral(value) => value,
+                        _ => {
+                            return Err(ParserError::IdentifierExpected(
+                                token.span,
+                                token.kind,
+                                IdentifierContext::InstructionName,
+                            ));
+                        }
+                    }
+                }
+                InstructionArgKind::FieldName => self.expect_next_identifier(
+                    IdentifierContext::FieldNameInstructionArg,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::FieldDescriptor => self.expect_next_identifier(
+                    IdentifierContext::FieldDescriptorInstructionArg,
+                    instruction_pos.end,
+                )?,
+            };
+        }
+        Ok(())
+    }
+
     fn parse_code_directive(&mut self) -> Result<(), ParserError> {
         // TODO: Do I need "already defined" checks for stack and locals?
         let mut stack = None;
         let mut locals = None;
-        let dot_code = self.next_token()?; // consume .code token
+        self.next_token()?; // consume .code token
 
         while let Some(JasmTokenKind::Identifier(_)) = self.peek_token_kind() {
             let identifier_token = self.next_token()?;
@@ -343,8 +401,35 @@ impl JasmParser {
         }
 
         self.expect_no_trailing_tokens(TrailingTokensContext::Code)?;
+        self.skip_newlines()?;
 
-        unimplemented!("Parsing of code instructions is not implemented yet");
+        while let Some(token) = self.tokens.peek() {
+            if matches!(token.kind, JasmTokenKind::DotEnd | JasmTokenKind::Eof) {
+                break;
+            }
+            self.parse_instruction()?;
+            self.skip_newlines()?
+        }
+
+        // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::DotEnd) {
+            return Err(ParserError::Internal(format!(
+                "Expected .end after code block, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::Identifier(ref s) if s == "code") {
+            return Err(ParserError::Internal(format!(
+                "Expected .end code after code block, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+        // TODO: assert no more tokens on the line after .end code
+        self.skip_newlines()?;
+
+        Ok(())
     }
 
     fn parse_method(&mut self) -> Result<(), ParserError> {
@@ -359,10 +444,31 @@ impl JasmParser {
         self.expect_no_trailing_tokens(TrailingTokensContext::Method)?;
         self.skip_newlines()?;
         self.parse_code_directive()?;
-        todo!()
+        self.skip_newlines()?;
+
+        // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::DotEnd) {
+            return Err(ParserError::Internal(format!(
+                "Expected .end after method body, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::Identifier(ref s) if s == "method") {
+            return Err(ParserError::Internal(format!(
+                "Expected .end method after method body, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+
+        // assert no more tokens on the line after .end method
+        self.skip_newlines()?;
+        Ok(())
     }
 
-    fn parse_class(&mut self) -> Result<JasmClass, ParserError> {
+    fn parse_class(&mut self) -> Result<(), ParserError> {
         self.skip_newlines()?;
         let class_token = self.next_token()?;
         if matches!(class_token.kind, JasmTokenKind::Eof) {
@@ -395,10 +501,10 @@ impl JasmParser {
             }
         }
 
-        todo!()
+        Ok(())
     }
 
-    pub fn parse(tokens: Vec<JasmToken>) -> Result<JasmClass, ParserError> {
+    pub fn parse(tokens: Vec<JasmToken>) -> Result<(), ParserError> {
         if !matches!(tokens.last().unwrap().kind, JasmTokenKind::Eof) {
             return Err(ParserError::Internal(
                 "Token stream must end with an EOF token".to_string(),

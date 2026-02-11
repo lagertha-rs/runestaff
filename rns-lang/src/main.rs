@@ -3,6 +3,7 @@ use crate::lexer::JasmLexer;
 
 mod ast;
 mod error;
+mod instruction;
 mod lexer;
 mod parser;
 mod token;
