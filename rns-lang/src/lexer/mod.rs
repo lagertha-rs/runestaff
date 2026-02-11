@@ -9,6 +9,7 @@ pub(crate) enum LexerError {
     UnknownDirective(Span, String),
     UnexpectedEof(Span),
     UnterminatedString(Span),
+    InvalidEscape(Span, char),
     InvalidNumber(Span, String),
 }
 
@@ -19,6 +20,7 @@ impl LexerError {
             LexerError::UnknownDirective(_, _) => "unknown directive",
             LexerError::UnexpectedEof(_) => "unexpected end of file",
             LexerError::UnterminatedString(_) => "unterminated string literal",
+            LexerError::InvalidEscape(_, _) => "invalid escape sequence",
             LexerError::InvalidNumber(_, _) => "invalid integer",
         };
         Some(msg.to_string())
@@ -34,6 +36,9 @@ impl LexerError {
 
             LexerError::UnterminatedString(_) => {
                 "String literal is not terminated before the end of the line or file.".to_string()
+            }
+            LexerError::InvalidEscape(_, c) => {
+                format!("The character '\\{}' is not a valid escape sequence.", c)
             }
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
@@ -64,6 +69,7 @@ impl LexerError {
             LexerError::UnterminatedString(_) => {
                 "String started here is not terminated".to_string()
             }
+            LexerError::InvalidEscape(_, c) => format!("Invalid escape sequence '\\{}'", c),
             LexerError::InvalidNumber(_, value) => {
                 if value.parse::<i128>().is_ok() {
                     format!(
@@ -86,6 +92,7 @@ impl LexerError {
             | LexerError::UnknownDirective(span, _)
             | LexerError::UnexpectedEof(span)
             | LexerError::UnterminatedString(span)
+            | LexerError::InvalidEscape(span, _)
             | LexerError::InvalidNumber(span, _) => Some(span),
         }
     }
@@ -184,7 +191,12 @@ impl<'a> JasmLexer<'a> {
                                     start + 1,
                                 )));
                             }
-                            _ => result.push(next_char),
+                            _ => {
+                                return Err(LexerError::InvalidEscape(
+                                    Span::new(self.byte_pos, self.byte_pos + next_char.len_utf8()),
+                                    next_char,
+                                ))
+                            }
                         }
                         self.next_char(); // consume escaped character
                     } else {
