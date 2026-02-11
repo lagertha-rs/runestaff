@@ -13,9 +13,15 @@ pub(crate) enum LexerError {
 }
 
 impl LexerError {
-    // TODO: add messages
     pub fn message(&self) -> Option<String> {
-        None
+        let msg = match self {
+            LexerError::UnexpectedChar(_, _, _) => "unexpected character",
+            LexerError::UnknownDirective(_, _) => "unknown directive",
+            LexerError::UnexpectedEof(_) => "unexpected end of file",
+            LexerError::UnterminatedString(_) => "unterminated string literal",
+            LexerError::InvalidNumber(_, _) => "invalid integer",
+        };
+        Some(msg.to_string())
     }
 
     pub fn note(&self) -> Option<String> {
@@ -34,7 +40,9 @@ impl LexerError {
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
             }
-            LexerError::InvalidNumber(_, _) => "Expected a valid integer number.".to_string(),
+            LexerError::InvalidNumber(_, _) => {
+                "Integers must be between -2147483648 and 2147483647".to_string()
+            }
         };
         Some(note)
     }
@@ -53,7 +61,18 @@ impl LexerError {
             LexerError::UnterminatedString(_) => {
                 "String started here is not terminated".to_string()
             }
-            LexerError::InvalidNumber(_, value) => format!("'{}' is not a valid integer", value),
+            LexerError::InvalidNumber(_, value) => {
+                if value.parse::<i128>().is_ok() {
+                    format!(
+                        "Integer '{}' is too large for a 32-bit signed integer",
+                        value
+                    )
+                } else if value.chars().any(|c| !c.is_digit(10) && c != '-') {
+                    format!("'{}' contains invalid characters", value)
+                } else {
+                    format!("'{}' is not a valid integer", value)
+                }
+            }
         };
         Some(res)
     }

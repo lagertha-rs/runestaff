@@ -1,0 +1,18 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+dot_dot_super ..super
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/lexer/directives/dot_dot_super.ja:1:15 ]
+   │
+ 1 │ dot_dot_super ..super
+   │               ───┬───  
+   │                  ╰───── Unknown directive '..super'
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

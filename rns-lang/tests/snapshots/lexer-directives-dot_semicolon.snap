@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.method
+    .;comment after semicolon
+.end
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/lexer/directives/dot_semicolon.ja:2:5 ]
+   │
+ 2 │     .;comment after semicolon
+   │     ────┬────  
+   │         ╰────── Unknown directive '.;comment'
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

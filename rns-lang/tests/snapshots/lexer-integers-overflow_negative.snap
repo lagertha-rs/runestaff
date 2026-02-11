@@ -8,12 +8,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: lexing error
+Error: invalid integer
    ╭─[ test_data/integration/lexer/integers/overflow_negative.ja:1:7 ]
    │
  1 │ .code -99999999999999999999
    │       ──────────┬──────────  
-   │                 ╰──────────── '-99999999999999999999' is not a valid integer
+   │                 ╰──────────── Integer '-99999999999999999999' is too large for a 32-bit signed integer
    │ 
-   │ Note: Expected a valid integer number.
+   │ Note: Integers must be between -2147483648 and 2147483647
 ───╯

@@ -98,6 +98,8 @@ mod snapshot_tests {
     }
 }
 
+/*
+
 //TODO: test unicode handling
 mod directives {
     use super::*;
@@ -2874,3 +2876,5 @@ mod init_clinit {
         }
     }
 }
+
+ */

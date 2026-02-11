@@ -3,18 +3,17 @@ source: jasm/tests/integration_test.rs
 expression: "&combined"
 ---
 ----- INPUT  -----
-.class public Test
-.code -5xyz
+.code -
 
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: invalid integer
-   ╭─[ test_data/integration/lexer/integers/invalid_negative_format.ja:2:7 ]
+   ╭─[ test_data/integration/lexer/integers/minus_only.ja:1:7 ]
    │
- 2 │ .code -5xyz
-   │       ──┬──  
-   │         ╰──── '-5xyz' contains invalid characters
+ 1 │ .code -
+   │       ┬  
+   │       ╰── '-' is not a valid integer
    │ 
    │ Note: Integers must be between -2147483648 and 2147483647
 ───╯

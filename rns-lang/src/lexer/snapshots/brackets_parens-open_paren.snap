@@ -5,8 +5,8 @@ expression: formatted
 ----- SOURCE -----
 (
 ----- TOKENS -----
-KIND       | SPAN  | TEXT
-----       | ----  | ----
-OpenParen  | 0..1  | (
-Newline    | 1..2  | \n
-Eof        | 2..2  |
+KIND                   | SPAN  | TEXT
+----                   | ----  | ----
+MethodDescriptor("(")  | 0..1  | (
+Newline                | 1..2  | \n
+Eof                    | 2..2  |
