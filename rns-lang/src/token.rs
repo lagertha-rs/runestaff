@@ -13,12 +13,10 @@ pub enum JasmTokenKind {
     Public,
     Static,
     Identifier(String),
+    MethodDescriptor(String),
 
     Integer(i32),
     StringLiteral(String),
-    OpenParen,
-    CloseParen,
-    OpenBracket,
     Newline,
     Eof,
 }
@@ -47,6 +45,7 @@ impl JasmTokenKind {
         match name.as_str() {
             "public" => JasmTokenKind::Public,
             "static" => JasmTokenKind::Static,
+            _ if name.starts_with('(') => JasmTokenKind::MethodDescriptor(name),
             _ => JasmTokenKind::Identifier(name),
         }
     }
@@ -65,9 +64,7 @@ impl JasmTokenKind {
             JasmTokenKind::Public | JasmTokenKind::Static => "keyword".to_string(),
             JasmTokenKind::Identifier(_) => "identifier".to_string(),
             JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
-            JasmTokenKind::OpenParen | JasmTokenKind::CloseParen | JasmTokenKind::OpenBracket => {
-                "symbol".to_string()
-            }
+            JasmTokenKind::MethodDescriptor(_) => "method descriptor".to_string(),
             JasmTokenKind::Integer(_) => "integer".to_string(),
             JasmTokenKind::Newline => "newline".to_string(),
             JasmTokenKind::Eof => "eof".to_string(),
@@ -88,12 +85,10 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Public => write!(f, "public"),
             JasmTokenKind::Static => write!(f, "static"),
             JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
+            JasmTokenKind::MethodDescriptor(desc) => write!(f, "{}", desc.escape_default()),
             JasmTokenKind::StringLiteral(value) => {
                 write!(f, "{}", value.escape_default())
             }
-            JasmTokenKind::OpenParen => write!(f, "("),
-            JasmTokenKind::CloseParen => write!(f, ")"),
-            JasmTokenKind::OpenBracket => write!(f, "["),
             JasmTokenKind::Integer(value) => write!(f, "{}", value),
         }
     }

@@ -114,7 +114,7 @@ impl<'a> JasmLexer<'a> {
     }
 
     fn is_delimiter(c: char) -> bool {
-        c.is_whitespace() || matches!(c, '(' | ')' | '[')
+        c.is_whitespace()
     }
 
     fn read_to_delimiter(&mut self) -> String {
@@ -225,7 +225,7 @@ impl<'a> JasmLexer<'a> {
 
         let kind = match ch {
             '.' => self.handle_directive(start)?,
-            'a'..='z' | 'A'..='Z' | '_' => {
+            'a'..='z' | 'A'..='Z' | '_' | '(' => {
                 let str = self.read_to_delimiter();
                 JasmTokenKind::from_identifier(str)
             }
@@ -237,18 +237,6 @@ impl<'a> JasmLexer<'a> {
                     kind: JasmTokenKind::Newline,
                     span: Span::new(start, self.byte_pos),
                 });
-            }
-            '[' => {
-                self.next_char();
-                JasmTokenKind::OpenBracket
-            }
-            '(' => {
-                self.next_char();
-                JasmTokenKind::OpenParen
-            }
-            ')' => {
-                self.next_char();
-                JasmTokenKind::CloseParen
             }
             '<' => {
                 let token_str = self.read_to_delimiter();

@@ -1,6 +1,5 @@
 use crate::ast::JasmClass;
 use crate::token::{JasmToken, JasmTokenKind, Span};
-use common::descriptor::MethodDescriptor;
 use std::iter::Peekable;
 use std::ops::Range;
 use std::vec::IntoIter;
@@ -12,7 +11,6 @@ pub(crate) enum ParserError {
     IdentifierExpected(Span, JasmTokenKind, IdentifierContext),
 
     MethodDescriptorExpected(Span, JasmTokenKind, MethodDescriptorContext),
-    MethodDescriptorClosParenExpected(Span, JasmTokenKind, MethodDescriptorContext),
 
     UnexpectedCodeDirectiveArg(Span, JasmTokenKind),
 
@@ -41,8 +39,6 @@ pub(crate) enum IdentifierContext {
     ClassDirective,
     SuperDirective,
     MethodDirectiveName,
-    MethodDirectiveDescriptorParams,
-    MethodDirectiveDescriptorRet,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -112,8 +108,6 @@ impl ParserError {
                 match (tokens[0].kind.clone(), context) {
                     (JasmTokenKind::DotSuper, TrailingTokensContext::Class) =>
                         "Consider starting a new line for the '.super' directive.",
-                    (JasmTokenKind::OpenParen, TrailingTokensContext::Class) =>
-                        "If you're trying to define a method, use the '.method' directive instead.",
                     (JasmTokenKind::DotMethod, TrailingTokensContext::Class) =>
                         "Consider starting a new line for the '.method' directive.",
                     (
@@ -259,6 +253,27 @@ impl JasmParser {
         }
     }
 
+    fn expect_next_method_descriptor(
+        &mut self,
+        context: MethodDescriptorContext,
+        prev_token_end: usize,
+    ) -> Result<String, ParserError> {
+        let token = self.next_token()?;
+        match token.kind {
+            JasmTokenKind::MethodDescriptor(name) => Ok(name),
+            JasmTokenKind::Eof | JasmTokenKind::Newline => {
+                Err(ParserError::MethodDescriptorExpected(
+                    Span::new(prev_token_end, prev_token_end),
+                    token.kind,
+                    context,
+                ))
+            }
+            _ => Err(ParserError::MethodDescriptorExpected(
+                token.span, token.kind, context,
+            )),
+        }
+    }
+
     fn parse_super_directive(&mut self) -> Result<(), ParserError> {
         let dot_super = self.next_token()?; // consume .super token
         let super_name =
@@ -332,52 +347,15 @@ impl JasmParser {
         unimplemented!("Parsing of code instructions is not implemented yet");
     }
 
-    fn parse_method_descriptor(
-        &mut self,
-        context: MethodDescriptorContext,
-    ) -> Result<(Option<String>, String), ParserError> {
-        let open_paren_token = self.next_token()?;
-        if !matches!(open_paren_token.kind, JasmTokenKind::OpenParen) {
-            return Err(ParserError::MethodDescriptorExpected(
-                open_paren_token.span,
-                open_paren_token.kind,
-                context,
-            ));
-        }
-
-        let params_str = if matches!(self.peek_token_kind(), Some(JasmTokenKind::CloseParen)) {
-            None
-        } else {
-            Some(self.expect_next_identifier(
-                IdentifierContext::MethodDirectiveDescriptorParams, // TODO: hardcoded
-                open_paren_token.span.end,
-            )?)
-        };
-
-        let close_paren_token = self.next_token()?;
-        if !matches!(close_paren_token.kind, JasmTokenKind::CloseParen) {
-            return Err(ParserError::MethodDescriptorClosParenExpected(
-                close_paren_token.span,
-                close_paren_token.kind,
-                context,
-            ));
-        }
-
-        let ret_str = self.expect_next_identifier(
-            IdentifierContext::MethodDirectiveDescriptorRet, // TODO: hardcoded
-            close_paren_token.span.end,
-        )?;
-
-        Ok((params_str, ret_str))
-    }
-
     fn parse_method(&mut self) -> Result<(), ParserError> {
         let dot_method = self.next_token()?; // consume .method token
         let _access_flags = self.parse_method_access_flags()?;
         let method_name = self
             .expect_next_identifier(IdentifierContext::MethodDirectiveName, dot_method.span.end)?;
-        let method_descriptor =
-            self.parse_method_descriptor(MethodDescriptorContext::MethodDirective)?;
+        let method_descriptor = self.expect_next_method_descriptor(
+            MethodDescriptorContext::MethodDirective,
+            self.last_span.end,
+        )?;
         self.expect_no_trailing_tokens(TrailingTokensContext::Method)?;
         self.skip_newlines()?;
         self.parse_code_directive()?;
