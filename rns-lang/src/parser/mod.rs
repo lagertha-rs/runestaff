@@ -1,4 +1,4 @@
-use crate::ast::JasmClass;
+use crate::instruction::{INSTRUCTION_SPECS, InstructionArgKind};
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;
 use std::ops::Range;
@@ -7,78 +7,182 @@ use std::vec::IntoIter;
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(crate) enum ParserError {
     ClassDirectiveExpected(Span, JasmTokenKind),
-    ClassDirectiveTrailingTokens(Vec<JasmToken>, String),
-    ClassDirectiveNameExpected(Span, JasmTokenKind),
+    TrailingTokens(Vec<JasmToken>, TrailingTokensContext),
+    IdentifierExpected(Span, JasmTokenKind, IdentifierContext),
+
+    MethodDescriptorExpected(Span, JasmTokenKind, MethodDescriptorContext),
+
+    UnexpectedCodeDirectiveArg(Span, JasmTokenKind),
+
+    NonNegativeIntegerExpected(Span, JasmTokenKind, NonNegativeIntegerContext),
+
+    UnknownInstruction(Span, String),
+
     EmptyFile(Span),
     Internal(String),
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(crate) enum NonNegativeIntegerContext {
+    CodeLocals,
+    CodeStack,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(crate) enum TrailingTokensContext {
+    Class,
+    Super,
+    Method,
+    Code,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(crate) enum IdentifierContext {
+    ClassDirective,
+    SuperDirective,
+    MethodDirectiveName,
+    InstructionName,
+    ClassNameInstructionArg,
+    MethodNameInstructionArg,
+    FieldNameInstructionArg,
+    FieldDescriptorInstructionArg,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(crate) enum MethodDescriptorContext {
+    MethodDirective,
+    Instruction,
 }
 
 impl ParserError {
     pub fn message(&self) -> Option<String> {
         match self {
-            ParserError::ClassDirectiveExpected(_, token) => {
-                Some(format!("unexpected {}", token.as_string_token_type()))
-            }
-            ParserError::ClassDirectiveTrailingTokens(_, class_name) => {
-                Some(format!("trailing characters after '{class_name}'"))
-            }
-            ParserError::ClassDirectiveNameExpected(_, _) => {
-                Some("incomplete class definition".to_string())
-            }
-            ParserError::EmptyFile(_) => Some("empty file".to_string()),
+            ParserError::ClassDirectiveExpected(_, token) => Some(format!(
+                "Unexpected {} before class definition",
+                token.as_string_token_type()
+            )),
+            ParserError::TrailingTokens(_, _) => Some("trailing characters".to_string()),
+            ParserError::IdentifierExpected(_, _, context) => Some(
+                match context {
+                    IdentifierContext::ClassDirective => "incomplete class definition",
+                    IdentifierContext::SuperDirective => "incomplete .super directive",
+                    IdentifierContext::MethodDirectiveName => "incomplete .method directive",
+                    _ => unimplemented!(),
+                }
+                .to_string(),
+            ),
+            ParserError::EmptyFile(_) => Some("File contains no class definition".to_string()),
             ParserError::Internal(msg) => Some(format!("Internal parser error: {}", msg)),
+            _ => unimplemented!(),
         }
     }
 
     pub fn label(&self) -> Option<String> {
         match self {
-            ParserError::ClassDirectiveTrailingTokens(_, _) => {
+            ParserError::TrailingTokens(_, _) => {
                 Some("Class headers must end after the name.".to_string())
             }
-            ParserError::ClassDirectiveExpected(_, token) => Some(format!(
-                "The '{}' {} cannot appear before a class is defined.",
-                token,
-                token.as_string_token_type()
-            )),
-            ParserError::ClassDirectiveNameExpected(_, _) => {
-                Some("Expected a class identifier (e.g., 'com/myapp/Main')".to_string())
+            ParserError::ClassDirectiveExpected(_, token) => match token {
+                JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => Some(format!(
+                    "The '{}' directive is only allowed inside a class definition.",
+                    token
+                )),
+                JasmTokenKind::DotCode => Some(format!(
+                    "The '{}' directive is only allowed inside a method definition.",
+                    token
+                )),
+                JasmTokenKind::DotEnd => Some(format!(
+                    "The '{}' directive has no matching start directive.",
+                    token
+                )),
+                _ => Some(format!(
+                    "The '{}' {} must appear inside a class definition.",
+                    token,
+                    token.as_string_token_type()
+                )),
+            },
+            ParserError::IdentifierExpected(_, _, context) => {
+                Some(
+                    match context {
+                        IdentifierContext::ClassDirective =>
+                            "The .class directive requires a class name after the access flags.",
+                        IdentifierContext::SuperDirective =>
+                            "The .super directive requires a superclass name.",
+                        IdentifierContext::MethodDirectiveName =>
+                            "The .method directive requires a method name followed by parentheses and a method descriptor.",
+                        _ => unimplemented!()
+                    }.to_string())
             }
-            ParserError::EmptyFile(_) => Some("The file contains no class definition.".to_string()),
             ParserError::Internal(_) => None,
+            ParserError::EmptyFile(_) => Some("The file is empty or contains only comments.".to_string()),
+                _ => unimplemented!()
         }
     }
 
     pub fn note(&self) -> Option<String> {
         match self {
-            ParserError::ClassDirectiveExpected(_, _) => {
-                //TODO: actually it is false. I guess the source file name or class file version could be added to the note when implemented
-                Some("A Java assembly file must start with a '.class' definition.".to_string())
-            }
-            ParserError::ClassDirectiveTrailingTokens(tokens, class_name) => Some(format!(
-                "The class definition should end after the class name '{class_name}'.\n{}",
-                match tokens[0].kind {
-                    JasmTokenKind::DotSuper =>
+            ParserError::ClassDirectiveExpected(_, token) => match token {
+                JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => {
+                    Some("Define a class first using '.class [access_flags] <name>'.".to_string())
+                }
+                JasmTokenKind::DotCode => Some(
+                    "Define a method first using '.method [access_flags] <name> <descriptor>'."
+                        .to_string(),
+                ),
+                JasmTokenKind::DotEnd => Some(
+                    "The '.end' directive must match a previous '.method', '.code', or '.class' directive.".to_string(),
+                ),
+                JasmTokenKind::Public | JasmTokenKind::Static => Some(
+                    "Keywords like 'public' and 'static' are access modifiers that must appear within '.class' or '.method' directives.".to_string(),
+                ),
+                JasmTokenKind::Identifier(_) => Some(
+                    "Identifiers (class, method, or field names) must be used within appropriate directives like '.class', '.method', or field references.".to_string(),
+                ),
+                JasmTokenKind::Integer(_) => Some(
+                    "Integer literals are typically used as instruction arguments inside '.code' blocks.".to_string(),
+                ),
+                JasmTokenKind::StringLiteral(_) => Some(
+                    "String literals are constant values that must appear inside '.code' blocks as instruction arguments.".to_string(),
+                ),
+                JasmTokenKind::MethodDescriptor(_) => Some(
+                    "Method descriptors specify method signatures and must appear after method names in '.method' directives or as instruction arguments.".to_string(),
+                ),
+                _ => {
+                    Some("All assembly code must be placed inside a class definition starting with '.class'.".to_string())
+                }
+            },
+            ParserError::TrailingTokens(tokens, context) => Some(format!(
+                "The class definition should end after the class name.\n{}",
+                match (tokens[0].kind.clone(), context) {
+                    (JasmTokenKind::DotSuper, TrailingTokensContext::Class) =>
                         "Consider starting a new line for the '.super' directive.",
-                    JasmTokenKind::OpenParen =>
-                        "If you're trying to define a method, use the '.method' directive instead.",
-                    JasmTokenKind::DotMethod =>
+                    (JasmTokenKind::DotMethod, TrailingTokensContext::Class) =>
                         "Consider starting a new line for the '.method' directive.",
-                    JasmTokenKind::Public | JasmTokenKind::Static =>
+                    (
+                        JasmTokenKind::Public | JasmTokenKind::Static,
+                        TrailingTokensContext::Class,
+                    ) =>
                         "Access flags must appear before the class name:\n.class [access_flags] <name>",
                     _ =>
                         "Unexpected tokens after class name. Consider starting a new line for the next directive.",
                 }
             )),
-            ParserError::ClassDirectiveNameExpected(_, kind) => match kind {
-                JasmTokenKind::StringLiteral(_) => {
-                    Some("Consider removing the quotes around the class name".to_string())
+            ParserError::IdentifierExpected(_, kind, context) => match (kind, context) {
+                (
+                    JasmTokenKind::StringLiteral(_),
+                    IdentifierContext::ClassDirective | IdentifierContext::SuperDirective,
+                ) => Some("Consider removing the quotes around the class name".to_string()),
+                (JasmTokenKind::StringLiteral(_), IdentifierContext::MethodDirectiveName) => {
+                    Some("Consider removing the quotes around the method name".to_string())
                 }
                 _ => Some(
                     "The .class directive requires a name:\n.class [access_flags] <name>"
                         .to_string(),
                 ),
             },
-            ParserError::Internal(_) | ParserError::EmptyFile(_) => None,
+            ParserError::EmptyFile(_) => Some("A Java assembly file must start with a '.class' directive.".to_string()),
+            ParserError::Internal(_) => None,
+            _ => unimplemented!(),
         }
     }
 
@@ -90,12 +194,13 @@ impl ParserError {
         match self {
             ParserError::ClassDirectiveExpected(span, _)
             | ParserError::EmptyFile(span)
-            | ParserError::ClassDirectiveNameExpected(span, _) => Some(*span),
-            ParserError::ClassDirectiveTrailingTokens(tokens, _) => Some(Span::new(
+            | ParserError::IdentifierExpected(span, _, _) => Some(*span),
+            ParserError::TrailingTokens(tokens, _) => Some(Span::new(
                 tokens[0].span.start,
                 tokens.last().map(|v| v.span.end).unwrap_or(0),
             )),
             ParserError::Internal(_) => None,
+            _ => unimplemented!(),
         }
     }
 }
@@ -106,12 +211,12 @@ pub struct JasmParser {
 }
 
 impl JasmParser {
+    fn peek_token_kind(&mut self) -> Option<&JasmTokenKind> {
+        self.tokens.peek().map(|token| &token.kind)
+    }
+
     fn skip_newlines(&mut self) -> Result<(), ParserError> {
-        while let Some(JasmToken {
-            kind: JasmTokenKind::Newline,
-            ..
-        }) = self.tokens.peek()
-        {
+        while let Some(JasmTokenKind::Newline) = self.peek_token_kind() {
             self.next_token()?;
         }
         Ok(())
@@ -144,18 +249,12 @@ impl JasmParser {
     fn parse_class_access_flags(&mut self) -> Result<u16, ParserError> {
         let mut flags = 0u16;
         loop {
-            match self.tokens.peek() {
-                Some(JasmToken {
-                    kind: JasmTokenKind::Public,
-                    ..
-                }) => {
+            match self.peek_token_kind() {
+                Some(JasmTokenKind::Public) => {
                     flags |= 0x0001; // ACC_PUBLIC
                     self.next_token()?;
                 }
-                Some(JasmToken {
-                    kind: JasmTokenKind::Static,
-                    ..
-                }) => {
+                Some(JasmTokenKind::Static) => {
                     flags |= 0x0008; // ACC_STATIC
                     self.next_token()?;
                 }
@@ -165,7 +264,252 @@ impl JasmParser {
         Ok(flags)
     }
 
-    fn parse_class(&mut self) -> Result<JasmClass, ParserError> {
+    //TODO: add all flags, handle orders, and check for duplicates
+    fn parse_method_access_flags(&mut self) -> Result<u16, ParserError> {
+        let mut flags = 0u16;
+        loop {
+            match self.peek_token_kind() {
+                Some(JasmTokenKind::Public) => {
+                    flags |= 0x0001; // ACC_PUBLIC
+                    self.next_token()?;
+                }
+                Some(JasmTokenKind::Static) => {
+                    flags |= 0x0008; // ACC_STATIC
+                    self.next_token()?;
+                }
+                _ => break,
+            }
+        }
+        Ok(flags)
+    }
+
+    fn expect_next_identifier(
+        &mut self,
+        context: IdentifierContext,
+        prev_token_end: usize,
+    ) -> Result<String, ParserError> {
+        let token = self.next_token()?;
+        match token.kind {
+            JasmTokenKind::Identifier(name) => Ok(name),
+            JasmTokenKind::Eof | JasmTokenKind::Newline => Err(ParserError::IdentifierExpected(
+                Span::new(prev_token_end, prev_token_end),
+                token.kind,
+                context,
+            )),
+            _ => Err(ParserError::IdentifierExpected(
+                token.span, token.kind, context,
+            )),
+        }
+    }
+
+    fn expect_next_method_descriptor(
+        &mut self,
+        context: MethodDescriptorContext,
+        prev_token_end: usize,
+    ) -> Result<String, ParserError> {
+        let token = self.next_token()?;
+        match token.kind {
+            JasmTokenKind::MethodDescriptor(name) => Ok(name),
+            JasmTokenKind::Eof | JasmTokenKind::Newline => {
+                Err(ParserError::MethodDescriptorExpected(
+                    Span::new(prev_token_end, prev_token_end),
+                    token.kind,
+                    context,
+                ))
+            }
+            _ => Err(ParserError::MethodDescriptorExpected(
+                token.span, token.kind, context,
+            )),
+        }
+    }
+
+    fn parse_super_directive(&mut self) -> Result<(), ParserError> {
+        let dot_super = self.next_token()?; // consume .super token
+        let super_name =
+            self.expect_next_identifier(IdentifierContext::SuperDirective, dot_super.span.end)?;
+        self.expect_no_trailing_tokens(TrailingTokensContext::Super)
+    }
+
+    fn expect_no_trailing_tokens(
+        &mut self,
+        context: TrailingTokensContext,
+    ) -> Result<(), ParserError> {
+        let trailing_tokens = self.next_until_newline()?;
+        if !trailing_tokens.is_empty() {
+            return Err(ParserError::TrailingTokens(trailing_tokens, context));
+        }
+        Ok(())
+    }
+
+    fn expect_next_non_negative_integer(
+        &mut self,
+        context: NonNegativeIntegerContext,
+        prev_token_end: usize,
+    ) -> Result<u32, ParserError> {
+        let token = self.next_token()?;
+        match token.kind {
+            JasmTokenKind::Integer(value) if value >= 0 => Ok(value as u32),
+            JasmTokenKind::Eof | JasmTokenKind::Newline => {
+                Err(ParserError::NonNegativeIntegerExpected(
+                    Span::new(prev_token_end, prev_token_end),
+                    token.kind,
+                    context,
+                ))
+            }
+            _ => Err(ParserError::NonNegativeIntegerExpected(
+                token.span, token.kind, context,
+            )),
+        }
+    }
+
+    fn parse_instruction(&mut self) -> Result<(), ParserError> {
+        let instruction_name =
+            self.expect_next_identifier(IdentifierContext::InstructionName, self.last_span.end)?;
+        let instruction_pos = self.last_span;
+        let instruction_spec = INSTRUCTION_SPECS
+            .get(instruction_name.as_str())
+            .ok_or_else(|| {
+                ParserError::UnknownInstruction(instruction_pos, instruction_name.clone())
+            })?;
+        for arg_spec in instruction_spec.args {
+            match arg_spec {
+                InstructionArgKind::ClassName => self.expect_next_identifier(
+                    IdentifierContext::ClassNameInstructionArg,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::MethodName => self.expect_next_identifier(
+                    IdentifierContext::MethodNameInstructionArg,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::MethodDescriptor => self.expect_next_method_descriptor(
+                    MethodDescriptorContext::Instruction,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::StringLiteral => {
+                    // TODO: stub for ldc
+                    let token = self.next_token()?;
+                    match token.kind {
+                        JasmTokenKind::StringLiteral(value) => value,
+                        _ => {
+                            return Err(ParserError::IdentifierExpected(
+                                token.span,
+                                token.kind,
+                                IdentifierContext::InstructionName,
+                            ));
+                        }
+                    }
+                }
+                InstructionArgKind::FieldName => self.expect_next_identifier(
+                    IdentifierContext::FieldNameInstructionArg,
+                    instruction_pos.end,
+                )?,
+                InstructionArgKind::FieldDescriptor => self.expect_next_identifier(
+                    IdentifierContext::FieldDescriptorInstructionArg,
+                    instruction_pos.end,
+                )?,
+            };
+        }
+        Ok(())
+    }
+
+    fn parse_code_directive(&mut self) -> Result<(), ParserError> {
+        // TODO: Do I need "already defined" checks for stack and locals?
+        let mut stack = None;
+        let mut locals = None;
+        self.next_token()?; // consume .code token
+
+        while let Some(JasmTokenKind::Identifier(_)) = self.peek_token_kind() {
+            let identifier_token = self.next_token()?;
+            match identifier_token.kind {
+                JasmTokenKind::Identifier(ref name) if name == "stack" => {
+                    stack = Some(self.expect_next_non_negative_integer(
+                        NonNegativeIntegerContext::CodeStack,
+                        identifier_token.span.end,
+                    )?);
+                }
+                JasmTokenKind::Identifier(ref name) if name == "locals" => {
+                    locals = Some(self.expect_next_non_negative_integer(
+                        NonNegativeIntegerContext::CodeLocals,
+                        identifier_token.span.end,
+                    )?);
+                }
+                JasmTokenKind::Identifier(_) => Err(ParserError::UnexpectedCodeDirectiveArg(
+                    identifier_token.span,
+                    identifier_token.kind,
+                ))?,
+                _ => unreachable!(),
+            }
+        }
+
+        self.expect_no_trailing_tokens(TrailingTokensContext::Code)?;
+        self.skip_newlines()?;
+
+        while let Some(token) = self.tokens.peek() {
+            if matches!(token.kind, JasmTokenKind::DotEnd | JasmTokenKind::Eof) {
+                break;
+            }
+            self.parse_instruction()?;
+            self.skip_newlines()?
+        }
+
+        // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::DotEnd) {
+            return Err(ParserError::Internal(format!(
+                "Expected .end after code block, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::Identifier(ref s) if s == "code") {
+            return Err(ParserError::Internal(format!(
+                "Expected .end code after code block, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+        // TODO: assert no more tokens on the line after .end code
+        self.skip_newlines()?;
+
+        Ok(())
+    }
+
+    fn parse_method(&mut self) -> Result<(), ParserError> {
+        let dot_method = self.next_token()?; // consume .method token
+        let _access_flags = self.parse_method_access_flags()?;
+        let method_name = self
+            .expect_next_identifier(IdentifierContext::MethodDirectiveName, dot_method.span.end)?;
+        let method_descriptor = self.expect_next_method_descriptor(
+            MethodDescriptorContext::MethodDirective,
+            self.last_span.end,
+        )?;
+        self.expect_no_trailing_tokens(TrailingTokensContext::Method)?;
+        self.skip_newlines()?;
+        self.parse_code_directive()?;
+        self.skip_newlines()?;
+
+        // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::DotEnd) {
+            return Err(ParserError::Internal(format!(
+                "Expected .end after method body, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+
+        let next_token = self.next_token()?;
+        if !matches!(next_token.kind, JasmTokenKind::Identifier(ref s) if s == "method") {
+            return Err(ParserError::Internal(format!(
+                "Expected .end method after method body, found {}",
+                next_token.kind.as_string_token_type()
+            )));
+        }
+
+        // assert no more tokens on the line after .end method
+        self.skip_newlines()?;
+        Ok(())
+    }
+
+    fn parse_class(&mut self) -> Result<(), ParserError> {
         self.skip_newlines()?;
         let class_token = self.next_token()?;
         if matches!(class_token.kind, JasmTokenKind::Eof) {
@@ -178,45 +522,30 @@ impl JasmParser {
             ));
         }
         let _access_flags = self.parse_class_access_flags()?;
-        let access_flag_end = self.last_span.end;
-        let name_token = self.next_token()?;
 
-        let class_name = match name_token.kind {
-            JasmTokenKind::Identifier(name) => Ok(name),
-            JasmTokenKind::Eof | JasmTokenKind::Newline => {
-                Err((Span::new(access_flag_end, access_flag_end), name_token.kind))
-            }
-            _ => Err((name_token.span, name_token.kind)),
-        }
-        .map_err(|(s, t)| ParserError::ClassDirectiveNameExpected(s, t))?;
+        let class_name =
+            self.expect_next_identifier(IdentifierContext::ClassDirective, self.last_span.end)?;
 
         // TODO: test EOF right after class name and check for correct span in error
-        let trailing_tokens = self.next_until_newline()?;
-        if !trailing_tokens.is_empty() {
-            return Err(ParserError::ClassDirectiveTrailingTokens(
-                trailing_tokens,
-                class_name,
-            ));
-        }
+        self.expect_no_trailing_tokens(TrailingTokensContext::Class)?;
 
         while let Some(token) = self.tokens.peek() {
             match token.kind {
                 JasmTokenKind::Newline => {
                     self.next_token()?;
                 }
-                JasmTokenKind::DotMethod => unimplemented!(),
-                JasmTokenKind::DotSuper => unimplemented!(),
+                JasmTokenKind::DotMethod => self.parse_method()?,
+                JasmTokenKind::DotSuper => self.parse_super_directive()?,
                 JasmTokenKind::DotEnd => todo!(), // TODO: check for .end class and break
                 JasmTokenKind::Eof => break,
                 _ => todo!("Unexpected token in class body"),
             }
         }
 
-        //self.expect(|t| matches!(t.kind, JasmTokenKind::DotClass), ".class")?;
-        todo!()
+        Ok(())
     }
 
-    pub fn parse(tokens: Vec<JasmToken>) -> Result<JasmClass, ParserError> {
+    pub fn parse(tokens: Vec<JasmToken>) -> Result<(), ParserError> {
         if !matches!(tokens.last().unwrap().kind, JasmTokenKind::Eof) {
             return Err(ParserError::Internal(
                 "Token stream must end with an EOF token".to_string(),

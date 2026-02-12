@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+   public
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected keyword before class definition
+   ╭─[ test_data/integration/parser/outside_class_directive/public_keyword.ja:1:4 ]
+   │
+ 1 │    public
+   │    ───┬──  
+   │       ╰──── The 'public' keyword must appear inside a class definition.
+   │ 
+   │ Note: Keywords like 'public' and 'static' are access modifiers that must appear within '.class' or '.method' directives.
+───╯

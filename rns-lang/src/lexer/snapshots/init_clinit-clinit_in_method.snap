@@ -3,15 +3,13 @@ source: jasm/src/lexer/tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
-.method static <clinit>()V
+.method static <clinit> ()V
 ----- TOKENS -----
-KIND                    | SPAN    | TEXT
-----                    | ----    | ----
-DotMethod               | 0..7    | .method
-Static                  | 8..14   | static
-Identifier("<clinit>")  | 15..23  | <clinit>
-OpenParen               | 23..24  | (
-CloseParen              | 24..25  | )
-Identifier("V")         | 25..26  | V
-Newline                 | 26..27  | \n
-Eof                     | 27..27  |
+KIND                     | SPAN    | TEXT
+----                     | ----    | ----
+DotMethod                | 0..7    | .method
+Static                   | 8..14   | static
+Identifier("<clinit>")   | 15..23  | <clinit>
+MethodDescriptor("()V")  | 24..27  | ()V
+Newline                  | 27..28  | \n
+Eof                      | 28..28  |

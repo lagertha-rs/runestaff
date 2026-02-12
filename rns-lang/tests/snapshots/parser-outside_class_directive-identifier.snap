@@ -1,0 +1,23 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+
+
+
+HelloWorld
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected identifier before class definition
+   ╭─[ test_data/integration/parser/outside_class_directive/identifier.ja:4:1 ]
+   │
+ 4 │ HelloWorld
+   │ ─────┬────  
+   │      ╰────── The 'HelloWorld' identifier must appear inside a class definition.
+   │ 
+   │ Note: Identifiers (class, method, or field names) must be used within appropriate directives like '.class', '.method', or field references.
+───╯

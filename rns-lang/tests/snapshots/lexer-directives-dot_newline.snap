@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.
+.end
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected character
+   ╭─[ test_data/integration/lexer/directives/dot_newline.ja:1:2 ]
+   │
+ 1 │ .
+   │  ┬  
+   │  ╰── Unexpected character '\n'
+   │ 
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .code
+───╯

@@ -1,4 +1,0 @@
-.class public HelloWorld ( ; should be here
-.super java/lang/Object
-
-.end method

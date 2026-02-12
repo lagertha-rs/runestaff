@@ -8,7 +8,7 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: lexing error
+Error: unknown directive
    ╭─[ test_data/integration/lexer/directives/unknown_directive_as_second_token.ja:1:8 ]
    │
  1 │ .class .unknown_directive HelloWorld

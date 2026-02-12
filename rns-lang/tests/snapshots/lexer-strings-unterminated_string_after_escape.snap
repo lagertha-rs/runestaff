@@ -8,7 +8,7 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: lexing error
+Error: unterminated string literal
    ╭─[ test_data/integration/lexer/strings/unterminated_string_after_escape.ja:2:1 ]
    │
  2 │ "String ending with backslash\

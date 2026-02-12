@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: lexing error
+Error: invalid integer
    ╭─[ test_data/integration/lexer/integers/invalid_negative_format.ja:2:7 ]
    │
  2 │ .code -5xyz
    │       ──┬──  
-   │         ╰──── '-5xyz' is not a valid integer
+   │         ╰──── '-5xyz' contains invalid characters
    │ 
-   │ Note: Expected a valid integer number.
+   │ Note: Integers must be between -2147483648 and 2147483647
 ───╯

@@ -5,16 +5,12 @@ expression: formatted
 ----- SOURCE -----
 42 (arg)[type <init> .code -10
 ----- TOKENS -----
-KIND                  | SPAN    | TEXT
-----                  | ----    | ----
-Integer(42)           | 0..2    | 42
-OpenParen             | 3..4    | (
-Identifier("arg")     | 4..7    | arg
-CloseParen            | 7..8    | )
-OpenBracket           | 8..9    | [
-Identifier("type")    | 9..13   | type
-Identifier("<init>")  | 14..20  | <init>
-DotCode               | 21..26  | .code
-Integer(-10)          | 27..30  | -10
-Newline               | 30..31  | \n
-Eof                   | 31..31  |
+KIND                            | SPAN    | TEXT
+----                            | ----    | ----
+Integer(42)                     | 0..2    | 42
+MethodDescriptor("(arg)[type")  | 3..13   | (arg)[type
+Identifier("<init>")            | 14..20  | <init>
+DotCode                         | 21..26  | .code
+Integer(-10)                    | 27..30  | -10
+Newline                         | 30..31  | \n
+Eof                             | 31..31  |

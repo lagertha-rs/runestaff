@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class
+.static
+.method
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/lexer/directives/dot_static.ja:2:1 ]
+   │
+ 2 │ .static
+   │ ───┬───  
+   │    ╰───── Unknown directive '.static'
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

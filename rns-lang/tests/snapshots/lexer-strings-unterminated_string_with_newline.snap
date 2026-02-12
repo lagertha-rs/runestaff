@@ -10,7 +10,7 @@ across lines"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: lexing error
+Error: unterminated string literal
    ╭─[ test_data/integration/lexer/strings/unterminated_string_with_newline.ja:2:1 ]
    │
  2 │ "String that breaks

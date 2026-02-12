@@ -1,0 +1,17 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code +123
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected character
+   ╭─[ test_data/integration/lexer/integers/plus_sign.ja:1:7 ]
+   │
+ 1 │ .code +123
+   │       ┬  
+   │       ╰── Unexpected character '+'
+───╯

@@ -9,13 +9,21 @@ pub(crate) enum LexerError {
     UnknownDirective(Span, String),
     UnexpectedEof(Span),
     UnterminatedString(Span),
+    InvalidEscape(Span, char),
     InvalidNumber(Span, String),
 }
 
 impl LexerError {
-    // TODO: add messages
     pub fn message(&self) -> Option<String> {
-        None
+        let msg = match self {
+            LexerError::UnexpectedChar(_, _, _) => "unexpected character",
+            LexerError::UnknownDirective(_, _) => "unknown directive",
+            LexerError::UnexpectedEof(_) => "unexpected end of file",
+            LexerError::UnterminatedString(_) => "unterminated string literal",
+            LexerError::InvalidEscape(_, _) => "invalid escape sequence",
+            LexerError::InvalidNumber(_, _) => "invalid integer",
+        };
+        Some(msg.to_string())
     }
 
     pub fn note(&self) -> Option<String> {
@@ -24,17 +32,25 @@ impl LexerError {
                 "Expected one of the directives: {}",
                 JasmTokenKind::list_directives()
             ),
-            LexerError::UnexpectedChar(_, _, context) => context
-                .clone()
-                .unwrap_or_else(|| "Unexpected character".to_string()),
+            LexerError::UnexpectedChar(_, _, context) => return context.clone(),
 
             LexerError::UnterminatedString(_) => {
                 "String literal is not terminated before the end of the line or file.".to_string()
             }
+            LexerError::InvalidEscape(_, c) => {
+                format!("The character '\\{}' is not a valid escape sequence.", c)
+            }
             LexerError::UnknownDirective(_, _) => {
                 format!("Valid directives are {}", JasmTokenKind::list_directives())
             }
-            LexerError::InvalidNumber(_, _) => "Expected a valid integer number.".to_string(),
+            LexerError::InvalidNumber(_, value) => {
+                if value.starts_with("0x") || value.starts_with("0X") {
+                    "Hexadecimal numbers are not supported yet, but are planned for the future."
+                        .to_string()
+                } else {
+                    "Integers must be between -2147483648 and 2147483647".to_string()
+                }
+            }
         };
         Some(note)
     }
@@ -53,7 +69,19 @@ impl LexerError {
             LexerError::UnterminatedString(_) => {
                 "String started here is not terminated".to_string()
             }
-            LexerError::InvalidNumber(_, value) => format!("'{}' is not a valid integer", value),
+            LexerError::InvalidEscape(_, c) => format!("Invalid escape sequence '\\{}'", c),
+            LexerError::InvalidNumber(_, value) => {
+                if value.parse::<i128>().is_ok() {
+                    format!(
+                        "Integer '{}' is too large for a 32-bit signed integer",
+                        value
+                    )
+                } else if value.chars().any(|c| !c.is_digit(10) && c != '-') {
+                    format!("'{}' contains invalid characters", value)
+                } else {
+                    format!("'{}' is not a valid integer", value)
+                }
+            }
         };
         Some(res)
     }
@@ -64,6 +92,7 @@ impl LexerError {
             | LexerError::UnknownDirective(span, _)
             | LexerError::UnexpectedEof(span)
             | LexerError::UnterminatedString(span)
+            | LexerError::InvalidEscape(span, _)
             | LexerError::InvalidNumber(span, _) => Some(span),
         }
     }
@@ -114,7 +143,7 @@ impl<'a> JasmLexer<'a> {
     }
 
     fn is_delimiter(c: char) -> bool {
-        c.is_whitespace() || matches!(c, '(' | ')' | '[')
+        c.is_whitespace()
     }
 
     fn read_to_delimiter(&mut self) -> String {
@@ -162,7 +191,12 @@ impl<'a> JasmLexer<'a> {
                                     start + 1,
                                 )));
                             }
-                            _ => result.push(next_char),
+                            _ => {
+                                return Err(LexerError::InvalidEscape(
+                                    Span::new(self.byte_pos, self.byte_pos + next_char.len_utf8()),
+                                    next_char,
+                                ));
+                            }
                         }
                         self.next_char(); // consume escaped character
                     } else {
@@ -225,7 +259,10 @@ impl<'a> JasmLexer<'a> {
 
         let kind = match ch {
             '.' => self.handle_directive(start)?,
-            'a'..='z' | 'A'..='Z' | '_' => {
+            'a'..='z' | 'A'..='Z' | '_' | '(' => {
+                // TODO: out identifiers can have forbidden characters, but for now we just read until
+                // the next whitespace, which is good enough for most cases. In the future we might want
+                // to implement more specific rules for identifiers and method descriptors.
                 let str = self.read_to_delimiter();
                 JasmTokenKind::from_identifier(str)
             }
@@ -237,18 +274,6 @@ impl<'a> JasmLexer<'a> {
                     kind: JasmTokenKind::Newline,
                     span: Span::new(start, self.byte_pos),
                 });
-            }
-            '[' => {
-                self.next_char();
-                JasmTokenKind::OpenBracket
-            }
-            '(' => {
-                self.next_char();
-                JasmTokenKind::OpenParen
-            }
-            ')' => {
-                self.next_char();
-                JasmTokenKind::CloseParen
             }
             '<' => {
                 let token_str = self.read_to_delimiter();
