@@ -61,7 +61,27 @@ impl ParserError {
                 "Unexpected {} before class definition",
                 token.as_string_token_type()
             )),
-            ParserError::TrailingTokens(_, _) => Some("trailing characters".to_string()),
+            ParserError::TrailingTokens(tokens, context) => {
+                let first_token_kind = &tokens[0].kind;
+                match context {
+                    TrailingTokensContext::Class => Some(format!(
+                        "Unexpected {} after class name",
+                        first_token_kind.as_string_token_type()
+                    )),
+                    TrailingTokensContext::Super => Some(format!(
+                        "Unexpected {} after superclass name",
+                        first_token_kind.as_string_token_type()
+                    )),
+                    TrailingTokensContext::Method => Some(format!(
+                        "Unexpected {} after method definition",
+                        first_token_kind.as_string_token_type()
+                    )),
+                    TrailingTokensContext::Code => Some(format!(
+                        "Unexpected {} after code directive",
+                        first_token_kind.as_string_token_type()
+                    )),
+                }
+            }
             ParserError::IdentifierExpected(_, token, context) => Some(match context {
                 IdentifierContext::ClassName => format!(
                     "Expected class name but found {}",
@@ -79,8 +99,32 @@ impl ParserError {
 
     pub fn label(&self) -> Option<String> {
         match self {
-            ParserError::TrailingTokens(_, _) => {
-                Some("Class headers must end after the name.".to_string())
+            ParserError::TrailingTokens(tokens, context) => {
+                match context {
+                    TrailingTokensContext::Class => {
+                        let first_token_kind = &tokens[0].kind;
+                        match first_token_kind {
+                            JasmTokenKind::DotSuper => Some("The '.super' directive must start on a new line.".to_string()),
+                            JasmTokenKind::DotMethod => Some("The '.method' directive must start on a new line.".to_string()),
+                            JasmTokenKind::DotClass | JasmTokenKind::DotCode | JasmTokenKind::DotEnd =>
+                                Some(format!("Directive '{}' cannot follow class name directly.", first_token_kind)),
+                            JasmTokenKind::Public | JasmTokenKind::Static =>
+                                Some("Access flags must appear before the class name.".to_string()),
+                            JasmTokenKind::Integer(_) =>
+                                Some("Integer literals cannot appear after class name.".to_string()),
+                            JasmTokenKind::Identifier(_) =>
+                                Some("Unexpected identifier after class name.".to_string()),
+                            JasmTokenKind::StringLiteral(_) =>
+                                Some("String literals cannot appear after class name.".to_string()),
+                            JasmTokenKind::MethodDescriptor(_) =>
+                                Some("Method descriptors cannot appear after class name.".to_string()),
+                            _ => Some("Unexpected token after class name.".to_string()),
+                        }
+                    }
+                    TrailingTokensContext::Super => Some("Super directive must end after superclass name.".to_string()),
+                    TrailingTokensContext::Method => Some("Method definition must end after method signature.".to_string()),
+                    TrailingTokensContext::Code => Some("Code directive must end after stack/local arguments.".to_string()),
+                }
             }
             ParserError::ClassDirectiveExpected(_, token) => match token {
                 JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => Some(format!(
@@ -115,7 +159,7 @@ impl ParserError {
             }
             ParserError::Internal(_) => None,
             ParserError::EmptyFile(_) => Some("The file is empty or contains only comments.".to_string()),
-                _ => unimplemented!()
+            _ => unimplemented!()
         }
     }
 
@@ -151,22 +195,43 @@ impl ParserError {
                     Some("All assembly code must be placed inside a class definition starting with '.class'.".to_string())
                 }
             },
-            ParserError::TrailingTokens(tokens, context) => Some(format!(
-                "The class definition should end after the class name.\n{}",
-                match (tokens[0].kind.clone(), context) {
-                    (JasmTokenKind::DotSuper, TrailingTokensContext::Class) =>
-                        "Consider starting a new line for the '.super' directive.",
-                    (JasmTokenKind::DotMethod, TrailingTokensContext::Class) =>
-                        "Consider starting a new line for the '.method' directive.",
-                    (
-                        JasmTokenKind::Public | JasmTokenKind::Static,
-                        TrailingTokensContext::Class,
-                    ) =>
-                        "Access flags must appear before the class name:\n.class [access_flags] <name>",
-                    _ =>
-                        "Unexpected tokens after class name. Consider starting a new line for the next directive.",
+            ParserError::TrailingTokens(tokens, context) => {
+                let first_token_kind = &tokens[0].kind;
+                match context {
+                    TrailingTokensContext::Class => Some(format!(
+                        "The class definition should end after the class name.\n{}",
+                        match first_token_kind {
+                            JasmTokenKind::DotSuper => "Consider starting a new line for the '.super' directive.".to_string(),
+                            JasmTokenKind::DotMethod => "Consider starting a new line for the '.method' directive.".to_string(),
+                            JasmTokenKind::DotClass =>
+                                "The .class directive is used to start a new class definition and cannot be nested or placed here. Please start the new class on a new line or remove the extra directive.".to_string(),
+                            JasmTokenKind::DotCode | JasmTokenKind::DotEnd =>
+                                format!("Directives like '{}' must appear before the class name, not after. Please move or remove it.", first_token_kind),
+                            JasmTokenKind::Public | JasmTokenKind::Static =>
+                                "Access flags must appear before the class name:\n.class [access_flags] <name>".to_string(),
+                            JasmTokenKind::Integer(_) =>
+                                "Integer literals are instruction arguments and must appear inside .code blocks.".to_string(),
+                            JasmTokenKind::Identifier(_) =>
+                                "Identifiers (method names, field names, etc.) must be used within appropriate directives like .method or as instruction arguments.".to_string(),
+                            JasmTokenKind::StringLiteral(_) =>
+                                "String literals are constant values and must appear inside .code blocks.".to_string(),
+                            JasmTokenKind::MethodDescriptor(_) =>
+                                "Method descriptors specify method signatures and must appear after method names in .method directives.".to_string(),
+                            _ =>
+                                "Unexpected tokens after class name. Consider starting a new line for the next directive.".to_string(),
+                        }
+                    )),
+                    TrailingTokensContext::Super => Some(
+                        "The .super directive must end after the superclass name.\nConsider starting a new line for the next directive.".to_string(),
+                    ),
+                    TrailingTokensContext::Method => Some(
+                        "The .method directive must end after the method signature.\nConsider starting a new line for the next directive.".to_string(),
+                    ),
+                    TrailingTokensContext::Code => Some(
+                        "The .code directive must end after stack/local arguments.\nConsider starting a new line for the next directive.".to_string(),
+                    ),
                 }
-            )),
+            }
             ParserError::IdentifierExpected(_, kind, context) => match (kind, context) {
                 // String literal cases
                 (

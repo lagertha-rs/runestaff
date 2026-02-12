@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld extra tokens here
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected identifier after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/multiple_trailing.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld extra tokens here
+   │                          ────────┬────────  
+   │                                  ╰────────── Unexpected identifier after class name.
+   │ 
+   │ Note: The class definition should end after the class name.
+   │       Identifiers (method names, field names, etc.) must be used within appropriate directives like .method or as instruction arguments.
+───╯

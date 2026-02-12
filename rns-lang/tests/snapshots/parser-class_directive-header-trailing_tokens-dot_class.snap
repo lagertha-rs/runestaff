@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld .class AnotherClass
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected directive after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/dot_class.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld .class AnotherClass
+   │                          ─────────┬─────────  
+   │                                   ╰─────────── Directive '.class' cannot follow class name directly.
+   │ 
+   │ Note: The class definition should end after the class name.
+   │       The .class directive is used to start a new class definition and cannot be nested or placed here. Please start the new class on a new line or remove the extra directive.
+───╯

@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld "extra string"
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected string literal after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/string_literal.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld "extra string"
+   │                          ───────┬──────  
+   │                                 ╰──────── String literals cannot appear after class name.
+   │ 
+   │ Note: The class definition should end after the class name.
+   │       String literals are constant values and must appear inside .code blocks.
+───╯

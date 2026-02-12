@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld 42
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected integer after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/integer.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld 42
+   │                          ─┬  
+   │                           ╰── Integer literals cannot appear after class name.
+   │ 
+   │ Note: The class definition should end after the class name.
+   │       Integer literals are instruction arguments and must appear inside .code blocks.
+───╯

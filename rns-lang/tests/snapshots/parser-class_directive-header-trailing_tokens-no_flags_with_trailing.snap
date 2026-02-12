@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class HelloWorld .super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Unexpected directive after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/no_flags_with_trailing.ja:1:19 ]
+   │
+ 1 │ .class HelloWorld .super java/lang/Object
+   │                   ───────────┬───────────  
+   │                              ╰───────────── The '.super' directive must start on a new line.
+   │ 
+   │ Note: The class definition should end after the class name.
+   │       Consider starting a new line for the '.super' directive.
+───╯
