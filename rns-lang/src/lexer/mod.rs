@@ -195,7 +195,7 @@ impl<'a> JasmLexer<'a> {
                                 return Err(LexerError::InvalidEscape(
                                     Span::new(self.byte_pos, self.byte_pos + next_char.len_utf8()),
                                     next_char,
-                                ))
+                                ));
                             }
                         }
                         self.next_char(); // consume escaped character
@@ -260,6 +260,9 @@ impl<'a> JasmLexer<'a> {
         let kind = match ch {
             '.' => self.handle_directive(start)?,
             'a'..='z' | 'A'..='Z' | '_' | '(' => {
+                // TODO: out identifiers can have forbidden characters, but for now we just read until
+                // the next whitespace, which is good enough for most cases. In the future we might want
+                // to implement more specific rules for identifiers and method descriptors.
                 let str = self.read_to_delimiter();
                 JasmTokenKind::from_identifier(str)
             }

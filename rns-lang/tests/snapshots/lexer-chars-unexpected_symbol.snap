@@ -1,0 +1,17 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code %
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected character
+   ╭─[ test_data/integration/lexer/chars/unexpected_symbol.ja:1:7 ]
+   │
+ 1 │ .code %
+   │       ┬  
+   │       ╰── Unexpected character '%'
+───╯
