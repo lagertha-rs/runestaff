@@ -1,4 +1,3 @@
-use crate::ast::JasmClass;
 use crate::instruction::{INSTRUCTION_SPECS, InstructionArgKind};
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;
@@ -58,9 +57,10 @@ pub(crate) enum MethodDescriptorContext {
 impl ParserError {
     pub fn message(&self) -> Option<String> {
         match self {
-            ParserError::ClassDirectiveExpected(_, token) => {
-                Some(format!("unexpected {}", token.as_string_token_type()))
-            }
+            ParserError::ClassDirectiveExpected(_, token) => Some(format!(
+                "Unexpected {} before class definition",
+                token.as_string_token_type()
+            )),
             ParserError::TrailingTokens(_, _) => Some("trailing characters".to_string()),
             ParserError::IdentifierExpected(_, _, context) => Some(
                 match context {
@@ -71,7 +71,7 @@ impl ParserError {
                 }
                 .to_string(),
             ),
-            ParserError::EmptyFile(_) => Some("empty file".to_string()),
+            ParserError::EmptyFile(_) => Some("File contains no class definition".to_string()),
             ParserError::Internal(msg) => Some(format!("Internal parser error: {}", msg)),
             _ => unimplemented!(),
         }
@@ -82,11 +82,25 @@ impl ParserError {
             ParserError::TrailingTokens(_, _) => {
                 Some("Class headers must end after the name.".to_string())
             }
-            ParserError::ClassDirectiveExpected(_, token) => Some(format!(
-                "The '{}' {} cannot appear before a class is defined.",
-                token,
-                token.as_string_token_type()
-            )),
+            ParserError::ClassDirectiveExpected(_, token) => match token {
+                JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => Some(format!(
+                    "The '{}' directive is only allowed inside a class definition.",
+                    token
+                )),
+                JasmTokenKind::DotCode => Some(format!(
+                    "The '{}' directive is only allowed inside a method definition.",
+                    token
+                )),
+                JasmTokenKind::DotEnd => Some(format!(
+                    "The '{}' directive has no matching start directive.",
+                    token
+                )),
+                _ => Some(format!(
+                    "The '{}' {} must appear inside a class definition.",
+                    token,
+                    token.as_string_token_type()
+                )),
+            },
             ParserError::IdentifierExpected(_, _, context) => {
                 Some(
                     match context {
@@ -99,18 +113,44 @@ impl ParserError {
                         _ => unimplemented!()
                     }.to_string())
             }
-            ParserError::EmptyFile(_) => Some("The file contains no class definition.".to_string()),
             ParserError::Internal(_) => None,
+            ParserError::EmptyFile(_) => Some("The file is empty or contains only comments.".to_string()),
                 _ => unimplemented!()
         }
     }
 
     pub fn note(&self) -> Option<String> {
         match self {
-            ParserError::ClassDirectiveExpected(_, _) => {
-                //TODO: actually it is false. I guess the source file name or class file version could be added to the note when implemented
-                Some("A Java assembly file must start with a '.class' definition.".to_string())
-            }
+            ParserError::ClassDirectiveExpected(_, token) => match token {
+                JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => {
+                    Some("Define a class first using '.class [access_flags] <name>'.".to_string())
+                }
+                JasmTokenKind::DotCode => Some(
+                    "Define a method first using '.method [access_flags] <name> <descriptor>'."
+                        .to_string(),
+                ),
+                JasmTokenKind::DotEnd => Some(
+                    "The '.end' directive must match a previous '.method', '.code', or '.class' directive.".to_string(),
+                ),
+                JasmTokenKind::Public | JasmTokenKind::Static => Some(
+                    "Keywords like 'public' and 'static' are access modifiers that must appear within '.class' or '.method' directives.".to_string(),
+                ),
+                JasmTokenKind::Identifier(_) => Some(
+                    "Identifiers (class, method, or field names) must be used within appropriate directives like '.class', '.method', or field references.".to_string(),
+                ),
+                JasmTokenKind::Integer(_) => Some(
+                    "Integer literals are typically used as instruction arguments inside '.code' blocks.".to_string(),
+                ),
+                JasmTokenKind::StringLiteral(_) => Some(
+                    "String literals are constant values that must appear inside '.code' blocks as instruction arguments.".to_string(),
+                ),
+                JasmTokenKind::MethodDescriptor(_) => Some(
+                    "Method descriptors specify method signatures and must appear after method names in '.method' directives or as instruction arguments.".to_string(),
+                ),
+                _ => {
+                    Some("All assembly code must be placed inside a class definition starting with '.class'.".to_string())
+                }
+            },
             ParserError::TrailingTokens(tokens, context) => Some(format!(
                 "The class definition should end after the class name.\n{}",
                 match (tokens[0].kind.clone(), context) {
@@ -140,7 +180,8 @@ impl ParserError {
                         .to_string(),
                 ),
             },
-            ParserError::Internal(_) | ParserError::EmptyFile(_) => None,
+            ParserError::EmptyFile(_) => Some("A Java assembly file must start with a '.class' directive.".to_string()),
+            ParserError::Internal(_) => None,
             _ => unimplemented!(),
         }
     }

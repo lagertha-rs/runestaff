@@ -45,6 +45,7 @@ impl JasmTokenKind {
         match name.as_str() {
             "public" => JasmTokenKind::Public,
             "static" => JasmTokenKind::Static,
+            // TODO: add a proper parsing
             _ if name.starts_with('(') => JasmTokenKind::MethodDescriptor(name),
             _ => JasmTokenKind::Identifier(name),
         }
