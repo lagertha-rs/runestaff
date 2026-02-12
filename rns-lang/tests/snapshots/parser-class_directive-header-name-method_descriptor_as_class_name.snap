@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public (II)V
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Expected class name but found method descriptor
+   ╭─[ test_data/integration/parser/class_directive/header/name/method_descriptor_as_class_name.ja:1:15 ]
+   │
+ 1 │ .class public (II)V
+   │               ──┬──  
+   │                 ╰──── Found '(II)V' instead of a class name. The .class directive requires a class name after optional access flags.
+   │ 
+   │ Note: Method descriptors cannot be used as class names.
+───╯

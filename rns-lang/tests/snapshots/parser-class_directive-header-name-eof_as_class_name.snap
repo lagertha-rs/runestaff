@@ -1,0 +1,18 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public static
+----- STDOUT -----
+
+----- STDERR -----
+Error: Expected class name but found eof
+   ╭─[ test_data/integration/parser/class_directive/header/name/eof_as_class_name.ja:1:21 ]
+   │
+ 1 │ .class public static
+   │                     │ 
+   │                     ╰─ Found 'eof' instead of a class name. The .class directive requires a class name after optional access flags.
+   │ 
+   │ Note: Class name is missing after optional access flags.
+───╯

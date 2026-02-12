@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public static .method main([Ljava/lang/String;)V
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Expected class name but found directive
+   ╭─[ test_data/integration/parser/class_directive/header/name/dot_method_as_class_name.ja:1:22 ]
+   │
+ 1 │ .class public static .method main([Ljava/lang/String;)V
+   │                      ───┬───  
+   │                         ╰───── Found '.method' instead of a class name. The .class directive requires a class name after optional access flags.
+   │ 
+   │ Note: Directives like '.method' cannot be used as class names.
+───╯

@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class .end method
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: Expected class name but found directive
+   ╭─[ test_data/integration/parser/class_directive/header/name/dot_end_as_class_name.ja:1:8 ]
+   │
+ 1 │ .class .end method
+   │        ──┬─  
+   │          ╰─── Found '.end' instead of a class name. The .class directive requires a class name after optional access flags.
+   │ 
+   │ Note: Directives like '.end' cannot be used as class names.
+───╯

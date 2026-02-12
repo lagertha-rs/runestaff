@@ -38,9 +38,9 @@ pub(crate) enum TrailingTokensContext {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(crate) enum IdentifierContext {
-    ClassDirective,
-    SuperDirective,
-    MethodDirectiveName,
+    ClassName,
+    SuperName,
+    MethodName,
     InstructionName,
     ClassNameInstructionArg,
     MethodNameInstructionArg,
@@ -62,15 +62,15 @@ impl ParserError {
                 token.as_string_token_type()
             )),
             ParserError::TrailingTokens(_, _) => Some("trailing characters".to_string()),
-            ParserError::IdentifierExpected(_, _, context) => Some(
-                match context {
-                    IdentifierContext::ClassDirective => "incomplete class definition",
-                    IdentifierContext::SuperDirective => "incomplete .super directive",
-                    IdentifierContext::MethodDirectiveName => "incomplete .method directive",
-                    _ => unimplemented!(),
-                }
-                .to_string(),
-            ),
+            ParserError::IdentifierExpected(_, token, context) => Some(match context {
+                IdentifierContext::ClassName => format!(
+                    "Expected class name but found {}",
+                    token.as_string_token_type()
+                ),
+                IdentifierContext::SuperName => "incomplete .super directive".to_string(),
+                IdentifierContext::MethodName => "incomplete .method directive".to_string(),
+                _ => unimplemented!(),
+            }),
             ParserError::EmptyFile(_) => Some("File contains no class definition".to_string()),
             ParserError::Internal(msg) => Some(format!("Internal parser error: {}", msg)),
             _ => unimplemented!(),
@@ -101,17 +101,17 @@ impl ParserError {
                     token.as_string_token_type()
                 )),
             },
-            ParserError::IdentifierExpected(_, _, context) => {
+            ParserError::IdentifierExpected(_, token, context) => {
                 Some(
                     match context {
-                        IdentifierContext::ClassDirective =>
-                            "The .class directive requires a class name after the access flags.",
-                        IdentifierContext::SuperDirective =>
-                            "The .super directive requires a superclass name.",
-                        IdentifierContext::MethodDirectiveName =>
-                            "The .method directive requires a method name followed by parentheses and a method descriptor.",
+                        IdentifierContext::ClassName =>
+                            format!("Found '{}' instead of a class name. The .class directive requires a class name after optional access flags.", token),
+                        IdentifierContext::SuperName =>
+                            "The .super directive requires a superclass name.".to_string(),
+                        IdentifierContext::MethodName =>
+                            "The .method directive requires a method name followed by parentheses and a method descriptor.".to_string(),
                         _ => unimplemented!()
-                    }.to_string())
+                    })
             }
             ParserError::Internal(_) => None,
             ParserError::EmptyFile(_) => Some("The file is empty or contains only comments.".to_string()),
@@ -168,17 +168,43 @@ impl ParserError {
                 }
             )),
             ParserError::IdentifierExpected(_, kind, context) => match (kind, context) {
+                // String literal cases
                 (
                     JasmTokenKind::StringLiteral(_),
-                    IdentifierContext::ClassDirective | IdentifierContext::SuperDirective,
+                    IdentifierContext::ClassName | IdentifierContext::SuperName,
                 ) => Some("Consider removing the quotes around the class name".to_string()),
-                (JasmTokenKind::StringLiteral(_), IdentifierContext::MethodDirectiveName) => {
+                (JasmTokenKind::StringLiteral(_), IdentifierContext::MethodName) => {
                     Some("Consider removing the quotes around the method name".to_string())
                 }
-                _ => Some(
-                    "The .class directive requires a name:\n.class [access_flags] <name>"
+                // Class name specific guidance
+                (JasmTokenKind::DotClass | JasmTokenKind::DotMethod | JasmTokenKind::DotSuper | JasmTokenKind::DotCode | JasmTokenKind::DotEnd, IdentifierContext::ClassName) => {
+                    Some(format!("Directives like '{}' cannot be used as class names.", kind))
+                }
+                (JasmTokenKind::Integer(_), IdentifierContext::ClassName) => {
+                    Some("Integer literals cannot be used as class names.".to_string())
+                }
+                (JasmTokenKind::MethodDescriptor(_), IdentifierContext::ClassName) => {
+                    Some("Method descriptors cannot be used as class names.".to_string())
+                }
+                (JasmTokenKind::Public | JasmTokenKind::Static, IdentifierContext::ClassName) => {
+                    Some(format!("Keywords like '{}' are access flags and must appear before the class name.", kind))
+                }
+                (JasmTokenKind::Newline | JasmTokenKind::Eof, IdentifierContext::ClassName) => {
+                    Some("Class name is missing after optional access flags.".to_string())
+                }
+                // Generic fallback
+                (_, IdentifierContext::ClassName) => Some(
+                    "The .class directive requires a valid Java class name:\n.class [access_flags] <name>"
                         .to_string(),
                 ),
+                // Keep existing for other contexts
+                (_, IdentifierContext::SuperName) => Some(
+                    "The .super directive requires a superclass name.".to_string(),
+                ),
+                (_, IdentifierContext::MethodName) => Some(
+                    "The .method directive requires a method name followed by parentheses and a method descriptor.".to_string(),
+                ),
+                _ => unimplemented!(),
             },
             ParserError::EmptyFile(_) => Some("A Java assembly file must start with a '.class' directive.".to_string()),
             ParserError::Internal(_) => None,
@@ -326,7 +352,7 @@ impl JasmParser {
     fn parse_super_directive(&mut self) -> Result<(), ParserError> {
         let dot_super = self.next_token()?; // consume .super token
         let super_name =
-            self.expect_next_identifier(IdentifierContext::SuperDirective, dot_super.span.end)?;
+            self.expect_next_identifier(IdentifierContext::SuperName, dot_super.span.end)?;
         self.expect_no_trailing_tokens(TrailingTokensContext::Super)
     }
 
@@ -476,8 +502,8 @@ impl JasmParser {
     fn parse_method(&mut self) -> Result<(), ParserError> {
         let dot_method = self.next_token()?; // consume .method token
         let _access_flags = self.parse_method_access_flags()?;
-        let method_name = self
-            .expect_next_identifier(IdentifierContext::MethodDirectiveName, dot_method.span.end)?;
+        let method_name =
+            self.expect_next_identifier(IdentifierContext::MethodName, dot_method.span.end)?;
         let method_descriptor = self.expect_next_method_descriptor(
             MethodDescriptorContext::MethodDirective,
             self.last_span.end,
@@ -524,7 +550,7 @@ impl JasmParser {
         let _access_flags = self.parse_class_access_flags()?;
 
         let class_name =
-            self.expect_next_identifier(IdentifierContext::ClassDirective, self.last_span.end)?;
+            self.expect_next_identifier(IdentifierContext::ClassName, self.last_span.end)?;
 
         // TODO: test EOF right after class name and check for correct span in error
         self.expect_no_trailing_tokens(TrailingTokensContext::Class)?;
