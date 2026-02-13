@@ -1,5 +1,3 @@
-use crate::lexer::LexerError;
-use crate::parser::ParserError;
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use std::ops::Range;
 
@@ -100,31 +98,6 @@ impl JasmDiagnostic {
     }
 }
 
-impl From<LexerError> for JasmError {
-    fn from(err: LexerError) -> Self {
-        JasmError::Diagnostic(JasmDiagnostic::new(
-            err.message().unwrap_or("lexing error".to_string()),
-            err.as_range(),
-            err.note(),
-            err.label(),
-        ))
-    }
-}
-
-impl From<ParserError> for JasmError {
-    fn from(err: ParserError) -> Self {
-        match err {
-            ParserError::Internal(msg) => JasmError::Internal(msg),
-            _ => JasmError::Diagnostic(JasmDiagnostic::new(
-                err.message().unwrap_or("parsing error".to_string()),
-                err.as_range(),
-                err.note(),
-                err.label(),
-            )),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -134,13 +107,5 @@ mod tests {
         let output = JasmError::format_internal_error("unexpected state in parser");
 
         insta::assert_snapshot!(output);
-    }
-
-    #[test]
-    fn test_parser_internal_error_converts_to_jasm_internal() {
-        let parser_err = ParserError::Internal("parser broke".to_string());
-        let jasm_err = JasmError::from(parser_err);
-
-        assert!(matches!(jasm_err, JasmError::Internal(msg) if msg == "parser broke"));
     }
 }
