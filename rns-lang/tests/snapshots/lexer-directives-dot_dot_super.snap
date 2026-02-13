@@ -12,7 +12,7 @@ Error: unknown directive
    │
  1 │ dot_dot_super ..super
    │               ───┬───  
-   │                  ╰───── Unknown directive '..super'
+   │                  ╰───── did you mean '.super'?
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

@@ -14,7 +14,7 @@ Error: unterminated string literal
    │
  2 │ "String with backslash escape followed by newline \
    │ ┬  
-   │ ╰── String started here is not terminated
+   │ ╰── this string literal is not terminated
    │ 
    │ Note: String literal is not terminated before the end of the line or file.
 ───╯

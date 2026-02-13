@@ -8,12 +8,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: File contains no class definition
+Error: file contains no class definition
    ╭─[ test_data/integration/parser/outside_class_directive/eof.ja:1:35 ]
    │
  1 │ ; only a comment, no class at all
    │                                   │ 
-   │                                   ╰─ The file is empty or contains only comments.
+   │                                   ╰─ the file is empty or contains only comments
    │ 
    │ Note: A Java assembly file must start with a '.class' directive.
 ───╯

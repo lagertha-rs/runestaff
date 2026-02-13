@@ -14,7 +14,7 @@ Error: unknown directive
    │
  2 │     .;comment after semicolon
    │     ────┬────  
-   │         ╰────── Unknown directive '.;comment'
+   │         ╰────── unknown directive
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

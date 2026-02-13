@@ -1,0 +1,6 @@
+.class public Name
+.method public main()V
+.code
+invokespecial "not-an-identifier"
+.end code
+.end method

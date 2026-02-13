@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld 42
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected integer after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/integer.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld 42
+   │                          ─┬  
+   │                           ╰── integer literals are not allowed here
+   │ 
+   │ Note: Integer literals belong inside '.code' blocks as instruction arguments.
+───╯

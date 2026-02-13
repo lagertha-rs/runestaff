@@ -13,7 +13,7 @@ Error: invalid integer
    │
  1 │ .code 99999999999999999999
    │       ──────────┬─────────  
-   │                 ╰─────────── Integer '99999999999999999999' is too large for a 32-bit signed integer
+   │                 ╰─────────── integer '99999999999999999999' is too large for a 32-bit signed integer
    │ 
    │ Note: Integers must be between -2147483648 and 2147483647
 ───╯

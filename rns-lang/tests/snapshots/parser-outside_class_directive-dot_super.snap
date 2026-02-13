@@ -10,12 +10,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected directive before class definition
+Error: unexpected directive before class definition
    ╭─[ test_data/integration/parser/outside_class_directive/dot_super.ja:2:1 ]
    │
  2 │ .super java/lang/Object
    │ ───┬──  
-   │    ╰──── The '.super' directive is only allowed inside a class definition.
+   │    ╰──── '.super' is only allowed inside a class definition
    │ 
    │ Note: Define a class first using '.class [access_flags] <name>'.
 ───╯

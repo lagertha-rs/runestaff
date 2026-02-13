@@ -62,18 +62,35 @@ impl LexerError {
     pub fn label(&self) -> Option<String> {
         let res = match self {
             LexerError::UnexpectedChar(_, c, _) => {
-                format!("Unexpected character '{}'", c.escape_default())
+                format!("found '{}' here", c.escape_default())
             }
-            LexerError::UnknownDirective(_, name) => format!("Unknown directive '{}'", name),
-            LexerError::UnexpectedEof(_) => "Unexpected end of file".to_string(),
+            LexerError::UnknownDirective(_, name) => {
+                let mut closest = None;
+                let mut min_dist = usize::MAX;
+                for directive in JasmTokenKind::DIRECTIVES {
+                    let d_str = directive.to_string();
+                    let dist = crate::utils::levenshtein_distance(name, &d_str);
+                    if dist < min_dist && dist <= 2 {
+                        min_dist = dist;
+                        closest = Some(d_str);
+                    }
+                }
+
+                if let Some(suggestion) = closest {
+                    format!("did you mean '{}'?", suggestion)
+                } else {
+                    "unknown directive".to_string()
+                }
+            }
+            LexerError::UnexpectedEof(_) => "unexpected end of file".to_string(),
             LexerError::UnterminatedString(_) => {
-                "String started here is not terminated".to_string()
+                "this string literal is not terminated".to_string()
             }
-            LexerError::InvalidEscape(_, c) => format!("Invalid escape sequence '\\{}'", c),
+            LexerError::InvalidEscape(_, c) => format!("invalid escape sequence '\\{}'", c),
             LexerError::InvalidNumber(_, value) => {
                 if value.parse::<i128>().is_ok() {
                     format!(
-                        "Integer '{}' is too large for a 32-bit signed integer",
+                        "integer '{}' is too large for a 32-bit signed integer",
                         value
                     )
                 } else if value.chars().any(|c| !c.is_digit(10) && c != '-') {

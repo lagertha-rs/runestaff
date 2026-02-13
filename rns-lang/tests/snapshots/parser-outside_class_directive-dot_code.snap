@@ -10,12 +10,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected directive before class definition
+Error: unexpected directive before class definition
    ╭─[ test_data/integration/parser/outside_class_directive/dot_code.ja:1:1 ]
    │
  1 │ .code
    │ ──┬──  
-   │   ╰──── The '.code' directive is only allowed inside a method definition.
+   │   ╰──── '.code' is only allowed inside a method definition
    │ 
-   │ Note: Define a method first using '.method [access_flags] <name> <descriptor>'.
+   │ Note: The '.code' directive is only valid inside a method definition. Define a method first using '.method [access_flags] <name> <descriptor>'.
 ───╯

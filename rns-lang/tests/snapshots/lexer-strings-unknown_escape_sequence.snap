@@ -14,7 +14,7 @@ Error: invalid escape sequence
    │
  2 │ .code "\u"
    │         ┬  
-   │         ╰── Invalid escape sequence '\u'
+   │         ╰── invalid escape sequence '\u'
    │ 
    │ Note: The character '\u' is not a valid escape sequence.
 ───╯

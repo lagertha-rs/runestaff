@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public static .method main([Ljava/lang/String;)V
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: cannot use directive '.method' as a class name
+   ╭─[ test_data/integration/parser/class_directive/header/name/dot_method_as_class_name.ja:1:22 ]
+   │
+ 1 │ .class public static .method main([Ljava/lang/String;)V
+   │                      ───┬───  
+   │                         ╰───── directives cannot be used as names
+   │ 
+   │ Note: Directives are reserved keywords. If you meant to start a new directive, do so on a new line.
+───╯

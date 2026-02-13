@@ -13,5 +13,5 @@ Error: unexpected character
    │
  1 │ .code <foo>
    │       ┬  
-   │       ╰── Unexpected character '<'
+   │       ╰── found '<' here
 ───╯

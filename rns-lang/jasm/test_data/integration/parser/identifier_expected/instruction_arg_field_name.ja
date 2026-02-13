@@ -1,0 +1,6 @@
+.class public Name
+.method public main()V
+.code
+getstatic java/lang/System
+.end code
+.end method

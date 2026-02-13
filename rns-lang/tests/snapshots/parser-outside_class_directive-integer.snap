@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected integer before class definition
+Error: unexpected integer before class definition
    ╭─[ test_data/integration/parser/outside_class_directive/integer.ja:1:1 ]
    │
  1 │ 42 ; the answer
    │ ─┬  
-   │  ╰── The '42' integer must appear inside a class definition.
+   │  ╰── this integer must appear inside a class definition
    │ 
    │ Note: Integer literals are typically used as instruction arguments inside '.code' blocks.
 ───╯

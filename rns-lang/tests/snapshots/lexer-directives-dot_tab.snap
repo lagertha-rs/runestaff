@@ -14,7 +14,7 @@ Error: unexpected character
    │
  1 │ .
    │  ┬  
-   │  ╰── Unexpected character '\t'
+   │  ╰── found '\t' here
    │ 
    │ Note: Expected one of the directives: .class, .super, .method, .end, .code
 ───╯
