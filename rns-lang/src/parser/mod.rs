@@ -337,7 +337,7 @@ impl ParserError {
                     Some("Method descriptors cannot be used as class names. Please provide a class name like 'com/example/MyClass'.".to_string())
                 }
                 (JasmTokenKind::Public | JasmTokenKind::Static, IdentifierContext::ClassName) => {
-                    Some(format!("Access flags like '{}' must appear BEFORE the class name. Example: '.class {} MyClass'", kind, kind))
+                    Some(format!("Access flags like '{}' must appear before the class name. Example: '.class {} MyClass'", kind, kind))
                 }
                 (JasmTokenKind::Newline | JasmTokenKind::Eof, IdentifierContext::ClassName) => {
                     Some("Every class definition needs a name. Example: '.class public MyClass'".to_string())
