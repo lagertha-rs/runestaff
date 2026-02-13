@@ -12,7 +12,7 @@ Error: unknown directive
    │
  1 │ .public static HelloWorl
    │ ───┬───  
-   │    ╰───── Unknown directive '.public'
+   │    ╰───── unknown directive
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

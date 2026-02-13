@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class HelloWorld .code
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected directive after class name
+   ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/dot_code.ja:1:19 ]
+   │
+ 1 │ .class HelloWorld .code
+   │                   ──┬──  
+   │                     ╰──── directive '.code' is not allowed here
+   │ 
+   │ Note: The '.code' directive must be inside a method definition, not directly after the class name.
+───╯

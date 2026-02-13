@@ -16,7 +16,7 @@ Error: unknown directive
    │
  2 │ .42 42 42 42 42
    │ ─┬─  
-   │  ╰─── Unknown directive '.42'
+   │  ╰─── unknown directive
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

@@ -7,12 +7,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Expected class name but found eof
+Error: missing class name in '.class' directive
    ╭─[ test_data/integration/parser/class_directive/header/name/eof_as_class_name.ja:1:21 ]
    │
  1 │ .class public static
    │                     │ 
-   │                     ╰─ Found 'eof' instead of a class name. The .class directive requires a class name after optional access flags.
+   │                     ╰─ expected a class name here
    │ 
-   │ Note: Class name is missing after optional access flags.
+   │ Note: Every class definition needs a name. Example: '.class public MyClass'
 ───╯

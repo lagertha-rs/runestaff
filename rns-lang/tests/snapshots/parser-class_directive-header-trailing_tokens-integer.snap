@@ -9,13 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected integer after class name
+Error: unexpected integer after class name
    ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/integer.ja:1:26 ]
    │
  1 │ .class public HelloWorld 42
    │                          ─┬  
-   │                           ╰── Integer literals cannot appear after class name.
+   │                           ╰── integer literals are not allowed here
    │ 
-   │ Note: The class definition should end after the class name.
-   │       Integer literals are instruction arguments and must appear inside .code blocks.
+   │ Note: Integer literals belong inside '.code' blocks as instruction arguments.
 ───╯

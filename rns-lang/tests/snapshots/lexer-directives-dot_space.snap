@@ -14,7 +14,7 @@ Error: unexpected character
    │
  2 │     . whaaat?
    │      ┬  
-   │      ╰── Unexpected character ' '
+   │      ╰── found ' ' here
    │ 
    │ Note: Expected one of the directives: .class, .super, .method, .end, .code
 ───╯

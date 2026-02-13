@@ -9,13 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected identifier after class name
+Error: unexpected identifier after class name
    ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/multiple_trailing.ja:1:26 ]
    │
  1 │ .class public HelloWorld extra tokens here
    │                          ────────┬────────  
-   │                                  ╰────────── Unexpected identifier after class name.
+   │                                  ╰────────── not allowed here
    │ 
-   │ Note: The class definition should end after the class name.
-   │       Identifiers (method names, field names, etc.) must be used within appropriate directives like .method or as instruction arguments.
+   │ Note: The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.
 ───╯

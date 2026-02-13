@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected string literal before class definition
+Error: unexpected string literal before class definition
    ╭─[ test_data/integration/parser/outside_class_directive/string_literal.ja:1:1 ]
    │
  1 │ "Hello World"
    │ ──────┬──────  
-   │       ╰──────── The 'Hello World' string literal must appear inside a class definition.
+   │       ╰──────── this string literal must appear inside a class definition
    │ 
    │ Note: String literals are constant values that must appear inside '.code' blocks as instruction arguments.
 ───╯

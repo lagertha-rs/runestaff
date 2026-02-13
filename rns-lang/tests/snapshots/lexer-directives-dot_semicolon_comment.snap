@@ -15,7 +15,7 @@ Error: unknown directive
    │
  3 │     .;not_comment ;this is also a comment
    │     ──────┬──────  
-   │           ╰──────── Unknown directive '.;not_comment'
+   │           ╰──────── unknown directive
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

@@ -13,7 +13,7 @@ Error: unexpected character
    │
  1 │ .
    │  ┬  
-   │  ╰── Unexpected character '\n'
+   │  ╰── found '\n' here
    │ 
    │ Note: Expected one of the directives: .class, .super, .method, .end, .code
 ───╯

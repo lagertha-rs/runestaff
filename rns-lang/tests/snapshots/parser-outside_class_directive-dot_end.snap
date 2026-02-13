@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected directive before class definition
+Error: unexpected directive before class definition
    ╭─[ test_data/integration/parser/outside_class_directive/dot_end.ja:1:1 ]
    │
  1 │ .end method ; trailing comment
    │ ──┬─  
-   │   ╰─── The '.end' directive has no matching start directive.
+   │   ╰─── '.end' has no matching start directive
    │ 
    │ Note: The '.end' directive must match a previous '.method', '.code', or '.class' directive.
 ───╯

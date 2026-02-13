@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Expected class name but found integer
+Error: expected class name
    ╭─[ test_data/integration/parser/class_directive/header/name/integer_as_class_name.ja:1:15 ]
    │
  1 │ .class public 42
    │               ─┬  
-   │                ╰── Found '42' instead of a class name. The .class directive requires a class name after optional access flags.
+   │                ╰── found '42' instead
    │ 
-   │ Note: Integer literals cannot be used as class names.
+   │ Note: Integer literals cannot be used as class names. Every class must have a valid identifier as its name.
 ───╯

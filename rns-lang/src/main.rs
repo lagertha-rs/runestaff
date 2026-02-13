@@ -7,6 +7,7 @@ mod instruction;
 mod lexer;
 mod parser;
 mod token;
+mod utils;
 
 fn get_filename_and_contents_from_arg() -> (String, String) {
     let args: Vec<String> = std::env::args().collect();

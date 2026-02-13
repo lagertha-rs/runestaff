@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Expected class name but found newline
+Error: missing class name in '.class' directive
    ╭─[ test_data/integration/parser/class_directive/header/name/comment_as_class_name.ja:1:15 ]
    │
  1 │ .class  static   ; class name should be here, but is missing
    │               │ 
-   │               ╰─ Found 'newline' instead of a class name. The .class directive requires a class name after optional access flags.
+   │               ╰─ expected a class name here
    │ 
-   │ Note: Class name is missing after optional access flags.
+   │ Note: Every class definition needs a name. Example: '.class public MyClass'
 ───╯

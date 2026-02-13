@@ -13,7 +13,7 @@ Error: unknown directive
    │
  1 │ ."Hello@World!"      ;;;;;;;;;; -_-
    │ ───────┬───────  
-   │        ╰───────── Unknown directive '."Hello@World!"'
+   │        ╰───────── unknown directive
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

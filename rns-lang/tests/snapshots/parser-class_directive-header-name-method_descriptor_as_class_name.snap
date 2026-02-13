@@ -9,12 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Expected class name but found method descriptor
+Error: expected class name
    ╭─[ test_data/integration/parser/class_directive/header/name/method_descriptor_as_class_name.ja:1:15 ]
    │
  1 │ .class public (II)V
    │               ──┬──  
-   │                 ╰──── Found '(II)V' instead of a class name. The .class directive requires a class name after optional access flags.
+   │                 ╰──── found '(II)V' instead
    │ 
-   │ Note: Method descriptors cannot be used as class names.
+   │ Note: Method descriptors cannot be used as class names. Please provide a class name like 'com/example/MyClass'.
 ───╯

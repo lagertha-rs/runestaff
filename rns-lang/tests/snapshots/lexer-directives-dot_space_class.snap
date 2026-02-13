@@ -12,7 +12,7 @@ Error: unexpected character
    │
  1 │ . class
    │  ┬  
-   │  ╰── Unexpected character ' '
+   │  ╰── found ' ' here
    │ 
    │ Note: Expected one of the directives: .class, .super, .method, .end, .code
 ───╯

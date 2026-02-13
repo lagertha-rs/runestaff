@@ -10,13 +10,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected directive after class name
+Error: unexpected directive after class name
    ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/dot_method.ja:1:28 ]
    │
  1 │    .class    HelloWorld    .method public <init>()V .end method
    │                            ──────────────────┬─────────────────  
-   │                                              ╰─────────────────── The '.method' directive must start on a new line.
+   │                                              ╰─────────────────── must start on a new line
    │ 
-   │ Note: The class definition should end after the class name.
-   │       Consider starting a new line for the '.method' directive.
+   │ Note: Consider starting a new line for the '.method' directive.
 ───╯

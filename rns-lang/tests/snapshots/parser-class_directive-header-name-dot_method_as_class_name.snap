@@ -8,12 +8,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Expected class name but found directive
+Error: cannot use directive '.method' as a class name
    ╭─[ test_data/integration/parser/class_directive/header/name/dot_method_as_class_name.ja:1:22 ]
    │
  1 │ .class public static .method main([Ljava/lang/String;)V
    │                      ───┬───  
-   │                         ╰───── Found '.method' instead of a class name. The .class directive requires a class name after optional access flags.
+   │                         ╰───── directives cannot be used as names
    │ 
-   │ Note: Directives like '.method' cannot be used as class names.
+   │ Note: Directives are reserved keywords. If you meant to start a new directive, do so on a new line.
 ───╯

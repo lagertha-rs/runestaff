@@ -12,7 +12,7 @@ Error: unknown directive
    │
  1 │ .method      ..code
    │              ───┬──  
-   │                 ╰──── Unknown directive '..code'
+   │                 ╰──── did you mean '.code'?
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

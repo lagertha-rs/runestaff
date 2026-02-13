@@ -2,6 +2,7 @@
 source: jasm/src/error.rs
 expression: output
 ---
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !            INTERNAL ASSEMBLER ERROR             !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

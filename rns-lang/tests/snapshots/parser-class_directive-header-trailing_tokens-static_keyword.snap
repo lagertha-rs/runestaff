@@ -9,14 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected keyword after class name
+Error: unexpected keyword after class name
    ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/static_keyword.ja:1:26 ]
    │
  1 │ .class public HelloWorld static
    │                          ───┬──  
-   │                             ╰──── Access flags must appear before the class name.
+   │                             ╰──── access flags must appear before the class name
    │ 
-   │ Note: The class definition should end after the class name.
-   │       Access flags must appear before the class name:
-   │       .class [access_flags] <name>
+   │ Note: Access flags must appear before the class name: '.class [access_flags] <name>'
 ───╯

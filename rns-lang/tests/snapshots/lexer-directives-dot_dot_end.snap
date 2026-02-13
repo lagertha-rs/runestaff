@@ -16,7 +16,7 @@ Error: unknown directive
    │
  3 │ ..end ; not valid
    │ ──┬──  
-   │   ╰──── Unknown directive '..end'
+   │   ╰──── did you mean '.end'?
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

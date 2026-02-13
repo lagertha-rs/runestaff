@@ -13,7 +13,7 @@ Error: unknown directive
    │
  1 │ .class .unknown_directive HelloWorld
    │        ─────────┬────────  
-   │                 ╰────────── Unknown directive '.unknown_directive'
+   │                 ╰────────── unknown directive
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code
 ───╯

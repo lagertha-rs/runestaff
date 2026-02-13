@@ -8,12 +8,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Expected class name but found directive
+Error: cannot use directive '.super' as a class name
    ╭─[ test_data/integration/parser/class_directive/header/name/dot_super_as_class_name.ja:1:10 ]
    │
  1 │ .class   .super java/lang/Object
    │          ───┬──  
-   │             ╰──── Found '.super' instead of a class name. The .class directive requires a class name after optional access flags.
+   │             ╰──── directives cannot be used as names
    │ 
-   │ Note: Directives like '.super' cannot be used as class names.
+   │ Note: Directives are reserved keywords. If you meant to start a new directive, do so on a new line.
 ───╯

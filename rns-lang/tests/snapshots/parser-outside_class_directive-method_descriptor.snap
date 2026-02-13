@@ -12,12 +12,12 @@ HelloWorld
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected method descriptor before class definition
+Error: unexpected method descriptor before class definition
    ╭─[ test_data/integration/parser/outside_class_directive/method_descriptor.ja:2:1 ]
    │
  2 │ (I)V
    │ ──┬─  
-   │   ╰─── The '(I)V' method descriptor must appear inside a class definition.
+   │   ╰─── this method descriptor must appear inside a class definition
    │ 
    │ Note: Method descriptors specify method signatures and must appear after method names in '.method' directives or as instruction arguments.
 ───╯

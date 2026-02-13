@@ -9,13 +9,12 @@ expression: "&combined"
 ----- STDOUT -----
 
 ----- STDERR -----
-Error: Unexpected directive after class name
+Error: unexpected directive after class name
    ╭─[ test_data/integration/parser/class_directive/header/trailing_tokens/dot_class.ja:1:26 ]
    │
  1 │ .class public HelloWorld .class AnotherClass
    │                          ─────────┬─────────  
-   │                                   ╰─────────── Directive '.class' cannot follow class name directly.
+   │                                   ╰─────────── directive '.class' is not allowed here
    │ 
-   │ Note: The class definition should end after the class name.
-   │       The .class directive is used to start a new class definition and cannot be nested or placed here. Please start the new class on a new line or remove the extra directive.
+   │ Note: The '.class' directive cannot be nested. Consider removing the second '.class' (todo when nested metada data is supported explain it).
 ───╯
