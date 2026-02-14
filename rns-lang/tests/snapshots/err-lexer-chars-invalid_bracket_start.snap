@@ -1,0 +1,17 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code <foo>
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected character
+   ╭─[ test_data/integration/err/lexer/chars/invalid_bracket_start.ja:1:7 ]
+   │
+ 1 │ .code <foo>
+   │       ┬  
+   │       ╰── found '<' here
+───╯

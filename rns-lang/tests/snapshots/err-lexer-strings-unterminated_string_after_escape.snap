@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public Test
+"String ending with backslash\
+----- STDOUT -----
+
+----- STDERR -----
+Error: unterminated string literal
+   ╭─[ test_data/integration/err/lexer/strings/unterminated_string_after_escape.ja:2:1 ]
+   │
+ 2 │ "String ending with backslash\
+   │ ┬  
+   │ ╰── this string literal is not terminated
+   │ 
+   │ Note: String literal is not terminated before the end of the line or file.
+───╯

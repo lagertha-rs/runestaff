@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public Test
+.code "\123"
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: invalid escape sequence
+   ╭─[ test_data/integration/err/lexer/strings/unsupported_octal_escape.ja:2:9 ]
+   │
+ 2 │ .code "\123"
+   │         ┬  
+   │         ╰── invalid escape sequence '\1'
+   │ 
+   │ Note: The character '\1' is not a valid escape sequence.
+───╯

@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code 0x123
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: invalid integer
+   ╭─[ test_data/integration/err/lexer/integers/hex_prefix.ja:1:7 ]
+   │
+ 1 │ .code 0x123
+   │       ──┬──  
+   │         ╰──── '0x123' contains invalid characters
+   │ 
+   │ Note: Hexadecimal numbers are not supported yet, but are planned for the future.
+───╯

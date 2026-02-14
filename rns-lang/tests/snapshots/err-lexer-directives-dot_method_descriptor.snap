@@ -1,0 +1,18 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.method (I)V .([Z)Ljava/lang/String;
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/err/lexer/directives/dot_method_descriptor.ja:1:14 ]
+   │
+ 1 │ .method (I)V .([Z)Ljava/lang/String;
+   │              ───────────┬───────────  
+   │                         ╰───────────── unknown directive
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

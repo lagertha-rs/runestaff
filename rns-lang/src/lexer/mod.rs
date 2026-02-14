@@ -1,4 +1,4 @@
-use crate::error::JasmError;
+use crate::diagnostic::JasmError;
 use crate::lexer::error::LexerError;
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;

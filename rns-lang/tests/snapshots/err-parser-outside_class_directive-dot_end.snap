@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.end method ; trailing comment
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected directive before class definition
+   ╭─[ test_data/integration/err/parser/outside_class_directive/dot_end.ja:1:1 ]
+   │
+ 1 │ .end method ; trailing comment
+   │ ──┬─  
+   │   ╰─── '.end' has no matching start directive
+   │ 
+   │ Note: The '.end' directive must match a previous '.method', '.code', or '.class' directive.
+───╯

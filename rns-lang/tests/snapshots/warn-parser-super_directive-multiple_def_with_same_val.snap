@@ -1,0 +1,35 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld
+.super java/lang/Object
+
+.method public <init> ()V
+   .code stack 10 locals 10
+     aload_0
+     invokespecial java/lang/Object <init> ()V
+     return
+   .end code
+.end method
+
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Warning: redundant '.super' directive
+    ╭─[ test_data/integration/warn/parser/super_directive/multiple_def_with_same_val.ja:12:1 ]
+    │
+  2 │ .super java/lang/Object
+    │        ────────┬───────  
+    │                ╰───────── superclass is already set to 'java/lang/Object' here
+    │ 
+ 12 │ .super java/lang/Object
+    │ ───────────┬───────────  
+    │            ╰───────────── this second directive is redundant
+    │ 
+    │ Note: JVM class files only support a single superclass.
+    │       Since both directives point to the same class, this is harmless but messy.
+────╯

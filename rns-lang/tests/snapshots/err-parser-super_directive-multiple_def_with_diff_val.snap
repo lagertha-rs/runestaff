@@ -1,0 +1,35 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld
+.super java/lang/Object
+
+.method public <init> ()V
+   .code stack 10 locals 10
+     aload_0
+     invokespecial java/lang/Object <init> ()V
+     return
+   .end code
+.end method
+
+.super java/lang/String
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: multiple superclass definitions
+    ╭─[ test_data/integration/err/parser/super_directive/multiple_def_with_diff_val.ja:12:1 ]
+    │
+  2 │ .super java/lang/Object
+    │        ────────┬───────  
+    │                ╰───────── superclass was first defined as 'java/lang/Object'
+    │ 
+ 12 │ .super java/lang/String
+    │ ───────────┬───────────  
+    │            ╰───────────── attempted to redefine as 'java/lang/String'
+    │ 
+    │ Note: Java classes do not support multiple inheritance.
+    │       A class can only have one parent.
+────╯

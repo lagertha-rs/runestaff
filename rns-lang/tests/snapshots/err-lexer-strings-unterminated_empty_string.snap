@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public Test
+"
+----- STDOUT -----
+
+----- STDERR -----
+Error: unterminated string literal
+   ╭─[ test_data/integration/err/lexer/strings/unterminated_empty_string.ja:2:1 ]
+   │
+ 2 │ "
+   │ ┬  
+   │ ╰── this string literal is not terminated
+   │ 
+   │ Note: String literal is not terminated before the end of the line or file.
+───╯

@@ -47,7 +47,7 @@ fn get_file_contents(path: &PathBuf) -> String {
 
 #[rstest]
 #[trace]
-fn error_cases(
+fn test_cases(
     #[base_dir = "test_data/integration/"]
     #[files("**/*.ja")]
     path: PathBuf,
@@ -57,9 +57,18 @@ fn error_cases(
     let mut cmd = cargo_bin_cmd!("jasm");
     cmd.arg(&relative_path);
     let file_contents = get_file_contents(&path);
+    let snaphot_name = to_snapshot_name(&path);
 
     // when
-    let output = cmd.assert().failure().get_output().clone();
+    let output = {
+        if snaphot_name.starts_with("err") {
+            cmd.assert().failure().get_output().clone()
+        } else if snaphot_name.starts_with("warn") {
+            cmd.assert().success().get_output().clone()
+        } else {
+            panic!("Snapshot name must start with 'err' or 'warn' to indicate expected outcome");
+        }
+    };
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 

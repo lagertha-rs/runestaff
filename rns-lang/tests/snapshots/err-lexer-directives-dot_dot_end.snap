@@ -1,0 +1,22 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.method
+
+..end ; not valid
+
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/err/lexer/directives/dot_dot_end.ja:3:1 ]
+   │
+ 3 │ ..end ; not valid
+   │ ──┬──  
+   │   ╰──── did you mean '.end' ?
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

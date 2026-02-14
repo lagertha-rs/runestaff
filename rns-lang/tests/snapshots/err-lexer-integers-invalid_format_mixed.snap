@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code 12a34
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: invalid integer
+   ╭─[ test_data/integration/err/lexer/integers/invalid_format_mixed.ja:1:7 ]
+   │
+ 1 │ .code 12a34
+   │       ──┬──  
+   │         ╰──── '12a34' contains invalid characters
+   │ 
+   │ Note: Integers must be between -2147483648 and 2147483647
+───╯

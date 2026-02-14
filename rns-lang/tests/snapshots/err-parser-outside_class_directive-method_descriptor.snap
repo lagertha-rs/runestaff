@@ -1,0 +1,23 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+
+(I)V
+
+HelloWorld
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected method descriptor before class definition
+   ╭─[ test_data/integration/err/parser/outside_class_directive/method_descriptor.ja:2:1 ]
+   │
+ 2 │ (I)V
+   │ ──┬─  
+   │   ╰─── this method descriptor must appear inside a class definition
+   │ 
+   │ Note: Method descriptors specify method signatures and must appear after method names in '.method' directives or as instruction arguments.
+───╯

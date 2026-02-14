@@ -1,37 +1,67 @@
-use crate::error::JasmError;
+use crate::diagnostic::{Diagnostic, JasmError};
 use crate::instruction::{INSTRUCTION_SPECS, InstructionArgKind};
 use crate::parser::error::{
-    IdentifierContext, MethodDescriptorContext, NonNegativeIntegerContext, ParserError,
-    TrailingTokensContext,
+    IdentifierContext, MethodDescriptorContext, MultipleDefinitionContext,
+    NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
+use crate::parser::warning::ParserWarning;
 use crate::token::{JasmToken, JasmTokenKind, Span};
-use crate::warning::JasmWarning;
+use jclass::prelude::ConstantPoolBuilder;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
 mod error;
 #[cfg(test)]
 mod tests;
+mod warning;
 
 const JAVA_LANG_OBJECT: &str = "java/lang/Object";
 
 pub struct JasmParser {
     tokens: Peekable<IntoIter<JasmToken>>,
     last_span: Span,
-    warnings: Vec<JasmWarning>,
 
-    super_name: Vec<SuperName>,
+    warnings: Vec<Box<dyn Diagnostic>>,
+
+    cp_builder: ConstantPoolBuilder,
+    name: String,
+    class_directive_pos: Span,
+    super_name: Option<SuperDirective>,
 }
 
-struct SuperName {
-    pub name: String,
+#[derive(Debug, Eq, PartialEq, Clone)]
+struct ClassDirective {
+    pub class_name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+struct SuperDirective {
+    pub class_name: String,
     pub directive_span: Span,
     pub identifier_span: Span,
 }
 
 impl JasmParser {
-    fn set_super_name(&mut self, super_name: SuperName) {
-        self.super_name.push(super_name);
+    fn set_super_name(&mut self, dir: SuperDirective) -> Result<(), ParserError> {
+        if let Some(exiting) = self.super_name.take() {
+            if exiting.class_name == dir.class_name {
+                self.warnings
+                    .push(Box::new(ParserWarning::SameSuperDefinedMultipleTimes {
+                        first_occurrence: exiting,
+                        second_occurrence: dir.clone(),
+                    }));
+            } else {
+                return Err(ParserError::MultipleDefinitions(
+                    MultipleDefinitionContext::SuperClass {
+                        first_definition: exiting,
+                        second_definition: dir,
+                    },
+                ));
+            }
+        }
+        self.super_name = Some(dir);
+        Ok(())
     }
 
     fn peek_token_kind(&mut self) -> Option<&JasmTokenKind> {
@@ -150,11 +180,11 @@ impl JasmParser {
         let dot_super = self.next_token()?; // consume .super token
         let (super_name, super_name_span) =
             self.expect_next_identifier(IdentifierContext::SuperName, dot_super.span.end)?;
-        self.set_super_name(SuperName {
-            name: super_name,
+        self.set_super_name(SuperDirective {
+            class_name: super_name,
             directive_span: dot_super.span,
             identifier_span: super_name_span,
-        });
+        })?;
         self.expect_no_trailing_tokens(TrailingTokensContext::Super)
     }
 
@@ -190,7 +220,7 @@ impl JasmParser {
         }
     }
 
-    fn parse_instruction(&mut self) -> Result<(), ParserError> {
+    fn parse_instruction(&mut self, code: &mut Vec<u8>) -> Result<(), ParserError> {
         let (instruction_name, _) =
             self.expect_next_identifier(IdentifierContext::InstructionName, self.last_span.end)?;
         let instruction_pos = self.last_span;
@@ -199,6 +229,7 @@ impl JasmParser {
             .ok_or_else(|| {
                 ParserError::UnknownInstruction(instruction_pos, instruction_name.clone())
             })?;
+        code.push(instruction_spec.opcode as u8);
         for arg_spec in instruction_spec.args {
             match arg_spec {
                 InstructionArgKind::ClassName => {
@@ -255,6 +286,7 @@ impl JasmParser {
         let mut stack = None;
         let mut locals = None;
         self.next_token()?; // consume .code token
+        let mut code = Vec::with_capacity(16); // TODO: find a better initial capacity
 
         while let Some(JasmTokenKind::Identifier(_)) = self.peek_token_kind() {
             let identifier_token = self.next_token()?;
@@ -286,7 +318,7 @@ impl JasmParser {
             if matches!(token.kind, JasmTokenKind::DotEnd | JasmTokenKind::Eof) {
                 break;
             }
-            self.parse_instruction()?;
+            self.parse_instruction(&mut code)?;
             self.skip_newlines()?
         }
 
@@ -359,10 +391,12 @@ impl JasmParser {
                 class_token.kind,
             ));
         }
+        self.class_directive_pos = class_token.span;
         let _access_flags = self.parse_class_access_flags()?;
 
         let (class_name, _) =
             self.expect_next_identifier(IdentifierContext::ClassName, self.last_span.end)?;
+        self.name = class_name;
 
         // TODO: test EOF right after class name and check for correct span in error
         self.expect_no_trailing_tokens(TrailingTokensContext::Class)?;
@@ -383,7 +417,7 @@ impl JasmParser {
         Ok(())
     }
 
-    pub fn parse(tokens: Vec<JasmToken>) -> Result<Vec<JasmWarning>, JasmError> {
+    pub fn parse(tokens: Vec<JasmToken>) -> Result<Vec<Box<dyn Diagnostic>>, JasmError> {
         if !matches!(tokens.last().unwrap().kind, JasmTokenKind::Eof) {
             return Err(ParserError::Internal(
                 "Token stream must end with an EOF token".to_string(),
@@ -395,7 +429,10 @@ impl JasmParser {
             tokens: tokens.into_iter().peekable(),
             last_span: Span::new(0, 0),
             warnings: Vec::new(),
-            super_name: Vec::new(),
+            super_name: None,
+            name: String::new(),
+            class_directive_pos: Span::new(0, 0),
+            cp_builder: ConstantPoolBuilder::new(),
         };
 
         instance.parse_class()?;
@@ -404,35 +441,17 @@ impl JasmParser {
     }
 
     fn build_jasm_class(&mut self) -> Result<(), ParserError> {
-        let super_name = {
-            if self.super_name.is_empty() {
-                JAVA_LANG_OBJECT.to_string()
-            } else if self.super_name.len() == 1 {
-                self.super_name[0].name.clone()
+        let _super_name = {
+            if let Some(super_name) = self.super_name.take() {
+                super_name.class_name
             } else {
-                let definitions_count = self.super_name.len();
-                let message = "Multiple .super directives found".to_string();
-                let primary_location = self.super_name[0].directive_span.as_range();
-                let taken_super_name = &self.super_name[definitions_count - 1];
-                let labels = self
-                    .super_name
-                    .iter()
-                    .map(|v| {
-                        (
-                            v.directive_span.start..v.identifier_span.end,
-                            "Defined here".to_string(),
-                        )
-                    })
-                    .collect::<Vec<_>>();
-
-                let note = format!(
-                    "The last .super directive will be used: '{}'",
-                    taken_super_name.name
-                );
                 self.warnings
-                    .push(JasmWarning::new(message, primary_location, labels, note));
-
-                taken_super_name.name.clone()
+                    .push(Box::new(ParserWarning::MissingSuperClass {
+                        class_name: self.name.clone(),
+                        class_directive_pos: self.class_directive_pos,
+                        default: JAVA_LANG_OBJECT,
+                    }));
+                JAVA_LANG_OBJECT.to_string()
             }
         };
         Ok(())

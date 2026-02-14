@@ -1,6 +1,0 @@
-.class public Name
-.method public main()V
-.code
-invokespecial java/lang/Object
-.end code
-.end method

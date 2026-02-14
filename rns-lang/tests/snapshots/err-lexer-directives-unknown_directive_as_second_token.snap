@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class .unknown_directive HelloWorld
+.end
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/err/lexer/directives/unknown_directive_as_second_token.ja:1:8 ]
+   │
+ 1 │ .class .unknown_directive HelloWorld
+   │        ─────────┬────────  
+   │                 ╰────────── unknown directive
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

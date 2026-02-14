@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.method
+.
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected end of file
+   ╭─[ test_data/integration/err/lexer/directives/dot_eof.ja:2:1 ]
+   │
+ 2 │ .
+   │ ┬  
+   │ ╰── unexpected end of file
+   │ 
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .code
+───╯

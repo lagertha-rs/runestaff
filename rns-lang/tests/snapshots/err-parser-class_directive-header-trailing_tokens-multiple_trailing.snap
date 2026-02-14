@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld extra tokens here
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected identifier after class name
+   ╭─[ test_data/integration/err/parser/class_directive/header/trailing_tokens/multiple_trailing.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld extra tokens here
+   │                          ────────┬────────  
+   │                                  ╰────────── not allowed here
+   │ 
+   │ Note: The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.
+───╯

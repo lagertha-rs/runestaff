@@ -1,3 +1,4 @@
+use jclass::bytecode::Opcode;
 use phf::phf_map;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -12,7 +13,7 @@ pub enum InstructionArgKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InstructionSpec {
-    pub mnemonic: InstructionMnemonic,
+    pub opcode: Opcode,
     pub args: &'static [InstructionArgKind],
 }
 
@@ -25,29 +26,10 @@ macro_rules! define_instructions {
             }
         ),* $(,)?
     ) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-        pub enum InstructionMnemonic {
-            $( $variant, )*
-        }
-
-        impl InstructionMnemonic {
-            pub const fn as_str(self) -> &'static str {
-                match self {
-                    $( InstructionMnemonic::$variant => $name, )*
-                }
-            }
-        }
-
-        impl std::fmt::Display for InstructionMnemonic {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.write_str(self.as_str())
-            }
-        }
-
         pub static INSTRUCTION_SPECS: phf::Map<&'static str, InstructionSpec> = phf_map! {
             $(
                 $name => InstructionSpec {
-                    mnemonic: InstructionMnemonic::$variant,
+                    opcode: Opcode::$variant,
                     args: &[ $( InstructionArgKind::$arg, )* ],
                 },
             )*
@@ -68,7 +50,7 @@ define_instructions! {
         name: "return",
         args: [],
     },
-    GetStatic => {
+    Getstatic => {
         name: "getstatic",
         args: [ClassName, FieldName, FieldDescriptor],
     },

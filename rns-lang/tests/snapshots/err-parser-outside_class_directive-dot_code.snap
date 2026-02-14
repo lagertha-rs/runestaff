@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.code
+.class public HelloWorld
+
+.end method
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected directive before class definition
+   ╭─[ test_data/integration/err/parser/outside_class_directive/dot_code.ja:1:1 ]
+   │
+ 1 │ .code
+   │ ──┬──  
+   │   ╰──── '.code' is only allowed inside a method definition
+   │ 
+   │ Note: The '.code' directive is only valid inside a method definition. Define a method first using '.method [access_flags] <name> <descriptor>'.
+───╯

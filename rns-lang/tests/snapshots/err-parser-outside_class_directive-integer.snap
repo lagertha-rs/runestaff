@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+42 ; the answer
+.class public HelloWorld
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected integer before class definition
+   ╭─[ test_data/integration/err/parser/outside_class_directive/integer.ja:1:1 ]
+   │
+ 1 │ 42 ; the answer
+   │ ─┬  
+   │  ╰── this integer must appear inside a class definition
+   │ 
+   │ Note: Integer literals are typically used as instruction arguments inside '.code' blocks.
+───╯

@@ -1,0 +1,19 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+."Hello@World!"      ;;;;;;;;;; -_-
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/err/lexer/directives/dot_string_literal.ja:1:1 ]
+   │
+ 1 │ ."Hello@World!"      ;;;;;;;;;; -_-
+   │ ───────┬───────  
+   │        ╰───────── unknown directive
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code
+───╯

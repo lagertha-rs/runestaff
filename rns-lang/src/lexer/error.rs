@@ -1,4 +1,4 @@
-use crate::error::{JasmDiagnostic, JasmError};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, JasmError, Severity};
 use crate::token::{JasmTokenKind, Span};
 use std::ops::Range;
 
@@ -13,19 +13,19 @@ pub(super) enum LexerError {
 }
 
 impl LexerError {
-    pub fn message(&self) -> Option<String> {
-        let msg = match self {
+    fn get_message(&self) -> String {
+        match self {
             LexerError::UnexpectedChar(_, _, _) => "unexpected character",
             LexerError::UnknownDirective(_, _) => "unknown directive",
             LexerError::UnexpectedEof(_) => "unexpected end of file",
             LexerError::UnterminatedString(_) => "unterminated string literal",
             LexerError::InvalidEscape(_, _) => "invalid escape sequence",
             LexerError::InvalidNumber(_, _) => "invalid integer",
-        };
-        Some(msg.to_string())
+        }
+        .to_string()
     }
 
-    pub fn note(&self) -> Option<String> {
+    fn get_note(&self) -> Option<String> {
         let note = match self {
             LexerError::UnexpectedEof(_) => format!(
                 "Expected one of the directives: {}",
@@ -54,12 +54,8 @@ impl LexerError {
         Some(note)
     }
 
-    pub fn as_range(&self) -> Option<Range<usize>> {
-        self.span().map(|s| s.as_range())
-    }
-
-    pub fn label(&self) -> Option<String> {
-        let res = match self {
+    fn get_labels(&self) -> Vec<DiagnosticLabel> {
+        let msg = match self {
             LexerError::UnexpectedChar(_, c, _) => {
                 format!("found '{}' here", c.escape_default())
             }
@@ -76,7 +72,7 @@ impl LexerError {
                 }
 
                 if let Some(suggestion) = closest {
-                    format!("did you mean '{}'?", suggestion)
+                    format!("did you mean '{}' ?", suggestion)
                 } else {
                     "unknown directive".to_string()
                 }
@@ -99,28 +95,45 @@ impl LexerError {
                 }
             }
         };
-        Some(res)
+        vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
     }
 
-    fn span(&self) -> Option<&Span> {
+    fn get_primary_location(&self) -> Range<usize> {
         match self {
             LexerError::UnexpectedChar(span, _, _)
             | LexerError::UnknownDirective(span, _)
             | LexerError::UnexpectedEof(span)
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
-            | LexerError::InvalidNumber(span, _) => Some(span),
+            | LexerError::InvalidNumber(span, _) => span.as_range(),
         }
+    }
+}
+
+impl Diagnostic for LexerError {
+    fn message(&self) -> String {
+        self.get_message()
+    }
+
+    fn primary_location(&self) -> Range<usize> {
+        self.get_primary_location()
+    }
+
+    fn note(&self) -> Option<String> {
+        self.get_note()
+    }
+
+    fn severity(&self) -> Severity {
+        Severity::Error
+    }
+
+    fn labels(&self) -> Vec<DiagnosticLabel> {
+        self.get_labels()
     }
 }
 
 impl From<LexerError> for JasmError {
     fn from(err: LexerError) -> Self {
-        JasmError::Diagnostic(JasmDiagnostic::new(
-            err.message().unwrap_or("lexing error".to_string()),
-            err.as_range(),
-            err.note(),
-            err.label(),
-        ))
+        JasmError::Diagnostic(Box::new(err))
     }
 }
