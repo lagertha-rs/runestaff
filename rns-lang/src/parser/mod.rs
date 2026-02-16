@@ -1,12 +1,12 @@
 use crate::diagnostic::{Diagnostic, JasmError};
-use crate::instruction::{INSTRUCTION_SPECS, InstructionArgKind};
+use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
 use crate::parser::error::{
     IdentifierContext, MethodDescriptorContext, MultipleDefinitionContext,
     NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
 use crate::parser::warning::ParserWarning;
 use crate::token::{JasmToken, JasmTokenKind, Span};
-use jclass::prelude::ConstantPoolBuilder;
+use jclass::prelude::*;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -24,6 +24,7 @@ pub struct JasmParser {
     warnings: Vec<Box<dyn Diagnostic>>,
 
     cp_builder: ConstantPoolBuilder,
+    methods: Vec<MethodInfo>,
     name: String,
     class_directive_pos: Span,
     super_name: Option<SuperDirective>,
@@ -199,6 +200,7 @@ impl JasmParser {
         Ok(())
     }
 
+    // TODO: this is wrong.. also need to review integer token.. it is i32
     fn expect_next_non_negative_integer(
         &mut self,
         context: NonNegativeIntegerContext,
@@ -230,58 +232,66 @@ impl JasmParser {
                 ParserError::UnknownInstruction(instruction_pos, instruction_name.clone())
             })?;
         code.push(instruction_spec.opcode as u8);
-        for arg_spec in instruction_spec.args {
-            match arg_spec {
-                InstructionArgKind::ClassName => {
-                    self.expect_next_identifier(
-                        IdentifierContext::ClassNameInstructionArg,
-                        instruction_pos.end,
-                    )?;
-                }
-                InstructionArgKind::MethodName => {
-                    self.expect_next_identifier(
-                        IdentifierContext::MethodNameInstructionArg,
-                        instruction_pos.end,
-                    )?;
-                }
-                InstructionArgKind::MethodDescriptor => {
-                    self.expect_next_method_descriptor(
-                        MethodDescriptorContext::Instruction,
-                        instruction_pos.end,
-                    )?;
-                }
-                InstructionArgKind::StringLiteral => {
-                    // TODO: stub for ldc
-                    let token = self.next_token()?;
-                    match token.kind {
-                        JasmTokenKind::StringLiteral(value) => value,
-                        _ => {
-                            return Err(ParserError::IdentifierExpected(
-                                token.span,
-                                token.kind,
-                                IdentifierContext::InstructionName,
-                            ));
-                        }
-                    };
-                }
-                InstructionArgKind::FieldName => {
-                    self.expect_next_identifier(
-                        IdentifierContext::FieldNameInstructionArg,
-                        instruction_pos.end,
-                    )?;
-                }
-                InstructionArgKind::FieldDescriptor => {
-                    self.expect_next_identifier(
-                        IdentifierContext::FieldDescriptorInstructionArg,
-                        instruction_pos.end,
-                    )?;
-                }
-            };
+        match instruction_spec.operand {
+            InstructionOperand::None => {}
+            InstructionOperand::MethodRef => {
+                let (class_name, _) = self.expect_next_identifier(
+                    IdentifierContext::ClassNameInstructionArg,
+                    instruction_pos.end,
+                )?;
+                let (method_name, _) = self.expect_next_identifier(
+                    IdentifierContext::MethodNameInstructionArg,
+                    self.last_span.end,
+                )?;
+                let method_descriptor = self.expect_next_method_descriptor(
+                    MethodDescriptorContext::Instruction,
+                    self.last_span.end,
+                )?;
+                let idx =
+                    self.cp_builder
+                        .add_methodref(&class_name, &method_name, &method_descriptor);
+                code.extend_from_slice(&idx.to_be_bytes());
+            }
+            InstructionOperand::FieldRef => {
+                let (class_name, _) = self.expect_next_identifier(
+                    IdentifierContext::ClassNameInstructionArg,
+                    instruction_pos.end,
+                )?;
+                let (field_name, _) = self.expect_next_identifier(
+                    IdentifierContext::FieldNameInstructionArg,
+                    self.last_span.end,
+                )?;
+                let (field_descriptor, _) = self.expect_next_identifier(
+                    IdentifierContext::FieldDescriptorInstructionArg,
+                    self.last_span.end,
+                )?;
+                let idx = self
+                    .cp_builder
+                    .add_fieldref(&class_name, &field_name, &field_descriptor);
+                code.extend_from_slice(&idx.to_be_bytes());
+            }
+            // TODO: it is still stub here for ldc, need to handle properly
+            InstructionOperand::StringLiteral => {
+                let token = self.next_token()?;
+                let value = match token.kind {
+                    JasmTokenKind::StringLiteral(value) => value,
+                    _ => {
+                        // TODO: error is wrong
+                        return Err(ParserError::IdentifierExpected(
+                            token.span,
+                            token.kind,
+                            IdentifierContext::InstructionName,
+                        ));
+                    }
+                };
+                let idx = self.cp_builder.add_string(&value);
+                code.push(idx as u8);
+            }
         }
         Ok(())
     }
 
-    fn parse_code_directive(&mut self) -> Result<(), ParserError> {
+    fn parse_code_directive(&mut self) -> Result<CodeAttribute, ParserError> {
         // TODO: Do I need "already defined" checks for stack and locals?
         let mut stack = None;
         let mut locals = None;
@@ -340,13 +350,19 @@ impl JasmParser {
         // TODO: assert no more tokens on the line after .end code
         self.skip_newlines()?;
 
-        Ok(())
+        Ok(CodeAttribute {
+            max_stack: stack.unwrap() as u16, // TODO: proper error and u16 conversion check
+            max_locals: locals.unwrap() as u16, // TODO: proper error and u16 conversion check
+            code,
+            exception_table: vec![],
+            attributes: vec![],
+        })
     }
 
-    fn parse_method(&mut self) -> Result<(), ParserError> {
+    fn parse_method(&mut self) -> Result<MethodInfo, ParserError> {
         let dot_method = self.next_token()?; // consume .method token
-        let _access_flags = self.parse_method_access_flags()?;
-        let method_name =
+        let access_flags = self.parse_method_access_flags()?;
+        let (method_name, _) =
             self.expect_next_identifier(IdentifierContext::MethodName, dot_method.span.end)?;
         let method_descriptor = self.expect_next_method_descriptor(
             MethodDescriptorContext::MethodDirective,
@@ -354,7 +370,7 @@ impl JasmParser {
         )?;
         self.expect_no_trailing_tokens(TrailingTokensContext::Method)?;
         self.skip_newlines()?;
-        self.parse_code_directive()?;
+        let code_attr = self.parse_code_directive()?;
         self.skip_newlines()?;
 
         // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
@@ -376,7 +392,12 @@ impl JasmParser {
 
         // assert no more tokens on the line after .end method
         self.skip_newlines()?;
-        Ok(())
+        Ok(MethodInfo {
+            access_flags: MethodFlags::new(access_flags),
+            name_index: self.cp_builder.add_utf8(&method_name),
+            descriptor_index: self.cp_builder.add_utf8(&method_descriptor),
+            attributes: vec![MethodAttribute::Code(code_attr)],
+        })
     }
 
     fn parse_class(&mut self) -> Result<(), ParserError> {
@@ -406,7 +427,10 @@ impl JasmParser {
                 JasmTokenKind::Newline => {
                     self.next_token()?;
                 }
-                JasmTokenKind::DotMethod => self.parse_method()?,
+                JasmTokenKind::DotMethod => {
+                    let method = self.parse_method()?;
+                    self.methods.push(method);
+                }
                 JasmTokenKind::DotSuper => self.parse_super_directive()?,
                 JasmTokenKind::DotEnd => todo!(), // TODO: check for .end class and break
                 JasmTokenKind::Eof => break,
@@ -417,12 +441,17 @@ impl JasmParser {
         Ok(())
     }
 
-    pub fn parse(tokens: Vec<JasmToken>) -> Result<Vec<Box<dyn Diagnostic>>, JasmError> {
+    pub fn parse(
+        tokens: Vec<JasmToken>,
+    ) -> (Vec<Box<dyn Diagnostic>>, Result<ClassFile, JasmError>) {
         if !matches!(tokens.last().unwrap().kind, JasmTokenKind::Eof) {
-            return Err(ParserError::Internal(
-                "Token stream must end with an EOF token".to_string(),
-            )
-            .into());
+            return (
+                vec![],
+                Err(
+                    ParserError::Internal("Token stream must end with an EOF token".to_string())
+                        .into(),
+                ),
+            );
         }
 
         let mut instance = Self {
@@ -433,18 +462,23 @@ impl JasmParser {
             name: String::new(),
             class_directive_pos: Span::new(0, 0),
             cp_builder: ConstantPoolBuilder::new(),
+            methods: Vec::new(),
         };
 
-        instance.parse_class()?;
-        instance.build_jasm_class()?;
-        Ok(instance.warnings)
+        if let Err(e) = instance.parse_class() {
+            return (instance.warnings, Err(e.into()));
+        }
+
+        match instance.build_jasm_class() {
+            Ok(class) => (instance.warnings, Ok(class)),
+            Err(e) => (instance.warnings, Err(e.into())),
+        }
     }
 
-    fn build_jasm_class(&mut self) -> Result<(), ParserError> {
-        let _super_name = {
-            if let Some(super_name) = self.super_name.take() {
-                super_name.class_name
-            } else {
+    fn build_jasm_class(&mut self) -> Result<ClassFile, ParserError> {
+        let super_name = match self.super_name.take() {
+            Some(directive) => directive.class_name,
+            None => {
                 self.warnings
                     .push(Box::new(ParserWarning::MissingSuperClass {
                         class_name: self.name.clone(),
@@ -454,6 +488,26 @@ impl JasmParser {
                 JAVA_LANG_OBJECT.to_string()
             }
         };
-        Ok(())
+
+        // registers attr name in cp, need to think about other attr and how to do it
+        let mut attribute_names = AttributeNameMap::new();
+        let code_name_idx = self.cp_builder.add_utf8(AttributeKind::Code.as_str());
+        attribute_names.insert(AttributeKind::Code, code_name_idx);
+
+        let this_cp_id = self.cp_builder.add_class(&self.name);
+        let super_cp_id = self.cp_builder.add_class(&super_name);
+        Ok(ClassFile {
+            minor_version: 0,
+            major_version: 69, // TODO: allow specifying version in jasm
+            cp: std::mem::take(&mut self.cp_builder).build(),
+            access_flags: ClassFlags::new(0x0022), // TODO: set access flags based on parsed flags
+            this_class: this_cp_id,
+            super_class: super_cp_id,
+            interfaces: vec![],
+            fields: vec![],
+            methods: std::mem::take(&mut self.methods),
+            attributes: vec![],
+            attribute_names,
+        })
     }
 }

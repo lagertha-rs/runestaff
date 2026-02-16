@@ -124,7 +124,7 @@ impl ParserError {
                 "unexpected argument in '.code' directive: {}",
                 token.as_string_token_type()
             ),
-            ParserError::NonNegativeIntegerExpected(_, token, context) => {
+            ParserError::NonNegativeIntegerExpected(_, _token, context) => {
                 let context_name = match context {
                     NonNegativeIntegerContext::CodeLocals => "locals limit",
                     NonNegativeIntegerContext::CodeStack => "stack limit",

@@ -1,7 +1,6 @@
 use crate::diagnostic::JasmError;
 use crate::lexer::JasmLexer;
 
-mod ast;
 mod diagnostic;
 mod instruction;
 mod lexer;
@@ -35,16 +34,30 @@ fn main() {
         }
     };
 
-    let warnings = match parser::JasmParser::parse(tokens) {
-        Ok(warnings) => warnings,
+    let (warnings, result) = parser::JasmParser::parse(tokens);
+
+    for warning in &warnings {
+        warning.print(&filename, &contents);
+    }
+
+    let class = match result {
+        Ok(class) => class,
         Err(err) => {
             err.print(&filename, &contents);
             std::process::exit(1);
         }
     };
 
-    // Print all warnings
-    for warning in warnings {
-        warning.print(&filename, &contents);
+    let bytes = class.to_bytes();
+    if let Err(err) = write_to_file(&filename.replace(".ja", ".class"), &bytes) {
+        err.print(&filename, &contents);
+        std::process::exit(1);
     }
+}
+
+// TODO: make proper fn, probably validate .ja name and class name in .class dir
+fn write_to_file(filename: &str, bytes: &[u8]) -> Result<(), JasmError> {
+    std::fs::write(filename, bytes).map_err(|err| {
+        JasmError::Internal(format!("Failed to write to file {}: {}", filename, err))
+    })
 }

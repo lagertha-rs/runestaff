@@ -2,19 +2,17 @@ use jclass::bytecode::Opcode;
 use phf::phf_map;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum InstructionArgKind {
-    ClassName,
-    MethodName,
-    MethodDescriptor,
-    FieldName,
-    FieldDescriptor,
-    StringLiteral, // TODO: stub for ldc
+pub enum InstructionOperand {
+    None,
+    MethodRef,
+    FieldRef,
+    StringLiteral,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct InstructionSpec {
     pub opcode: Opcode,
-    pub args: &'static [InstructionArgKind],
+    pub operand: InstructionOperand,
 }
 
 macro_rules! define_instructions {
@@ -22,7 +20,7 @@ macro_rules! define_instructions {
         $(
             $variant:ident => {
                 name: $name:literal,
-                args: [ $( $arg:ident ),* $(,)? ],
+                operand: $operand:ident,
             }
         ),* $(,)?
     ) => {
@@ -30,7 +28,7 @@ macro_rules! define_instructions {
             $(
                 $name => InstructionSpec {
                     opcode: Opcode::$variant,
-                    args: &[ $( InstructionArgKind::$arg, )* ],
+                    operand: InstructionOperand::$operand,
                 },
             )*
         };
@@ -40,26 +38,26 @@ macro_rules! define_instructions {
 define_instructions! {
     Aload0 => {
         name: "aload_0",
-        args: [],
+        operand: None,
     },
     InvokeSpecial => {
         name: "invokespecial",
-        args: [ClassName, MethodName, MethodDescriptor],
+        operand: MethodRef,
     },
     Return => {
         name: "return",
-        args: [],
+        operand: None,
     },
     Getstatic => {
         name: "getstatic",
-        args: [ClassName, FieldName, FieldDescriptor],
+        operand: FieldRef,
     },
     Ldc => {
         name: "ldc",
-        args: [StringLiteral],
+        operand: StringLiteral, // TODO: stub for hello world
     },
     InvokeVirtual => {
         name: "invokevirtual",
-        args: [ClassName, MethodName, MethodDescriptor],
+        operand: MethodRef,
     },
 }
