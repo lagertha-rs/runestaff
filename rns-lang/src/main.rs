@@ -1,5 +1,7 @@
 use crate::diagnostic::JasmError;
 use crate::lexer::JasmLexer;
+use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 mod diagnostic;
 mod instruction;
@@ -8,22 +10,46 @@ mod parser;
 mod token;
 mod utils;
 
-fn get_filename_and_contents_from_arg() -> (String, String) {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Usage: jasm <filename>");
-        std::process::exit(1);
-    }
-    let filename = &args[1];
-    let content = std::fs::read_to_string(filename).unwrap_or_else(|err| {
-        eprintln!("Error reading file {}: {}", filename, err);
-        std::process::exit(1);
-    });
-    (filename.clone(), content)
+#[derive(Parser)]
+#[command(name = "jasm", about = "Java assembler and disassembler")]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+
+    #[arg(value_name = "FILE")]
+    file: Option<PathBuf>,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    Asm { file: PathBuf },
+    Dis { file: PathBuf },
 }
 
 fn main() {
-    let (filename, contents) = get_filename_and_contents_from_arg();
+    let cli = Cli::parse();
+
+    match cli.command {
+        Some(Command::Asm { file }) => assemble(&file),
+        Some(Command::Dis { file }) => disassemble(&file),
+        None => {
+            if let Some(file) = cli.file {
+                assemble(&file);
+            } else {
+                eprintln!("Usage: jasm <file.ja> or jasm asm <file.ja> or jasm dis <file.class>");
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
+fn assemble(path: &PathBuf) {
+    let filename = path.to_string_lossy().to_string();
+    let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
+        eprintln!("Error reading file {}: {}", filename, err);
+        std::process::exit(1);
+    });
+
     let mut lexer = JasmLexer::new(&contents);
 
     let tokens = match lexer.tokenize() {
@@ -49,10 +75,26 @@ fn main() {
     };
 
     let bytes = class.to_bytes();
-    if let Err(err) = write_to_file(&filename.replace(".ja", ".class"), &bytes) {
+    let output = filename.replace(".ja", ".class");
+    if let Err(err) = write_to_file(&output, &bytes) {
         err.print(&filename, &contents);
         std::process::exit(1);
     }
+}
+
+fn disassemble(path: &PathBuf) {
+    let bytes = std::fs::read(path).unwrap_or_else(|err| {
+        eprintln!("Error reading file {}: {}", path.display(), err);
+        std::process::exit(1);
+    });
+
+    let class_file = jclass::ClassFile::try_from(bytes).unwrap_or_else(|err| {
+        eprintln!("Error parsing class file {}: {}", path.display(), err);
+        std::process::exit(1);
+    });
+
+    let ja_text = class_file.to_ja();
+    print!("{}", ja_text);
 }
 
 // TODO: make proper fn, probably validate .ja name and class name in .class dir
