@@ -27,6 +27,7 @@ pub struct JasmParser {
     methods: Vec<MethodInfo>,
     name: String,
     class_directive_pos: Span,
+    class_flags: ClassFlags,
     super_name: Option<SuperDirective>,
 }
 
@@ -100,22 +101,17 @@ impl JasmParser {
     }
 
     //TODO: add all flags, handle orders, and check for duplicates
-    fn parse_class_access_flags(&mut self) -> Result<u16, ParserError> {
-        let mut flags = 0u16;
+    fn parse_class_access_flags(&mut self) -> Result<(), ParserError> {
         loop {
             match self.peek_token_kind() {
                 Some(JasmTokenKind::Public) => {
-                    flags |= 0x0001; // ACC_PUBLIC
-                    self.next_token()?;
-                }
-                Some(JasmTokenKind::Static) => {
-                    flags |= 0x0008; // ACC_STATIC
+                    self.class_flags.set_public();
                     self.next_token()?;
                 }
                 _ => break,
             }
         }
-        Ok(flags)
+        Ok(())
     }
 
     //TODO: add all flags, handle orders, and check for duplicates
@@ -413,7 +409,7 @@ impl JasmParser {
             ));
         }
         self.class_directive_pos = class_token.span;
-        let _access_flags = self.parse_class_access_flags()?;
+        self.parse_class_access_flags()?;
 
         let (class_name, _) =
             self.expect_next_identifier(IdentifierContext::ClassName, self.last_span.end)?;
@@ -432,9 +428,22 @@ impl JasmParser {
                     self.methods.push(method);
                 }
                 JasmTokenKind::DotSuper => self.parse_super_directive()?,
-                JasmTokenKind::DotEnd => todo!(), // TODO: check for .end class and break
+                JasmTokenKind::DotEnd => {
+                    self.next_token()?; // consume .end
+                    if let Some(token) = self.tokens.peek() {
+                        if let JasmTokenKind::Identifier(ref s) = token.kind {
+                            if s == "class" {
+                                self.next_token()?; // consume "class"
+                                break; // .end class - finish parsing
+                            }
+                        }
+                    }
+                }
                 JasmTokenKind::Eof => break,
-                _ => todo!("Unexpected token in class body"),
+                _ => {
+                    eprintln!("DEBUG: Unexpected token in class body: {:?}", token.kind);
+                    todo!("Unexpected token in class body")
+                }
             }
         }
 
@@ -463,6 +472,7 @@ impl JasmParser {
             class_directive_pos: Span::new(0, 0),
             cp_builder: ConstantPoolBuilder::new(),
             methods: Vec::new(),
+            class_flags: ClassFlags::new(0),
         };
 
         if let Err(e) = instance.parse_class() {
@@ -500,7 +510,7 @@ impl JasmParser {
             minor_version: 0,
             major_version: 69, // TODO: allow specifying version in jasm
             cp: std::mem::take(&mut self.cp_builder).build(),
-            access_flags: ClassFlags::new(0x0022), // TODO: set access flags based on parsed flags
+            access_flags: self.class_flags, // TODO: set access flags based on parsed flags
             this_class: this_cp_id,
             super_class: super_cp_id,
             interfaces: vec![],

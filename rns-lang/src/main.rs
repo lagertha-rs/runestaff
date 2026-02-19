@@ -22,19 +22,25 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    Asm { file: PathBuf },
-    Dis { file: PathBuf },
+    Asm {
+        file: PathBuf,
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+    Dis {
+        file: PathBuf,
+    },
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Command::Asm { file }) => assemble(&file),
+        Some(Command::Asm { file, output }) => assemble(&file, output.as_ref()),
         Some(Command::Dis { file }) => disassemble(&file),
         None => {
             if let Some(file) = cli.file {
-                assemble(&file);
+                assemble(&file, None);
             } else {
                 eprintln!("Usage: jasm <file.ja> or jasm asm <file.ja> or jasm dis <file.class>");
                 std::process::exit(1);
@@ -43,7 +49,7 @@ fn main() {
     }
 }
 
-fn assemble(path: &PathBuf) {
+fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
     let filename = path.to_string_lossy().to_string();
     let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
         eprintln!("Error reading file {}: {}", filename, err);
@@ -75,8 +81,10 @@ fn assemble(path: &PathBuf) {
     };
 
     let bytes = class.to_bytes();
-    let output = filename.replace(".ja", ".class");
-    if let Err(err) = write_to_file(&output, &bytes) {
+    let output_path = output
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| filename.replace(".ja", ".class"));
+    if let Err(err) = write_to_file(&output_path, &bytes) {
         err.print(&filename, &contents);
         std::process::exit(1);
     }
@@ -93,8 +101,8 @@ fn disassemble(path: &PathBuf) {
         std::process::exit(1);
     });
 
-    let ja_text = class_file.to_ja();
-    print!("{}", ja_text);
+    let ja_text = class_file.fmt_jasm();
+    print!("{}", ja_text.unwrap());
 }
 
 // TODO: make proper fn, probably validate .ja name and class name in .class dir
