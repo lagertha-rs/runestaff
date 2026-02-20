@@ -18,5 +18,5 @@ Error: unknown directive
    │ ──┬──  
    │   ╰──── did you mean '.end' ?
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .code
+   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
 ───╯

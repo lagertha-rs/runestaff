@@ -16,5 +16,5 @@ Error: unexpected character
    │  ┬  
    │  ╰── found '\t' here
    │ 
-   │ Note: Expected one of the directives: .class, .super, .method, .end, .code
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .code, .annotation
 ───╯

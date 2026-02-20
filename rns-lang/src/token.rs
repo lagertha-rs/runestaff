@@ -9,6 +9,7 @@ pub enum JasmTokenKind {
     DotMethod,
     DotCode,
     DotEnd,
+    DotAnnotation,
 
     Public,
     Static,
@@ -28,6 +29,7 @@ impl JasmTokenKind {
         JasmTokenKind::DotMethod,
         JasmTokenKind::DotEnd,
         JasmTokenKind::DotCode,
+        JasmTokenKind::DotAnnotation,
     ];
 
     pub fn from_directive(name: &str) -> Option<Self> {
@@ -37,6 +39,7 @@ impl JasmTokenKind {
             "method" => Some(JasmTokenKind::DotMethod),
             "end" => Some(JasmTokenKind::DotEnd),
             "code" => Some(JasmTokenKind::DotCode),
+            "annotation" => Some(JasmTokenKind::DotAnnotation),
             _ => None,
         }
     }
@@ -61,6 +64,7 @@ impl JasmTokenKind {
             | JasmTokenKind::DotSuper
             | JasmTokenKind::DotMethod
             | JasmTokenKind::DotEnd
+            | JasmTokenKind::DotAnnotation
             | JasmTokenKind::DotCode => "directive".to_string(),
             JasmTokenKind::Public | JasmTokenKind::Static => "keyword".to_string(),
             JasmTokenKind::Identifier(_) => "identifier".to_string(),
@@ -70,6 +74,19 @@ impl JasmTokenKind {
             JasmTokenKind::Newline => "newline".to_string(),
             JasmTokenKind::Eof => "eof".to_string(),
         }
+    }
+
+    // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
+    pub fn is_directive(&self) -> bool {
+        matches!(
+            self,
+            JasmTokenKind::DotClass
+                | JasmTokenKind::DotSuper
+                | JasmTokenKind::DotMethod
+                | JasmTokenKind::DotEnd
+                | JasmTokenKind::DotCode
+                | JasmTokenKind::DotAnnotation
+        )
     }
 }
 
@@ -81,6 +98,7 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::DotMethod => write!(f, ".method"),
             JasmTokenKind::DotEnd => write!(f, ".end"),
             JasmTokenKind::DotCode => write!(f, ".code"),
+            JasmTokenKind::DotAnnotation => write!(f, ".annotation"),
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),
             JasmTokenKind::Public => write!(f, "public"),

@@ -1,0 +1,20 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+.class public HelloWorld .annotation visible
+.super java/lang/Object
+
+----- STDOUT -----
+
+----- STDERR -----
+Error: unexpected directive after class name
+   ╭─[ test_data/integration/err/parser/class_directive/header/trailing_tokens/dot_annotation.ja:1:26 ]
+   │
+ 1 │ .class public HelloWorld .annotation visible
+   │                          ─────────┬─────────  
+   │                                   ╰─────────── must start on a new line
+   │ 
+   │ Note: The class definition should end after the class name.
+───╯

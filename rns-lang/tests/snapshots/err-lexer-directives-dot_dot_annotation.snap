@@ -3,16 +3,16 @@ source: jasm/tests/integration_test.rs
 expression: "&combined"
 ---
 ----- INPUT  -----
-.public static HelloWorl
+..annotation 
 ----- STDOUT -----
 
 ----- STDERR -----
 Error: unknown directive
-   ╭─[ test_data/integration/err/lexer/directives/dot_public.ja:1:1 ]
+   ╭─[ test_data/integration/err/lexer/directives/dot_dot_annotation.ja:1:1 ]
    │
- 1 │ .public static HelloWorl
-   │ ───┬───  
-   │    ╰───── unknown directive
+ 1 │ ..annotation
+   │ ──────┬─────  
+   │       ╰─────── did you mean '.annotation' ?
    │ 
    │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
 ───╯

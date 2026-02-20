@@ -97,11 +97,7 @@ impl ParserError {
                     JasmTokenKind::Newline | JasmTokenKind::Eof => {
                         "missing class name in '.class' directive".to_string()
                     }
-                    JasmTokenKind::DotClass
-                    | JasmTokenKind::DotSuper
-                    | JasmTokenKind::DotMethod
-                    | JasmTokenKind::DotCode
-                    | JasmTokenKind::DotEnd => {
+                    _ if token.is_directive() => {
                         format!("cannot use directive '{}' as a class name", token)
                     }
                     _ => "expected class name".to_string(),
@@ -152,7 +148,11 @@ impl ParserError {
                     TrailingTokensContext::Class => {
                         let first_token_kind = &tokens[0].kind;
                         match first_token_kind {
-                            JasmTokenKind::DotSuper | JasmTokenKind::DotMethod => {
+                            // TODO: we can make it better. for example add a method to JasmTokenKind to know
+                            // if it is valid class member instead of hardcoding here
+                            JasmTokenKind::DotSuper
+                            | JasmTokenKind::DotMethod
+                            | JasmTokenKind::DotAnnotation => {
                                 "must start on a new line".to_string()
                             }
                             JasmTokenKind::DotClass
@@ -191,7 +191,12 @@ impl ParserError {
                     JasmTokenKind::DotEnd => {
                         format!("'{}' has no matching start directive", token)
                     }
-
+                    JasmTokenKind::DotAnnotation => {
+                        format!(
+                            "'{}' is only allowed inside a class or method definition",
+                            token
+                        )
+                    }
                     _ => format!(
                         "this {} must appear inside a class definition",
                         token.as_string_token_type()
@@ -205,11 +210,9 @@ impl ParserError {
                         JasmTokenKind::Newline | JasmTokenKind::Eof => {
                             "expected a class name here".to_string()
                         }
-                        JasmTokenKind::DotClass
-                        | JasmTokenKind::DotSuper
-                        | JasmTokenKind::DotMethod
-                        | JasmTokenKind::DotCode
-                        | JasmTokenKind::DotEnd => "directives cannot be used as names".to_string(),
+                        _ if token.is_directive() => {
+                            "directives cannot be used as names".to_string()
+                        }
                         _ => format!("found '{}' instead", token),
                     },
                     IdentifierContext::SuperName => "expected a superclass name".to_string(),
