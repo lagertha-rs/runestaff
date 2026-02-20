@@ -298,6 +298,10 @@ impl ParserError {
     fn get_note(&self) -> Option<String> {
         match self {
             ParserError::ClassDirectiveExpected(_, token) => match token {
+                _ if token.is_access_flag() => Some(
+                    "Access flags must appear within a '.class' or '.method' directive.".to_string(),
+                ),
+                // TODO: is class nested instead?
                 JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => {
                     Some("Define a class first using '.class [access_flags] <name>'.".to_string())
                 }
@@ -307,9 +311,6 @@ impl ParserError {
                 ),
                 JasmTokenKind::DotEnd => Some(
                     "The '.end' directive must match a previous '.method', '.code', or '.class' directive.".to_string(),
-                ),
-                JasmTokenKind::Public | JasmTokenKind::Static => Some(
-                    "Access flags like 'public' and 'static' must appear within a '.class' or '.method' directive.".to_string(),
                 ),
                 JasmTokenKind::Identifier(name) => Some(
                     format!("Found identifier '{}' before any class was defined. Did you forget to start the class? Try: '.class {}'", name, name),
@@ -338,6 +339,10 @@ impl ParserError {
                         _ if first_token_kind.is_class_nested_directive() => {
                             Some(format!("Consider starting a new line for the '{}' directive.", first_token_kind))
                         }
+                        _ if first_token_kind.is_access_flag() => {
+                            // TODO: bad note, almost the same as the label
+                            Some("Access flags must appear before the class name: '.class [access_flags] <name>'".to_string())
+                        }
                         JasmTokenKind::DotClass => {
                             Some("The '.class' directive cannot be nested. Consider removing the second '.class' (todo when nested metada data is supported explain it).".to_string())
                         }
@@ -346,9 +351,6 @@ impl ParserError {
                         }
                         JasmTokenKind::DotEnd => {
                             Some("The '.end' directive must match a previous '.method', '.code', or '.class' directive. It cannot appear directly after the class name.".to_string())
-                        }
-                        JasmTokenKind::Public | JasmTokenKind::Static => {
-                            Some("Access flags must appear before the class name: '.class [access_flags] <name>'".to_string())
                         }
                         JasmTokenKind::Integer(_) => {
                             Some("Integer literals belong inside '.code' blocks as instruction arguments.".to_string())

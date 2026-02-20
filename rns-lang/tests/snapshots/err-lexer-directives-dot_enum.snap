@@ -1,0 +1,21 @@
+---
+source: jasm/tests/integration_test.rs
+expression: "&combined"
+---
+----- INPUT  -----
+;;;;;;;;;;;
+;;;; enum
+
+.enum ;??
+----- STDOUT -----
+
+----- STDERR -----
+Error: unknown directive
+   ╭─[ test_data/integration/err/lexer/directives/dot_enum.ja:4:1 ]
+   │
+ 4 │ .enum ;??
+   │ ──┬──  
+   │   ╰──── did you mean '.end' ?
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+───╯

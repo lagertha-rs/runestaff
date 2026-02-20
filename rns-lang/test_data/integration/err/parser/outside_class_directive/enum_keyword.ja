@@ -1,0 +1,4 @@
+; some comment
+; another comment
+enum
+.class public HelloWorld

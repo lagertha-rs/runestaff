@@ -1,0 +1,4 @@
+; some comment
+; another comment
+module
+.class public HelloWorld

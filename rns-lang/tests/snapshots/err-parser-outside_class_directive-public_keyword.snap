@@ -16,5 +16,5 @@ Error: unexpected keyword before class definition
    │    ───┬──  
    │       ╰──── this keyword must appear inside a class definition
    │ 
-   │ Note: Access flags like 'public' and 'static' must appear within a '.class' or '.method' directive.
+   │ Note: Access flags must appear within a '.class' or '.method' directive.
 ───╯

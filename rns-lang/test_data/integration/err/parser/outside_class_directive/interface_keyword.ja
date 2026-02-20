@@ -1,0 +1,4 @@
+; some comment
+; another comment
+interface
+.class public HelloWorld

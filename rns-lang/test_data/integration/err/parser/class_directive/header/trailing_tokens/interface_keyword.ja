@@ -1,0 +1,2 @@
+.class HelloWorld interface ; interface should appear with other modifiers
+.super java/lang/Object

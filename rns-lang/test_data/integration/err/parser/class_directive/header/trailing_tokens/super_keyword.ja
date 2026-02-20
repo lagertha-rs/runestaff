@@ -1,0 +1,2 @@
+.class HelloWorld super
+.super java/lang/Object

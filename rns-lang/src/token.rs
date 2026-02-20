@@ -4,6 +4,7 @@ use std::ops::Range;
 //TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum JasmTokenKind {
+    // directives
     DotClass,
     DotSuper,
     DotMethod,
@@ -11,8 +12,20 @@ pub enum JasmTokenKind {
     DotEnd,
     DotAnnotation,
 
+    // access flags
     Public,
     Static,
+    Final,
+    Super,
+    Interface,
+    Abstract,
+    Enum,
+
+    // access flags that can be identifiers
+    Synthetic,
+    Annotation,
+    Module,
+
     Identifier(String),
     MethodDescriptor(String),
 
@@ -45,6 +58,13 @@ impl JasmTokenKind {
         )
     }
 
+    pub fn can_be_identifier(&self) -> bool {
+        matches!(
+            self,
+            JasmTokenKind::Synthetic | JasmTokenKind::Annotation | JasmTokenKind::Module
+        )
+    }
+
     pub fn is_class_nested_directive(&self) -> bool {
         matches!(
             self,
@@ -57,7 +77,19 @@ impl JasmTokenKind {
     }
 
     pub fn is_access_flag(&self) -> bool {
-        matches!(self, JasmTokenKind::Public | JasmTokenKind::Static)
+        matches!(
+            self,
+            JasmTokenKind::Public
+                | JasmTokenKind::Static
+                | JasmTokenKind::Final
+                | JasmTokenKind::Super
+                | JasmTokenKind::Interface
+                | JasmTokenKind::Abstract
+                | JasmTokenKind::Enum
+                | JasmTokenKind::Synthetic
+                | JasmTokenKind::Annotation
+                | JasmTokenKind::Module
+        )
     }
 
     pub fn from_directive(name: &str) -> Option<Self> {
@@ -76,6 +108,14 @@ impl JasmTokenKind {
         match name.as_str() {
             "public" => JasmTokenKind::Public,
             "static" => JasmTokenKind::Static,
+            "final" => JasmTokenKind::Final,
+            "super" => JasmTokenKind::Super,
+            "interface" => JasmTokenKind::Interface,
+            "abstract" => JasmTokenKind::Abstract,
+            "enum" => JasmTokenKind::Enum,
+            "synthetic" => JasmTokenKind::Synthetic,
+            "annotation" => JasmTokenKind::Annotation,
+            "module" => JasmTokenKind::Module,
             // TODO: add a proper parsing
             _ if name.starts_with('(') => JasmTokenKind::MethodDescriptor(name),
             _ => JasmTokenKind::Identifier(name),
@@ -94,7 +134,16 @@ impl JasmTokenKind {
             | JasmTokenKind::DotEnd
             | JasmTokenKind::DotAnnotation
             | JasmTokenKind::DotCode => "directive".to_string(),
-            JasmTokenKind::Public | JasmTokenKind::Static => "keyword".to_string(),
+            JasmTokenKind::Public
+            | JasmTokenKind::Static
+            | JasmTokenKind::Final
+            | JasmTokenKind::Super
+            | JasmTokenKind::Interface
+            | JasmTokenKind::Abstract
+            | JasmTokenKind::Enum
+            | JasmTokenKind::Synthetic
+            | JasmTokenKind::Annotation
+            | JasmTokenKind::Module => "keyword".to_string(), // TODO: keywords or access flags?
             JasmTokenKind::Identifier(_) => "identifier".to_string(),
             JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
             JasmTokenKind::MethodDescriptor(_) => "method descriptor".to_string(),
@@ -118,6 +167,14 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Eof => write!(f, "eof"),
             JasmTokenKind::Public => write!(f, "public"),
             JasmTokenKind::Static => write!(f, "static"),
+            JasmTokenKind::Final => write!(f, "final"),
+            JasmTokenKind::Super => write!(f, "super"),
+            JasmTokenKind::Interface => write!(f, "interface"),
+            JasmTokenKind::Abstract => write!(f, "abstract"),
+            JasmTokenKind::Enum => write!(f, "enum"),
+            JasmTokenKind::Synthetic => write!(f, "synthetic"),
+            JasmTokenKind::Annotation => write!(f, "annotation"),
+            JasmTokenKind::Module => write!(f, "module"),
             JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
             JasmTokenKind::MethodDescriptor(desc) => write!(f, "{}", desc.escape_default()),
             JasmTokenKind::StringLiteral(value) => {
