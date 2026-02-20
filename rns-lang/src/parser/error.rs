@@ -148,19 +148,13 @@ impl ParserError {
                     TrailingTokensContext::Class => {
                         let first_token_kind = &tokens[0].kind;
                         match first_token_kind {
-                            // TODO: we can make it better. for example add a method to JasmTokenKind to know
-                            // if it is valid class member instead of hardcoding here
-                            JasmTokenKind::DotSuper
-                            | JasmTokenKind::DotMethod
-                            | JasmTokenKind::DotAnnotation => {
+                            _ if first_token_kind.is_class_nested_directive() => {
                                 "must start on a new line".to_string()
                             }
-                            JasmTokenKind::DotClass
-                            | JasmTokenKind::DotCode
-                            | JasmTokenKind::DotEnd => {
+                            _ if first_token_kind.is_directive() => {
                                 format!("directive '{}' is not allowed here", first_token_kind)
                             }
-                            JasmTokenKind::Public | JasmTokenKind::Static => {
+                            _ if first_token_kind.is_access_flag() => {
                                 "access flags must appear before the class name".to_string()
                             }
                             JasmTokenKind::Integer(_) => {
@@ -182,20 +176,22 @@ impl ParserError {
             }
             ParserError::ClassDirectiveExpected(_, token) => {
                 let msg = match token {
-                    JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => {
-                        format!("'{}' is only allowed inside a class definition", token)
-                    }
-                    JasmTokenKind::DotCode => {
-                        format!("'{}' is only allowed inside a method definition", token)
-                    }
-                    JasmTokenKind::DotEnd => {
-                        format!("'{}' has no matching start directive", token)
-                    }
-                    JasmTokenKind::DotAnnotation => {
+                    _ if token.is_class_nested_directive()
+                        && token.is_method_nested_directive() =>
+                    {
                         format!(
                             "'{}' is only allowed inside a class or method definition",
                             token
                         )
+                    }
+                    _ if token.is_class_nested_directive() => {
+                        format!("'{}' is only allowed inside a class definition", token)
+                    }
+                    _ if token.is_method_nested_directive() => {
+                        format!("'{}' is only allowed inside a method definition", token)
+                    }
+                    JasmTokenKind::DotEnd => {
+                        format!("'{}' has no matching start directive", token)
                     }
                     _ => format!(
                         "this {} must appear inside a class definition",
@@ -327,6 +323,10 @@ impl ParserError {
                 JasmTokenKind::MethodDescriptor(_) => Some(
                     "Method descriptors specify method signatures and must appear after method names in '.method' directives or as instruction arguments.".to_string(),
                 ),
+                JasmTokenKind::DotAnnotation => Some(
+                    "The '.annotation' directive is only valid inside a class or method definition."
+                        .to_string(),
+                ),
                 _ => {
                     Some("All assembly code must be placed inside a class definition starting with '.class'.".to_string())
                 }
@@ -335,7 +335,7 @@ impl ParserError {
                 let first_token_kind = &tokens[0].kind;
                 match context {
                     TrailingTokensContext::Class => match first_token_kind {
-                        JasmTokenKind::DotSuper | JasmTokenKind::DotMethod => {
+                        _ if first_token_kind.is_class_nested_directive() => {
                             Some(format!("Consider starting a new line for the '{}' directive.", first_token_kind))
                         }
                         JasmTokenKind::DotClass => {
@@ -489,16 +489,16 @@ impl Diagnostic for ParserError {
         self.get_primary_location()
     }
 
-    fn labels(&self) -> Vec<DiagnosticLabel> {
-        self.get_labels()
-    }
-
     fn note(&self) -> Option<String> {
         self.get_note()
     }
 
     fn severity(&self) -> Severity {
         Severity::Error
+    }
+
+    fn labels(&self) -> Vec<DiagnosticLabel> {
+        self.get_labels()
     }
 }
 

@@ -16,5 +16,5 @@ Error: unexpected directive after class name
    │                          ─────────┬─────────  
    │                                   ╰─────────── must start on a new line
    │ 
-   │ Note: The class definition should end after the class name.
+   │ Note: Consider starting a new line for the '.annotation' directive.
 ───╯

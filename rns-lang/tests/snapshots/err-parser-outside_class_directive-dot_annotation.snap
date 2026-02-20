@@ -17,5 +17,5 @@ Error: unexpected directive before class definition
    │ ─────┬─────  
    │      ╰─────── '.annotation' is only allowed inside a class or method definition
    │ 
-   │ Note: All assembly code must be placed inside a class definition starting with '.class'.
+   │ Note: The '.annotation' directive is only valid inside a class or method definition.
 ───╯

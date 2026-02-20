@@ -32,6 +32,34 @@ impl JasmTokenKind {
         JasmTokenKind::DotAnnotation,
     ];
 
+    // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
+    pub fn is_directive(&self) -> bool {
+        matches!(
+            self,
+            JasmTokenKind::DotClass
+                | JasmTokenKind::DotSuper
+                | JasmTokenKind::DotMethod
+                | JasmTokenKind::DotEnd
+                | JasmTokenKind::DotCode
+                | JasmTokenKind::DotAnnotation
+        )
+    }
+
+    pub fn is_class_nested_directive(&self) -> bool {
+        matches!(
+            self,
+            JasmTokenKind::DotMethod | JasmTokenKind::DotAnnotation | JasmTokenKind::DotSuper
+        )
+    }
+
+    pub fn is_method_nested_directive(&self) -> bool {
+        matches!(self, JasmTokenKind::DotCode | JasmTokenKind::DotAnnotation)
+    }
+
+    pub fn is_access_flag(&self) -> bool {
+        matches!(self, JasmTokenKind::Public | JasmTokenKind::Static)
+    }
+
     pub fn from_directive(name: &str) -> Option<Self> {
         match name {
             "class" => Some(JasmTokenKind::DotClass),
@@ -74,19 +102,6 @@ impl JasmTokenKind {
             JasmTokenKind::Newline => "newline".to_string(),
             JasmTokenKind::Eof => "eof".to_string(),
         }
-    }
-
-    // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
-    pub fn is_directive(&self) -> bool {
-        matches!(
-            self,
-            JasmTokenKind::DotClass
-                | JasmTokenKind::DotSuper
-                | JasmTokenKind::DotMethod
-                | JasmTokenKind::DotEnd
-                | JasmTokenKind::DotCode
-                | JasmTokenKind::DotAnnotation
-        )
     }
 }
 
