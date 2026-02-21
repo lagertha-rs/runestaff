@@ -1,0 +1,21 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class public Test
+.code "\123"
+----- STDERR -----
+Error: invalid escape sequence
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/strings/unsupported_octal_escape.ja:2:9 ]
+   │
+ 2 │ .code "\123"
+   │         ┬  
+   │         ╰── invalid escape sequence '\1'
+   │ 
+   │ Note: The character '\1' is not a valid escape sequence.
+───╯
+----- HASH -----
+not generated

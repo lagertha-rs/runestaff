@@ -1,0 +1,18 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+.class public EmptyClass
+.super java/lang/Object
+
+.end class
+----- INPUT -----
+.class public EmptyClass
+.super java/lang/Object
+
+.end class
+----- STDERR -----
+
+----- HASH -----
+5b5613227999d37e30dfe40a7b27472fdb8692e609fcc846e57d04d2f8a54d58

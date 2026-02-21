@@ -1,0 +1,23 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+;;;;;;;;;;;
+;;;; enum
+
+.enum ;??
+----- STDERR -----
+Error: unknown directive
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_enum.ja:4:1 ]
+   │
+ 4 │ .enum ;??
+   │ ──┬──  
+   │   ╰──── did you mean '.end' ?
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+───╯
+----- HASH -----
+not generated

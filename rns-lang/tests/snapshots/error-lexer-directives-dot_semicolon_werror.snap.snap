@@ -1,0 +1,22 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.method
+    .;comment after semicolon
+.end
+----- STDERR -----
+Error: unknown directive
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_semicolon.ja:2:5 ]
+   │
+ 2 │     .;comment after semicolon
+   │     ────┬────  
+   │         ╰────── unknown directive
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+───╯
+----- HASH -----
+not generated

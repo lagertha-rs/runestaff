@@ -1,0 +1,21 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class public Test
+.code "\u"
+----- STDERR -----
+Error: invalid escape sequence
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/strings/unknown_escape_sequence.ja:2:9 ]
+   │
+ 2 │ .code "\u"
+   │         ┬  
+   │         ╰── invalid escape sequence '\u'
+   │ 
+   │ Note: The character '\u' is not a valid escape sequence.
+───╯
+----- HASH -----
+not generated

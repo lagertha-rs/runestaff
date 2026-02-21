@@ -26,6 +26,12 @@ enum Command {
         file: PathBuf,
         #[arg(short, long)]
         output: Option<PathBuf>,
+        #[arg(long)]
+        #[allow(non_snake_case)]
+        Wasm: bool,
+        #[arg(long)]
+        #[allow(non_snake_case)]
+        Werror: bool,
     },
     Dis {
         file: PathBuf,
@@ -36,11 +42,16 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Command::Asm { file, output }) => assemble(&file, output.as_ref()),
+        Some(Command::Asm {
+            file,
+            output,
+            Wasm,
+            Werror,
+        }) => assemble(&file, output.as_ref(), Wasm, Werror),
         Some(Command::Dis { file }) => disassemble(&file),
         None => {
             if let Some(file) = cli.file {
-                assemble(&file, None);
+                assemble(&file, None, false, false);
             } else {
                 eprintln!("Usage: jasm <file.ja> or jasm asm <file.ja> or jasm dis <file.class>");
                 std::process::exit(1);
@@ -49,7 +60,7 @@ fn main() {
     }
 }
 
-fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
+fn assemble(path: &PathBuf, output: Option<&PathBuf>, _warn_asm: bool, _warn_error: bool) {
     let filename = path.to_string_lossy().to_string();
     let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
         eprintln!("Error reading file {}: {}", filename, err);

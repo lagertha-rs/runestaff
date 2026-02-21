@@ -1,0 +1,21 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.method
+.
+----- STDERR -----
+Error: unexpected end of file
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_eof.ja:2:1 ]
+   │
+ 2 │ .
+   │ ┬  
+   │ ╰── unexpected end of file
+   │ 
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .code, .annotation
+───╯
+----- HASH -----
+not generated

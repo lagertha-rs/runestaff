@@ -15,4 +15,6 @@ rstest = "0.26.1"
 insta = "1.46.2"
 assert_cmd = "2"
 tabwriter = "1"
+sha2 = "0.10"
+rand = "0.8"
 

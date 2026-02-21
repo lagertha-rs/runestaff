@@ -1,0 +1,21 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.
+.end
+----- STDERR -----
+Error: unexpected character
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_newline.ja:1:2 ]
+   │
+ 1 │ .
+   │  ┬  
+   │  ╰── found '\n' here
+   │ 
+   │ Note: Expected one of the directives: .class, .super, .method, .end, .code, .annotation
+───╯
+----- HASH -----
+not generated

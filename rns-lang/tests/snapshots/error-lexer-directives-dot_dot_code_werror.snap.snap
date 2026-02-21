@@ -1,0 +1,20 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.method      ..code
+----- STDERR -----
+Error: unknown directive
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_dot_code.ja:1:14 ]
+   │
+ 1 │ .method      ..code
+   │              ───┬──  
+   │                 ╰──── did you mean '.code' ?
+   │ 
+   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+───╯
+----- HASH -----
+not generated
