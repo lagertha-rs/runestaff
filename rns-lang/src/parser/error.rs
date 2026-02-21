@@ -1,4 +1,4 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, JasmError, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, JasmError, Severity};
 use crate::instruction::INSTRUCTION_SPECS;
 use crate::parser::SuperDirective;
 use crate::token::{JasmToken, JasmTokenKind, Span};
@@ -497,6 +497,10 @@ impl Diagnostic for ParserError {
 
     fn severity(&self) -> Severity {
         Severity::Error
+    }
+
+    fn tier(&self) -> DiagnosticTier {
+        DiagnosticTier::Assembler
     }
 
     fn labels(&self) -> Vec<DiagnosticLabel> {

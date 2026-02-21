@@ -38,6 +38,7 @@ pub trait Diagnostic: Debug {
     fn primary_location(&self) -> Range<usize>;
     fn note(&self) -> Option<String>;
     fn severity(&self) -> Severity;
+    fn tier(&self) -> DiagnosticTier;
     fn labels(&self) -> Vec<DiagnosticLabel>;
 
     fn print(&self, filename: &str, source_code: &str) {
@@ -72,6 +73,12 @@ pub trait Diagnostic: Debug {
             .eprint((filename_owned, Source::from(source_code)))
             .unwrap();
     }
+}
+
+pub enum DiagnosticTier {
+    Syntax,    // Can't parse - always error
+    Assembler, // Assembler logic issues
+    JvmSpec,   // JVM spec violations
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

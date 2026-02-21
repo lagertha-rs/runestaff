@@ -1,4 +1,4 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, JasmError, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, JasmError, Severity};
 use crate::token::{JasmTokenKind, Span};
 use std::ops::Range;
 
@@ -125,6 +125,10 @@ impl Diagnostic for LexerError {
 
     fn severity(&self) -> Severity {
         Severity::Error
+    }
+
+    fn tier(&self) -> DiagnosticTier {
+        DiagnosticTier::Syntax
     }
 
     fn labels(&self) -> Vec<DiagnosticLabel> {

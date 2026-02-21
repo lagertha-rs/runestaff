@@ -1,19 +1,20 @@
 use crate::diagnostic::{Diagnostic, JasmError};
-use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
+use crate::instruction::{InstructionOperand, INSTRUCTION_SPECS};
 use crate::parser::error::{
     IdentifierContext, MethodDescriptorContext, MultipleDefinitionContext,
     NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
-use crate::parser::warning::ParserWarning;
+use crate::parser::jasm_warning::ParserWarning;
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use jclass::prelude::*;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
 mod error;
+mod jasm_warning;
+mod jvm_warning;
 #[cfg(test)]
 mod tests;
-mod warning;
 
 const JAVA_LANG_OBJECT: &str = "java/lang/Object";
 
