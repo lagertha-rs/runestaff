@@ -10,8 +10,6 @@ pub(super) enum ParserError {
     TrailingTokens(Vec<JasmToken>, TrailingTokensContext),
     IdentifierExpected(Span, JasmTokenKind, IdentifierContext),
 
-    MethodDescriptorExpected(Span, JasmTokenKind, MethodDescriptorContext),
-
     UnexpectedCodeDirectiveArg(Span, JasmTokenKind),
 
     NonNegativeIntegerExpected(Span, JasmTokenKind, NonNegativeIntegerContext),
@@ -51,17 +49,12 @@ pub(super) enum IdentifierContext {
     ClassName,
     SuperName,
     MethodName,
+    MethodDescriptor,
     InstructionName,
     ClassNameInstructionArg,
     MethodNameInstructionArg,
     FieldNameInstructionArg,
     FieldDescriptorInstructionArg,
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum MethodDescriptorContext {
-    MethodDirective,
-    Instruction,
 }
 
 impl ParserError {
@@ -104,6 +97,7 @@ impl ParserError {
                 },
                 IdentifierContext::SuperName => "incomplete '.super' directive".to_string(),
                 IdentifierContext::MethodName => "incomplete '.method' directive".to_string(),
+                IdentifierContext::MethodDescriptor => "missing method descriptor".to_string(),
                 IdentifierContext::InstructionName => "expected instruction".to_string(),
                 IdentifierContext::ClassNameInstructionArg => "missing class name".to_string(),
                 IdentifierContext::MethodNameInstructionArg => "missing method name".to_string(),
@@ -112,10 +106,6 @@ impl ParserError {
                     "missing field descriptor".to_string()
                 }
             },
-            ParserError::MethodDescriptorExpected(_, token, _) => format!(
-                "expected method descriptor but found {}",
-                token.as_string_token_type()
-            ),
             ParserError::UnexpectedCodeDirectiveArg(_, token) => format!(
                 "unexpected argument in '.code' directive: {}",
                 token.as_string_token_type()
@@ -164,9 +154,6 @@ impl ParserError {
                             JasmTokenKind::StringLiteral(_) => {
                                 "string literals are not allowed here".to_string()
                             }
-                            JasmTokenKind::MethodDescriptor(_) => {
-                                "method descriptors are not allowed here".to_string()
-                            }
                             _ => "not allowed here".to_string(),
                         }
                     }
@@ -213,6 +200,9 @@ impl ParserError {
                     },
                     IdentifierContext::SuperName => "expected a superclass name".to_string(),
                     IdentifierContext::MethodName => "expected a method name".to_string(),
+                    IdentifierContext::MethodDescriptor => {
+                        "expected a method descriptor (e.g., '(I)V')".to_string()
+                    }
                     IdentifierContext::InstructionName => {
                         "expected an instruction mnemonic".to_string()
                     }
@@ -231,10 +221,6 @@ impl ParserError {
                 };
                 vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
             }
-            ParserError::MethodDescriptorExpected(_, token, _) => vec![DiagnosticLabel::at(
-                self.get_primary_location(),
-                format!("expected a method descriptor, but found '{}'", token),
-            )],
             ParserError::UnexpectedCodeDirectiveArg(_, token) => {
                 vec![DiagnosticLabel::at(
                     self.get_primary_location(),
@@ -321,9 +307,6 @@ impl ParserError {
                 JasmTokenKind::StringLiteral(_) => Some(
                     "String literals are constant values that must appear inside '.code' blocks as instruction arguments.".to_string(),
                 ),
-                JasmTokenKind::MethodDescriptor(_) => Some(
-                    "Method descriptors specify method signatures and must appear after method names in '.method' directives or as instruction arguments.".to_string(),
-                ),
                 JasmTokenKind::DotAnnotation => Some(
                     "The '.annotation' directive is only valid inside a class or method definition."
                         .to_string(),
@@ -361,9 +344,6 @@ impl ParserError {
                         JasmTokenKind::Identifier(_) => {
                             Some("The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.".to_string())
                         }
-                        JasmTokenKind::MethodDescriptor(_) => {
-                            Some("Method descriptors must follow method names in '.method' directives.".to_string())
-                        }
                         _ => Some("The class definition should end after the class name.".to_string()),
                     },
                     TrailingTokensContext::Super => Some(
@@ -390,9 +370,6 @@ impl ParserError {
                 }
                 (JasmTokenKind::Integer(_), IdentifierContext::ClassName) => {
                     Some("Integer literals cannot be used as class names. Every class must have a valid identifier as its name.".to_string())
-                }
-                (JasmTokenKind::MethodDescriptor(_), IdentifierContext::ClassName) => {
-                    Some("Method descriptors cannot be used as class names. Please provide a class name like 'com/example/MyClass'.".to_string())
                 }
                 (JasmTokenKind::Public | JasmTokenKind::Static, IdentifierContext::ClassName) => {
                     Some(format!("Access flags like '{}' must appear before the class name. Example: '.class {} MyClass'", kind, kind))
@@ -425,17 +402,10 @@ impl ParserError {
                 (_, IdentifierContext::FieldDescriptorInstructionArg) => Some(
                     "This instruction requires a field descriptor (e.g., 'I', 'Ljava/lang/String;') as an argument.".to_string(),
                 ),
+                (_, IdentifierContext::MethodDescriptor) => Some(
+                    "Method descriptors describe the parameter and return types of a method. Example: '(I)V' for a method that takes an int and returns void.".to_string(),
+                ),
             },
-            ParserError::MethodDescriptorExpected(_, _, context) => Some(match context {
-                MethodDescriptorContext::MethodDirective => {
-                    "Method descriptors specify parameter types and return type. Example: '(II)V' for a method taking two ints and returning void."
-                        .to_string()
-                }
-                MethodDescriptorContext::Instruction => {
-                    "This instruction requires a method descriptor to identify the target method signature."
-                        .to_string()
-                }
-            }),
             ParserError::UnexpectedCodeDirectiveArg(_, _) => Some(
                 "The .code directive only accepts two non-negative integers: stack limit and locals limit.\nExample: '.code 2 1'".to_string(),
             ),
@@ -465,7 +435,6 @@ impl ParserError {
             ParserError::ClassDirectiveExpected(span, _)
             | ParserError::EmptyFile(span)
             | ParserError::IdentifierExpected(span, _, _)
-            | ParserError::MethodDescriptorExpected(span, _, _)
             | ParserError::UnexpectedCodeDirectiveArg(span, _)
             | ParserError::NonNegativeIntegerExpected(span, _, _)
             | ParserError::UnknownInstruction(span, _) => span.as_range(),

@@ -1,8 +1,8 @@
 use crate::diagnostic::{Diagnostic, JasmError};
 use crate::instruction::{InstructionOperand, INSTRUCTION_SPECS};
 use crate::parser::error::{
-    IdentifierContext, MethodDescriptorContext, MultipleDefinitionContext,
-    NonNegativeIntegerContext, ParserError, TrailingTokensContext,
+    IdentifierContext, MultipleDefinitionContext, NonNegativeIntegerContext, ParserError,
+    TrailingTokensContext,
 };
 use crate::parser::jasm_warning::ParserWarning;
 use crate::token::{JasmToken, JasmTokenKind, Span};
@@ -153,27 +153,6 @@ impl JasmParser {
         }
     }
 
-    fn expect_next_method_descriptor(
-        &mut self,
-        context: MethodDescriptorContext,
-        prev_token_end: usize,
-    ) -> Result<String, ParserError> {
-        let token = self.next_token()?;
-        match token.kind {
-            JasmTokenKind::MethodDescriptor(name) => Ok(name),
-            JasmTokenKind::Eof | JasmTokenKind::Newline => {
-                Err(ParserError::MethodDescriptorExpected(
-                    Span::new(prev_token_end, prev_token_end),
-                    token.kind,
-                    context,
-                ))
-            }
-            _ => Err(ParserError::MethodDescriptorExpected(
-                token.span, token.kind, context,
-            )),
-        }
-    }
-
     fn parse_super_directive(&mut self) -> Result<(), ParserError> {
         let dot_super = self.next_token()?; // consume .super token
         let (super_name, super_name_span) =
@@ -240,6 +219,8 @@ impl JasmParser {
                     IdentifierContext::MethodNameInstructionArg,
                     self.last_span.end,
                 )?;
+                todo!("Method descriptor is deleted")
+                /*
                 let method_descriptor = self.expect_next_method_descriptor(
                     MethodDescriptorContext::Instruction,
                     self.last_span.end,
@@ -248,6 +229,7 @@ impl JasmParser {
                     self.cp_builder
                         .add_methodref(&class_name, &method_name, &method_descriptor);
                 code.extend_from_slice(&idx.to_be_bytes());
+                 */
             }
             InstructionOperand::FieldRef => {
                 let (class_name, _) = self.expect_next_identifier(
@@ -361,10 +343,8 @@ impl JasmParser {
         let access_flags = self.parse_method_access_flags()?;
         let (method_name, _) =
             self.expect_next_identifier(IdentifierContext::MethodName, dot_method.span.end)?;
-        let method_descriptor = self.expect_next_method_descriptor(
-            MethodDescriptorContext::MethodDirective,
-            self.last_span.end,
-        )?;
+        let (method_descriptor, _) =
+            self.expect_next_identifier(IdentifierContext::MethodDescriptor, self.last_span.end)?;
         self.expect_no_trailing_tokens(TrailingTokensContext::Method)?;
         self.skip_newlines()?;
         let code_attr = self.parse_code_directive()?;

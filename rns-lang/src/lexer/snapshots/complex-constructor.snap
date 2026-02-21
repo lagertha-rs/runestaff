@@ -26,7 +26,7 @@ Newline                         | 46..47    | \n
 DotMethod                       | 47..54    | .method
 Public                          | 55..61    | public
 Identifier("<init>")            | 62..68    | <init>
-MethodDescriptor("()V")         | 69..72    | ()V
+Identifier("()V")               | 69..72    | ()V
 Newline                         | 72..73    | \n
 DotCode                         | 73..78    | .code
 Newline                         | 78..79    | \n
@@ -35,7 +35,7 @@ Newline                         | 90..91    | \n
 Identifier("invokespecial")     | 95..108   | invokespecial
 Identifier("java/lang/Object")  | 109..125  | java/lang/Object
 Identifier("<init>")            | 126..132  | <init>
-MethodDescriptor("()V")         | 133..136  | ()V
+Identifier("()V")               | 133..136  | ()V
 Newline                         | 136..137  | \n
 Identifier("return")            | 141..147  | return
 Newline                         | 147..148  | \n

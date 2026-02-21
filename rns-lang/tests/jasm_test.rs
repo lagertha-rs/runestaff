@@ -62,7 +62,7 @@ fn to_snapshot_name(path: &Path, flag: Option<&str>) -> String {
     } else {
         format!("{}{}", base_name, flag_suffix)
     };
-    format!("{}.snap", full_name.replace("/", "-").replace("--", "-"))
+    full_name.replace("/", "-").replace("--", "-")
 }
 
 struct TempClassFile(PathBuf);

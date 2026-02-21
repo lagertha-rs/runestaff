@@ -27,8 +27,6 @@ pub enum JasmTokenKind {
     Module,
 
     Identifier(String),
-    MethodDescriptor(String),
-
     Integer(i32),
     StringLiteral(String),
     Newline,
@@ -116,8 +114,6 @@ impl JasmTokenKind {
             "synthetic" => JasmTokenKind::Synthetic,
             "annotation" => JasmTokenKind::Annotation,
             "module" => JasmTokenKind::Module,
-            // TODO: add a proper parsing
-            _ if name.starts_with('(') => JasmTokenKind::MethodDescriptor(name),
             _ => JasmTokenKind::Identifier(name),
         }
     }
@@ -146,7 +142,6 @@ impl JasmTokenKind {
             | JasmTokenKind::Module => "keyword".to_string(), // TODO: keywords or access flags?
             JasmTokenKind::Identifier(_) => "identifier".to_string(),
             JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
-            JasmTokenKind::MethodDescriptor(_) => "method descriptor".to_string(),
             JasmTokenKind::Integer(_) => "integer".to_string(),
             JasmTokenKind::Newline => "newline".to_string(),
             JasmTokenKind::Eof => "eof".to_string(),
@@ -176,7 +171,6 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::Annotation => write!(f, "annotation"),
             JasmTokenKind::Module => write!(f, "module"),
             JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
-            JasmTokenKind::MethodDescriptor(desc) => write!(f, "{}", desc.escape_default()),
             JasmTokenKind::StringLiteral(value) => {
                 write!(f, "{}", value.escape_default())
             }

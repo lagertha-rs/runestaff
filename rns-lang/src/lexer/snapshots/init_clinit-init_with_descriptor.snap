@@ -5,9 +5,9 @@ expression: formatted
 ----- SOURCE -----
 <init> ()V
 ----- TOKENS -----
-KIND                     | SPAN    | TEXT
-----                     | ----    | ----
-Identifier("<init>")     | 0..6    | <init>
-MethodDescriptor("()V")  | 7..10   | ()V
-Newline                  | 10..11  | \n
-Eof                      | 11..11  |
+KIND                  | SPAN    | TEXT
+----                  | ----    | ----
+Identifier("<init>")  | 0..6    | <init>
+Identifier("()V")     | 7..10   | ()V
+Newline               | 10..11  | \n
+Eof                   | 11..11  |

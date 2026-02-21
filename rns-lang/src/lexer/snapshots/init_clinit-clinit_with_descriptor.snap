@@ -5,9 +5,9 @@ expression: formatted
 ----- SOURCE -----
 <clinit> ()V
 ----- TOKENS -----
-KIND                     | SPAN    | TEXT
-----                     | ----    | ----
-Identifier("<clinit>")   | 0..8    | <clinit>
-MethodDescriptor("()V")  | 9..12   | ()V
-Newline                  | 12..13  | \n
-Eof                      | 13..13  |
+KIND                    | SPAN    | TEXT
+----                    | ----    | ----
+Identifier("<clinit>")  | 0..8    | <clinit>
+Identifier("()V")       | 9..12   | ()V
+Newline                 | 12..13  | \n
+Eof                     | 13..13  |

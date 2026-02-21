@@ -5,11 +5,11 @@ expression: formatted
 ----- SOURCE -----
 .method public <init> ()V
 ----- TOKENS -----
-KIND                     | SPAN    | TEXT
-----                     | ----    | ----
-DotMethod                | 0..7    | .method
-Public                   | 8..14   | public
-Identifier("<init>")     | 15..21  | <init>
-MethodDescriptor("()V")  | 22..25  | ()V
-Newline                  | 25..26  | \n
-Eof                      | 26..26  |
+KIND                  | SPAN    | TEXT
+----                  | ----    | ----
+DotMethod             | 0..7    | .method
+Public                | 8..14   | public
+Identifier("<init>")  | 15..21  | <init>
+Identifier("()V")     | 22..25  | ()V
+Newline               | 25..26  | \n
+Eof                   | 26..26  |
