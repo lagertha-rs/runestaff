@@ -1,0 +1,23 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.annotation actually can't be here
+.class public HelloWorld
+
+.end method
+----- STDERR -----
+Error: unexpected directive before class definition
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/dot_annotation.ja:1:1 ]
+   │
+ 1 │ .annotation actually can't be here
+   │ ─────┬─────  
+   │      ╰─────── '.annotation' is only allowed inside a class or method definition
+   │ 
+   │ Note: The '.annotation' directive is only valid inside a class or method definition.
+───╯
+----- HASH -----
+not generated

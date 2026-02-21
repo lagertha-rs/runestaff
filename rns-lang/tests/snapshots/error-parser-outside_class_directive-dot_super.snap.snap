@@ -1,0 +1,22 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; comment before the directive
+.super java/lang/Object
+.class public HelloWorld
+----- STDERR -----
+Error: unexpected directive before class definition
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/dot_super.ja:2:1 ]
+   │
+ 2 │ .super java/lang/Object
+   │ ───┬──  
+   │    ╰──── '.super' is only allowed inside a class definition
+   │ 
+   │ Note: Define a class first using '.class [access_flags] <name>'.
+───╯
+----- HASH -----
+not generated

@@ -1,0 +1,20 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; only a comment, no class at all
+----- STDERR -----
+Error: file contains no class definition
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/eof.ja:1:35 ]
+   │
+ 1 │ ; only a comment, no class at all
+   │                                   │ 
+   │                                   ╰─ the file is empty or contains only comments
+   │ 
+   │ Note: A Java assembly file must start with a '.class' directive.
+───╯
+----- HASH -----
+not generated

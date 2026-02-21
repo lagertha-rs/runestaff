@@ -1,0 +1,21 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.end method ; trailing comment
+.class public HelloWorld
+----- STDERR -----
+Error: unexpected directive before class definition
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/dot_end.ja:1:1 ]
+   │
+ 1 │ .end method ; trailing comment
+   │ ──┬─  
+   │   ╰─── '.end' has no matching start directive
+   │ 
+   │ Note: The '.end' directive must match a previous '.method', '.code', or '.class' directive.
+───╯
+----- HASH -----
+not generated

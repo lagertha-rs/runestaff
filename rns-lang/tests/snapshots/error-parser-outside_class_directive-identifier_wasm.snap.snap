@@ -1,0 +1,24 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+
+
+
+HelloWorld
+.class public HelloWorld
+----- STDERR -----
+Error: unexpected identifier before class definition
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/identifier.ja:4:1 ]
+   │
+ 4 │ HelloWorld
+   │ ─────┬────  
+   │      ╰────── this identifier must appear inside a class definition
+   │ 
+   │ Note: Found identifier 'HelloWorld' before any class was defined. Did you forget to start the class? Try: '.class HelloWorld'
+───╯
+----- HASH -----
+not generated

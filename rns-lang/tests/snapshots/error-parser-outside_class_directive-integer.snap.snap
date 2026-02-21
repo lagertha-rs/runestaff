@@ -1,0 +1,21 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+42 ; the answer
+.class public HelloWorld
+----- STDERR -----
+Error: unexpected integer before class definition
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/integer.ja:1:1 ]
+   │
+ 1 │ 42 ; the answer
+   │ ─┬  
+   │  ╰── this integer must appear inside a class definition
+   │ 
+   │ Note: Integer literals are typically used as instruction arguments inside '.code' blocks.
+───╯
+----- HASH -----
+not generated
