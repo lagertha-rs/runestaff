@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 .class public final EmptyClass
@@ -13,7 +13,7 @@ expression: "&combined"
 
 .end class
 ----- STDERR -----
-Warning: duplicate access flag 'public'
+Warning: duplicate access flag 'public' in class declaration
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/multiple_access_flags.ja:1:15 ]
    │
  1 │ .class public public final public EmptyClass
@@ -24,7 +24,7 @@ Warning: duplicate access flag 'public'
    │                               │    
    │                               ╰──── duplicate flag ignored here
    │ 
-   │ Note: This flag was already specified. You only need to declare it once.
+   │ Note: The `public` flag was already specified. You only need to declare it once.
 ───╯
 ----- HASH -----
 15660cc72b14de356de78864cb002c7909cd787fae77332babaf3fb942963ddc

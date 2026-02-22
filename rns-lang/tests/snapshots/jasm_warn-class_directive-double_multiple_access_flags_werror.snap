@@ -1,0 +1,38 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class public public final public final EmptyClass
+.super java/lang/Object
+
+.end class
+----- STDERR -----
+Warning: duplicate access flag 'public' in class declaration
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/double_multiple_access_flags.ja:1:15 ]
+   │
+ 1 │ .class public public final public final EmptyClass
+   │        ───┬── ───┬──       ───┬──  
+   │           ╰──────────────────────── first defined here
+   │                  │            │    
+   │                  ╰───────────────── duplicate flag ignored here
+   │                               │    
+   │                               ╰──── duplicate flag ignored here
+   │ 
+   │ Note: The `public` flag was already specified. You only need to declare it once.
+───╯
+Warning: duplicate access flag 'final' in class declaration
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/double_multiple_access_flags.ja:1:35 ]
+   │
+ 1 │ .class public public final public final EmptyClass
+   │                      ──┬──        ──┬──  
+   │                        ╰───────────────── first defined here
+   │                                     │    
+   │                                     ╰──── duplicate flag ignored here
+   │ 
+   │ Note: The `final` flag was already specified. You only need to declare it once.
+───╯
+----- HASH -----
+not generated

@@ -20,7 +20,7 @@ impl Diagnostic for ParserWarning {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
             ParserWarning::ClassDuplicateFlag { flag, .. } => {
-                format!("duplicate access flag '{}'", flag)
+                format!("duplicate access flag '{}' in class declaration", flag)
             }
         }
     }
@@ -48,9 +48,10 @@ impl Diagnostic for ParserWarning {
                  Defaulting to '{}'.",
                 default
             )),
-            ParserWarning::ClassDuplicateFlag { .. } => Some(
-                "This flag was already specified. You only need to declare it once.".to_string(),
-            ),
+            ParserWarning::ClassDuplicateFlag { flag, .. } => Some(format!(
+                "The `{}` flag was already specified. You only need to declare it once.",
+                flag
+            )),
         }
     }
 
