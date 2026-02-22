@@ -1,6 +1,5 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, Severity};
-use crate::parser::SuperDirective;
-use crate::token::Span;
+use crate::token::{JasmAccessFlag, Span};
 use std::ops::Range;
 
 #[derive(Debug)]
@@ -10,9 +9,9 @@ pub(super) enum ParserWarning {
         class_directive_pos: Span,
         default: &'static str,
     },
-    SameSuperDefinedMultipleTimes {
-        first_occurrence: SuperDirective,
-        second_occurrence: SuperDirective,
+    ClassDuplicateFlag {
+        flag: JasmAccessFlag,
+        spans: Vec<Span>,
     },
 }
 
@@ -20,8 +19,8 @@ impl Diagnostic for ParserWarning {
     fn message(&self) -> String {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
-            ParserWarning::SameSuperDefinedMultipleTimes { .. } => {
-                "redundant '.super' directive".to_string()
+            ParserWarning::ClassDuplicateFlag { flag, .. } => {
+                format!("duplicate access flag '{}'", flag)
             }
         }
     }
@@ -32,14 +31,14 @@ impl Diagnostic for ParserWarning {
                 class_directive_pos,
                 ..
             } => class_directive_pos.as_range(),
-            ParserWarning::SameSuperDefinedMultipleTimes {
-                second_occurrence, ..
-            } => second_occurrence.directive_span.as_range(),
+            ParserWarning::ClassDuplicateFlag { spans, .. } => {
+                spans.get(1).copied().unwrap_or_default().as_range()
+            }
         }
     }
 
     fn tier(&self) -> DiagnosticTier {
-        DiagnosticTier::JvmSpec // TODO: stub
+        DiagnosticTier::Assembler // TODO: stub
     }
 
     fn note(&self) -> Option<String> {
@@ -49,11 +48,7 @@ impl Diagnostic for ParserWarning {
                  Defaulting to '{}'.",
                 default
             )),
-            ParserWarning::SameSuperDefinedMultipleTimes { .. } => Some(
-                "JVM class files only support a single superclass.\n\
-                 Since both directives point to the same class, this is harmless but messy."
-                    .to_string(),
-            ),
+            ParserWarning::ClassDuplicateFlag { .. } => Some("The same access flag is specified multiple times. This is redundant and may indicate a mistake.".to_string()),
         }
     }
 
@@ -71,22 +66,15 @@ impl Diagnostic for ParserWarning {
                 class_directive_pos.as_range(),
                 format!("class '{}' is missing a '.super' directive", class_name),
             )],
-            ParserWarning::SameSuperDefinedMultipleTimes {
-                first_occurrence,
-                second_occurrence,
-            } => vec![
-                DiagnosticLabel::context(
-                    first_occurrence.identifier_span.as_range(),
-                    format!(
-                        "superclass is already set to '{}' here",
-                        first_occurrence.class_name
-                    ),
-                ),
-                DiagnosticLabel::at(
-                    second_occurrence.directive_span.start..second_occurrence.identifier_span.end,
-                    "this second directive is redundant",
-                ),
-            ],
+            ParserWarning::ClassDuplicateFlag { flag, spans } => spans
+                .iter()
+                .map(|span| {
+                    DiagnosticLabel::at(
+                        span.as_range(),
+                        format!("duplicate access flag '{}'", flag),
+                    )
+                })
+                .collect(),
         }
     }
 }

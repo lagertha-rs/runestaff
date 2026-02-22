@@ -1,7 +1,6 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, JasmError, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, Severity};
 use crate::instruction::INSTRUCTION_SPECS;
-use crate::parser::SuperDirective;
-use crate::token::{JasmToken, JasmTokenKind, Span};
+use crate::token::{JasmAccessFlag, JasmToken, JasmTokenKind, Span};
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -16,18 +15,9 @@ pub(super) enum ParserError {
 
     UnknownInstruction(Span, String),
 
-    MultipleDefinitions(MultipleDefinitionContext),
-
     EmptyFile(Span),
+    //TODO: add a specific handling
     Internal(String),
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum MultipleDefinitionContext {
-    SuperClass {
-        first_definition: SuperDirective,
-        second_definition: SuperDirective,
-    },
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -120,12 +110,6 @@ impl ParserError {
             ParserError::UnknownInstruction(_, name) => {
                 format!("unknown instruction '{}'", name)
             }
-            ParserError::MultipleDefinitions(context) => format!(
-                "multiple {} definitions",
-                match context {
-                    MultipleDefinitionContext::SuperClass { .. } => "superclass",
-                }
-            ),
             ParserError::EmptyFile(_) => "file contains no class definition".to_string(),
             ParserError::Internal(msg) => format!("Internal parser error: {}", msg),
         }
@@ -256,28 +240,6 @@ impl ParserError {
                     "the file is empty or contains only comments",
                 )]
             }
-            ParserError::MultipleDefinitions(context) => match context {
-                MultipleDefinitionContext::SuperClass {
-                    first_definition,
-                    second_definition,
-                } => vec![
-                    DiagnosticLabel::context(
-                        first_definition.identifier_span.as_range(),
-                        format!(
-                            "superclass was first defined as '{}'",
-                            first_definition.class_name
-                        ),
-                    ),
-                    DiagnosticLabel::at(
-                        second_definition.directive_span.start
-                            ..second_definition.identifier_span.end,
-                        format!(
-                            "attempted to redefine as '{}'",
-                            second_definition.class_name
-                        ),
-                    ),
-                ],
-            },
         }
     }
 
@@ -371,7 +333,7 @@ impl ParserError {
                 (JasmTokenKind::Integer(_), IdentifierContext::ClassName) => {
                     Some("Integer literals cannot be used as class names. Every class must have a valid identifier as its name.".to_string())
                 }
-                (JasmTokenKind::Public | JasmTokenKind::Static, IdentifierContext::ClassName) => {
+                (JasmTokenKind::AccessFlag(JasmAccessFlag::Public) | JasmTokenKind::AccessFlag(JasmAccessFlag::Static), IdentifierContext::ClassName) => {
                     Some(format!("Access flags like '{}' must appear before the class name. Example: '.class {} MyClass'", kind, kind))
                 }
                 (JasmTokenKind::Newline | JasmTokenKind::Eof, IdentifierContext::ClassName) => {
@@ -422,11 +384,6 @@ impl ParserError {
             ),
             ParserError::EmptyFile(_) => Some("A Java assembly file must start with a '.class' directive.".to_string()),
             ParserError::Internal(_) => None,
-            ParserError::MultipleDefinitions(context) => match context {
-                MultipleDefinitionContext::SuperClass { .. } => Some(
-                    "Java classes do not support multiple inheritance.\nA class can only have one parent.".to_string(),
-                ),
-            },
         }
     }
 
@@ -441,11 +398,6 @@ impl ParserError {
             ParserError::TrailingTokens(tokens, _) => {
                 tokens[0].span.start..tokens.last().map(|v| v.span.end).unwrap_or(0)
             }
-            ParserError::MultipleDefinitions(context) => match context {
-                MultipleDefinitionContext::SuperClass {
-                    second_definition, ..
-                } => second_definition.directive_span.as_range(),
-            },
             ParserError::Internal(_) => 0..0,
         }
     }
@@ -477,11 +429,14 @@ impl Diagnostic for ParserError {
     }
 }
 
-impl From<ParserError> for JasmError {
+impl From<ParserError> for Box<dyn Diagnostic> {
     fn from(err: ParserError) -> Self {
-        match err {
-            ParserError::Internal(msg) => JasmError::Internal(msg),
-            _ => JasmError::Diagnostic(Box::new(err)),
-        }
+        Box::new(err)
+    }
+}
+
+impl From<ParserError> for Vec<Box<dyn Diagnostic>> {
+    fn from(err: ParserError) -> Self {
+        vec![Box::new(err)]
     }
 }

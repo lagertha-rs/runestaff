@@ -1,5 +1,20 @@
 use itertools::Itertools;
+use std::fmt::Display;
 use std::ops::Range;
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
+pub enum JasmAccessFlag {
+    Public,
+    Static,
+    Final,
+    Super,
+    Interface,
+    Abstract,
+    Enum,
+    Synthetic,
+    Annotation,
+    Module,
+}
 
 //TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -12,25 +27,50 @@ pub enum JasmTokenKind {
     DotEnd,
     DotAnnotation,
 
-    // access flags
-    Public,
-    Static,
-    Final,
-    Super,
-    Interface,
-    Abstract,
-    Enum,
-
-    // access flags that can be identifiers
-    Synthetic,
-    Annotation,
-    Module,
+    AccessFlag(JasmAccessFlag),
 
     Identifier(String),
     Integer(i32),
     StringLiteral(String),
     Newline,
     Eof,
+}
+
+impl TryFrom<&str> for JasmAccessFlag {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "public" => Ok(JasmAccessFlag::Public),
+            "static" => Ok(JasmAccessFlag::Static),
+            "final" => Ok(JasmAccessFlag::Final),
+            "super" => Ok(JasmAccessFlag::Super),
+            "interface" => Ok(JasmAccessFlag::Interface),
+            "abstract" => Ok(JasmAccessFlag::Abstract),
+            "enum" => Ok(JasmAccessFlag::Enum),
+            "synthetic" => Ok(JasmAccessFlag::Synthetic),
+            "annotation" => Ok(JasmAccessFlag::Annotation),
+            "module" => Ok(JasmAccessFlag::Module),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Display for JasmAccessFlag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JasmAccessFlag::Public => write!(f, "public"),
+            JasmAccessFlag::Static => write!(f, "static"),
+            JasmAccessFlag::Final => write!(f, "final"),
+            JasmAccessFlag::Super => write!(f, "super"),
+            JasmAccessFlag::Interface => write!(f, "interface"),
+            JasmAccessFlag::Abstract => write!(f, "abstract"),
+            JasmAccessFlag::Enum => write!(f, "enum"),
+            JasmAccessFlag::Synthetic => write!(f, "synthetic"),
+            JasmAccessFlag::Annotation => write!(f, "annotation"),
+            JasmAccessFlag::Module => write!(f, "module"),
+        }
+    }
 }
 
 impl JasmTokenKind {
@@ -56,13 +96,6 @@ impl JasmTokenKind {
         )
     }
 
-    pub fn can_be_identifier(&self) -> bool {
-        matches!(
-            self,
-            JasmTokenKind::Synthetic | JasmTokenKind::Annotation | JasmTokenKind::Module
-        )
-    }
-
     pub fn is_class_nested_directive(&self) -> bool {
         matches!(
             self,
@@ -75,19 +108,7 @@ impl JasmTokenKind {
     }
 
     pub fn is_access_flag(&self) -> bool {
-        matches!(
-            self,
-            JasmTokenKind::Public
-                | JasmTokenKind::Static
-                | JasmTokenKind::Final
-                | JasmTokenKind::Super
-                | JasmTokenKind::Interface
-                | JasmTokenKind::Abstract
-                | JasmTokenKind::Enum
-                | JasmTokenKind::Synthetic
-                | JasmTokenKind::Annotation
-                | JasmTokenKind::Module
-        )
+        matches!(self, JasmTokenKind::AccessFlag(_))
     }
 
     pub fn from_directive(name: &str) -> Option<Self> {
@@ -103,18 +124,10 @@ impl JasmTokenKind {
     }
 
     pub fn from_identifier(name: String) -> Self {
-        match name.as_str() {
-            "public" => JasmTokenKind::Public,
-            "static" => JasmTokenKind::Static,
-            "final" => JasmTokenKind::Final,
-            "super" => JasmTokenKind::Super,
-            "interface" => JasmTokenKind::Interface,
-            "abstract" => JasmTokenKind::Abstract,
-            "enum" => JasmTokenKind::Enum,
-            "synthetic" => JasmTokenKind::Synthetic,
-            "annotation" => JasmTokenKind::Annotation,
-            "module" => JasmTokenKind::Module,
-            _ => JasmTokenKind::Identifier(name),
+        if let Ok(access_flag) = JasmAccessFlag::try_from(name.as_str()) {
+            JasmTokenKind::AccessFlag(access_flag)
+        } else {
+            JasmTokenKind::Identifier(name)
         }
     }
 
@@ -130,16 +143,7 @@ impl JasmTokenKind {
             | JasmTokenKind::DotEnd
             | JasmTokenKind::DotAnnotation
             | JasmTokenKind::DotCode => "directive".to_string(),
-            JasmTokenKind::Public
-            | JasmTokenKind::Static
-            | JasmTokenKind::Final
-            | JasmTokenKind::Super
-            | JasmTokenKind::Interface
-            | JasmTokenKind::Abstract
-            | JasmTokenKind::Enum
-            | JasmTokenKind::Synthetic
-            | JasmTokenKind::Annotation
-            | JasmTokenKind::Module => "keyword".to_string(), // TODO: keywords or access flags?
+            JasmTokenKind::AccessFlag(_) => "keyword".to_string(), // TODO: keywords or access flags?
             JasmTokenKind::Identifier(_) => "identifier".to_string(),
             JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
             JasmTokenKind::Integer(_) => "integer".to_string(),
@@ -149,7 +153,7 @@ impl JasmTokenKind {
     }
 }
 
-impl std::fmt::Display for JasmTokenKind {
+impl Display for JasmTokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             JasmTokenKind::DotClass => write!(f, ".class"),
@@ -160,16 +164,7 @@ impl std::fmt::Display for JasmTokenKind {
             JasmTokenKind::DotAnnotation => write!(f, ".annotation"),
             JasmTokenKind::Newline => write!(f, "newline"),
             JasmTokenKind::Eof => write!(f, "eof"),
-            JasmTokenKind::Public => write!(f, "public"),
-            JasmTokenKind::Static => write!(f, "static"),
-            JasmTokenKind::Final => write!(f, "final"),
-            JasmTokenKind::Super => write!(f, "super"),
-            JasmTokenKind::Interface => write!(f, "interface"),
-            JasmTokenKind::Abstract => write!(f, "abstract"),
-            JasmTokenKind::Enum => write!(f, "enum"),
-            JasmTokenKind::Synthetic => write!(f, "synthetic"),
-            JasmTokenKind::Annotation => write!(f, "annotation"),
-            JasmTokenKind::Module => write!(f, "module"),
+            JasmTokenKind::AccessFlag(flag) => write!(f, "{}", flag),
             JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
             JasmTokenKind::StringLiteral(value) => {
                 write!(f, "{}", value.escape_default())
@@ -179,7 +174,7 @@ impl std::fmt::Display for JasmTokenKind {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 pub struct Span {
     pub start: usize,
     pub end: usize, // is exclusive

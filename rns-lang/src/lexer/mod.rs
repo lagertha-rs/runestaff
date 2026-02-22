@@ -1,4 +1,4 @@
-use crate::diagnostic::JasmError;
+use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
 use crate::token::{JasmToken, JasmTokenKind, Span};
 use std::iter::Peekable;
@@ -169,13 +169,6 @@ impl<'a> JasmLexer<'a> {
 
         let kind = match ch {
             '.' => self.handle_directive(start)?,
-            'a'..='z' | 'A'..='Z' | '_' | '(' => {
-                // TODO: out identifiers can have forbidden characters, but for now we just read until
-                // the next whitespace, which is good enough for most cases. In the future we might want
-                // to implement more specific rules for identifiers and method descriptors.
-                let str = self.read_to_delimiter();
-                JasmTokenKind::from_identifier(str)
-            }
             '0'..='9' | '-' => self.read_number(start)?,
             '"' => JasmTokenKind::StringLiteral(self.read_string(start)?),
             '\n' => {
@@ -185,24 +178,9 @@ impl<'a> JasmLexer<'a> {
                     span: Span::new(start, self.byte_pos),
                 });
             }
-            '<' => {
-                let token_str = self.read_to_delimiter();
-                if token_str.starts_with("<init>") || token_str.starts_with("<clinit>") {
-                    JasmTokenKind::Identifier(token_str)
-                } else {
-                    return Err(LexerError::UnexpectedChar(
-                        Span::new(start, start + ch.len_utf8()),
-                        ch,
-                        None,
-                    ));
-                }
-            }
             _ => {
-                return Err(LexerError::UnexpectedChar(
-                    Span::new(start, start + ch.len_utf8()),
-                    ch,
-                    None,
-                ));
+                let str = self.read_to_delimiter();
+                JasmTokenKind::from_identifier(str)
             }
         };
 
@@ -213,7 +191,7 @@ impl<'a> JasmLexer<'a> {
         })
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<JasmToken>, JasmError> {
+    pub fn tokenize(&mut self) -> Result<Vec<JasmToken>, Box<dyn Diagnostic>> {
         let mut tokens = Vec::new();
 
         loop {

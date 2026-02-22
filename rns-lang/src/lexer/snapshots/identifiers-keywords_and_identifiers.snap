@@ -7,9 +7,9 @@ public myVariable static someMethod final
 ----- TOKENS -----
 KIND                      | SPAN    | TEXT
 ----                      | ----    | ----
-Public                    | 0..6    | public
+AccessFlag(Public)        | 0..6    | public
 Identifier("myVariable")  | 7..17   | myVariable
-Static                    | 18..24  | static
+AccessFlag(Static)        | 18..24  | static
 Identifier("someMethod")  | 25..35  | someMethod
-Final                     | 36..41  | final
+AccessFlag(Final)         | 36..41  | final
 Eof                       | 41..41  |

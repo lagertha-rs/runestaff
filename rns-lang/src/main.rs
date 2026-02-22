@@ -1,11 +1,13 @@
-use crate::diagnostic::JasmError;
+use crate::diagnostic::DiagnosticTier;
 use crate::lexer::JasmLexer;
+use crate::parser::JasmParser;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 mod diagnostic;
 mod instruction;
 mod lexer;
+mod module;
 mod parser;
 mod token;
 mod utils;
@@ -60,7 +62,7 @@ fn main() {
     }
 }
 
-fn assemble(path: &PathBuf, output: Option<&PathBuf>, _warn_asm: bool, _warn_error: bool) {
+fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error: bool) {
     let filename = path.to_string_lossy().to_string();
     let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
         eprintln!("Error reading file {}: {}", filename, err);
@@ -77,28 +79,38 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, _warn_asm: bool, _warn_err
         }
     };
 
-    let (warnings, result) = parser::JasmParser::parse(tokens);
-
-    for warning in &warnings {
-        warning.print(&filename, &contents);
-    }
-
-    let class = match result {
-        Ok(class) => class,
-        Err(err) => {
-            err.print(&filename, &contents);
+    let module = match JasmParser::parse(tokens) {
+        Ok(module) => module,
+        Err(errors) => {
+            for err in errors {
+                err.print(&filename, &contents);
+            }
             std::process::exit(1);
         }
     };
+
+    let (class, diagnostics) = module.into_class_file();
+
+    let mut has_error = false;
+    for diag in diagnostics {
+        diag.print(&filename, &contents);
+        match (diag.tier(), warn_asm, warn_error) {
+            (DiagnosticTier::Syntax, _, _) => has_error = true,
+            (DiagnosticTier::JvmSpec, false, _) => has_error = true,
+            (DiagnosticTier::Assembler, _, false) => has_error = true,
+            _ => {}
+        }
+    }
+
+    if has_error {
+        std::process::exit(1);
+    }
 
     let bytes = class.to_bytes();
     let output_path = output
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_else(|| filename.replace(".ja", ".class"));
-    if let Err(err) = write_to_file(&output_path, &bytes) {
-        err.print(&filename, &contents);
-        std::process::exit(1);
-    }
+    std::fs::write(output_path, bytes).expect("Failed to write output file");
 }
 
 fn disassemble(path: &PathBuf) {
@@ -114,11 +126,4 @@ fn disassemble(path: &PathBuf) {
 
     let ja_text = class_file.fmt_jasm();
     print!("{}", ja_text.unwrap());
-}
-
-// TODO: make proper fn, probably validate .ja name and class name in .class dir
-fn write_to_file(filename: &str, bytes: &[u8]) -> Result<(), JasmError> {
-    std::fs::write(filename, bytes).map_err(|err| {
-        JasmError::Internal(format!("Failed to write to file {}: {}", filename, err))
-    })
 }

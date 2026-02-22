@@ -1,4 +1,4 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, JasmError, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, Severity};
 use crate::token::{JasmTokenKind, Span};
 use std::ops::Range;
 
@@ -136,8 +136,8 @@ impl Diagnostic for LexerError {
     }
 }
 
-impl From<LexerError> for JasmError {
+impl From<LexerError> for Box<dyn Diagnostic> {
     fn from(err: LexerError) -> Self {
-        JasmError::Diagnostic(Box::new(err))
+        Box::new(err)
     }
 }
