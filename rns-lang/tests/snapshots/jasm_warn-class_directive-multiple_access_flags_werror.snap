@@ -1,0 +1,27 @@
+---
+source: jasm/tests/jasm_test.rs
+expression: "&combined"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class public public final public EmptyClass
+.super java/lang/Object
+
+.end class
+----- STDERR -----
+Warning: duplicate access flag 'public'
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/multiple_access_flags.ja:1:15 ]
+   │
+ 1 │ .class public public final public EmptyClass
+   │        ───┬── ───┬──       ───┬──  
+   │           ╰──────────────────────── first defined here
+   │                  │            │    
+   │                  ╰───────────────── duplicate flag ignored here
+   │                               │    
+   │                               ╰──── duplicate flag ignored here
+   │ 
+   │ Note: This flag was already specified. You only need to declare it once.
+───╯
+----- HASH -----
+not generated

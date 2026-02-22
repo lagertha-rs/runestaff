@@ -48,7 +48,9 @@ impl Diagnostic for ParserWarning {
                  Defaulting to '{}'.",
                 default
             )),
-            ParserWarning::ClassDuplicateFlag { .. } => Some("The same access flag is specified multiple times. This is redundant and may indicate a mistake.".to_string()),
+            ParserWarning::ClassDuplicateFlag { .. } => Some(
+                "This flag was already specified. You only need to declare it once.".to_string(),
+            ),
         }
     }
 
@@ -66,15 +68,20 @@ impl Diagnostic for ParserWarning {
                 class_directive_pos.as_range(),
                 format!("class '{}' is missing a '.super' directive", class_name),
             )],
-            ParserWarning::ClassDuplicateFlag { flag, spans } => spans
-                .iter()
-                .map(|span| {
-                    DiagnosticLabel::at(
+            ParserWarning::ClassDuplicateFlag { flag, spans } => {
+                let mut labels = Vec::with_capacity(spans.len());
+                labels.push(DiagnosticLabel::context(
+                    spans[0].as_range(),
+                    "first defined here",
+                ));
+                for span in spans.iter().skip(1) {
+                    labels.push(DiagnosticLabel::at(
                         span.as_range(),
-                        format!("duplicate access flag '{}'", flag),
-                    )
-                })
-                .collect(),
+                        "duplicate flag ignored here",
+                    ))
+                }
+                labels
+            }
         }
     }
 }

@@ -96,8 +96,8 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
         diag.print(&filename, &contents);
         match (diag.tier(), warn_asm, warn_error) {
             (DiagnosticTier::Syntax, _, _) => has_error = true,
-            (DiagnosticTier::JvmSpec, false, _) => has_error = true,
-            (DiagnosticTier::Assembler, _, false) => has_error = true,
+            (DiagnosticTier::JvmSpec, true, _) => has_error = true,
+            (DiagnosticTier::Assembler, _, true) => has_error = true,
             _ => {}
         }
     }

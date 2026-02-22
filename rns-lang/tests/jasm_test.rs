@@ -4,10 +4,11 @@ use rstest::rstest;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Output;
 
 const SNAPSHOT_PATH: &str = "snapshots";
 
-fn get_file_contents(path: &PathBuf) -> String {
+fn get_file_contents(path: &Path) -> String {
     fs::read_to_string(path).expect("Unable to read file")
 }
 
@@ -16,14 +17,6 @@ fn get_hash(path: &Path) -> String {
     let mut hasher = Sha256::new();
     hasher.update(&bytes);
     format!("{:x}", hasher.finalize())
-}
-
-fn get_relative_path_for_test(absolute_path: &Path) -> PathBuf {
-    let cwd = std::env::current_dir().expect("Failed to get current working directory");
-    absolute_path
-        .strip_prefix(&cwd)
-        .unwrap_or(absolute_path)
-        .to_path_buf()
 }
 
 fn to_snapshot_name(path: &Path, flag: Option<&str>) -> String {
@@ -63,6 +56,86 @@ fn to_snapshot_name(path: &Path, flag: Option<&str>) -> String {
         format!("{}{}", base_name, flag_suffix)
     };
     full_name.replace("/", "-").replace("--", "-")
+}
+
+fn run_assemble_command(path: &Path, flag: Option<&str>, output_path: &Path) -> Output {
+    let mut assemble_cmd = cargo_bin_cmd!("jasm");
+    assemble_cmd
+        .arg("asm")
+        .arg(path)
+        .arg("--output")
+        .arg(output_path);
+    if let Some(f) = flag {
+        assemble_cmd.arg(f);
+    }
+    assemble_cmd.output().expect("Failed to assemble")
+}
+
+fn assert_stdout_empty(stdout: &str) {
+    assert!(
+        stdout.trim().is_empty(),
+        "Expected stdout to be empty, but got:\n{}",
+        stdout
+    );
+}
+
+fn process_assembly_result(output: &Output, class_file: &TempClassFile) -> (String, String) {
+    if output.status.success() {
+        let hash = get_hash(class_file.path());
+
+        let disassembled = {
+            let mut cmd = cargo_bin_cmd!("jasm");
+            cmd.arg("dis").arg(class_file.path());
+            let dis_output = cmd.output().expect("Failed to execute disassemble");
+            String::from_utf8(dis_output.stdout).expect("Failed to read disassemble output")
+        };
+        (disassembled, hash)
+    } else {
+        ("not generated".to_string(), "not generated".to_string())
+    }
+}
+
+fn verify_assembly_behavior(
+    disassembled: &str,
+    hash: &str,
+    output: &Output,
+    class_file: &TempClassFile,
+) {
+    if disassembled == "not generated" && hash == "not generated" {
+        assert!(
+            !output.status.success(),
+            "Expected non-zero exit code when 'not generated' appears"
+        );
+        assert!(
+            !class_file.path().exists(),
+            "Class file should not exist when assembly fails"
+        );
+    } else {
+        assert!(
+            output.status.success(),
+            "Expected zero exit code when class is generated"
+        );
+        let file_size = fs::metadata(class_file.path())
+            .expect("Class file should exist on success")
+            .len();
+        assert!(file_size > 0, "Class file should have content on success");
+    }
+}
+
+fn create_snapshot_content(
+    disassembled: &str,
+    input_path: &Path,
+    stderr: &str,
+    hash: &str,
+) -> String {
+    let original_contents = get_file_contents(input_path);
+    format!(
+        "----- DISASSEMBLED -----\n{}\n----- INPUT -----\n{}\n----- STDERR -----\n{}\n----- HASH -----\n{}",
+        disassembled.trim_end(),
+        original_contents.trim_end(),
+        stderr.trim_end(),
+        hash
+    )
 }
 
 struct TempClassFile(PathBuf);
@@ -112,49 +185,17 @@ fn test_integration(
 ) {
     let class_file = TempClassFile::new(&path, flag);
 
-    let mut assemble_cmd = cargo_bin_cmd!("jasm");
-    assemble_cmd
-        .arg("asm")
-        .arg(&path)
-        .arg("--output")
-        .arg(class_file.path());
-    if let Some(f) = flag {
-        assemble_cmd.arg(f);
-    }
-    let assemble_output = assemble_cmd.output().expect("Failed to assemble");
+    let assemble_output = run_assemble_command(&path, flag, class_file.path());
 
     let stdout = String::from_utf8_lossy(&assemble_output.stdout);
     let stderr = String::from_utf8_lossy(&assemble_output.stderr);
 
-    assert!(
-        stdout.trim().is_empty(),
-        "Expected stdout to be empty, but got:\n{}",
-        stdout
-    );
+    assert_stdout_empty(&stdout);
 
-    let (disassembled, hash) = if assemble_output.status.success() {
-        let h = get_hash(class_file.path());
+    let (disassembled, hash) = process_assembly_result(&assemble_output, &class_file);
+    verify_assembly_behavior(&disassembled, &hash, &assemble_output, &class_file);
 
-        let dis_output = {
-            let mut cmd = cargo_bin_cmd!("jasm");
-            cmd.arg("dis").arg(class_file.path());
-            let output = cmd.output().expect("Failed to execute disassemble");
-            String::from_utf8(output.stdout).expect("Failed to read disassemble output")
-        };
-        (dis_output, h)
-    } else {
-        ("not generated".to_string(), "not generated".to_string())
-    };
-
-    let original_contents = get_file_contents(&path);
-
-    let combined = format!(
-        "----- DISASSEMBLED -----\n{}\n----- INPUT -----\n{}\n----- STDERR -----\n{}\n----- HASH -----\n{}",
-        disassembled.trim_end(),
-        original_contents.trim_end(),
-        stderr.trim_end(),
-        hash
-    );
+    let snapshot_content = create_snapshot_content(&disassembled, &path, &stderr, &hash);
 
     with_settings!(
         {
@@ -162,7 +203,7 @@ fn test_integration(
             prepend_module_to_snapshot => false,
         },
         {
-            insta::assert_snapshot!(to_snapshot_name(&path, flag), &combined);
+            insta::assert_snapshot!(to_snapshot_name(&path, flag), &snapshot_content);
         }
     );
 }

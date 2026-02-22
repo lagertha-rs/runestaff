@@ -33,6 +33,7 @@ impl JasmModule {
         for (flag, _) in &self.class_directive.access_flags {
             match flag {
                 JasmAccessFlag::Public => res.set_public(),
+                JasmAccessFlag::Final => res.set_final(),
                 _ => unimplemented!(),
             }
         }
