@@ -4,10 +4,10 @@ use crate::parser::JasmParser;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+mod assembler;
 mod diagnostic;
 mod instruction;
 mod lexer;
-mod module;
 mod parser;
 mod token;
 mod utils;
@@ -79,7 +79,7 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
         }
     };
 
-    let module = match JasmParser::parse(tokens) {
+    let jasm_module = match JasmParser::parse(tokens) {
         Ok(module) => module,
         Err(errors) => {
             for err in errors {
@@ -89,17 +89,17 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
         }
     };
 
-    let (class, diagnostics) = module.into_class_file();
+    let (class, diagnostics) = jasm_module.into_class_file();
 
     let mut has_error = false;
     for diag in diagnostics {
-        diag.print(&filename, &contents);
-        match (diag.tier(), warn_asm, warn_error) {
-            (DiagnosticTier::Syntax, _, _) => has_error = true,
-            (DiagnosticTier::JvmSpec, true, _) => has_error = true,
-            (DiagnosticTier::Assembler, _, true) => has_error = true,
+        match (diag.tier, warn_asm, warn_error) {
+            (DiagnosticTier::SyntaxError, _, _) => has_error = true,
+            (DiagnosticTier::JvmSpecWarn, true, _) => has_error = true,
+            (DiagnosticTier::AssemblerWarn, _, true) => has_error = true,
             _ => {}
         }
+        diag.print(&filename, &contents);
     }
 
     if has_error {

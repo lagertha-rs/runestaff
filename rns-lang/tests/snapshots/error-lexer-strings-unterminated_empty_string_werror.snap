@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -8,7 +8,7 @@ not generated
 .class public Test
 "
 ----- STDERR -----
-Error: unterminated string literal
+[E001] Error: unterminated string literal
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/strings/unterminated_empty_string.ja:2:1 ]
    │
  2 │ "

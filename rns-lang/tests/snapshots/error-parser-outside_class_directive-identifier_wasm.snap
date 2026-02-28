@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -11,7 +11,7 @@ not generated
 HelloWorld
 .class public HelloWorld
 ----- STDERR -----
-Error: unexpected identifier before class definition
+[PARSER-001] Error: unexpected identifier before class definition
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/identifier.ja:4:1 ]
    │
  4 │ HelloWorld

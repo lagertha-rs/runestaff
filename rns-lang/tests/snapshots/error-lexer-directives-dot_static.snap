@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -9,7 +9,7 @@ not generated
 .static
 .method
 ----- STDERR -----
-Error: unknown directive
+[E001] Error: unknown directive
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_static.ja:2:1 ]
    │
  2 │ .static

@@ -1,13 +1,13 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
 ..annotation
 ----- STDERR -----
-Error: unknown directive
+[E001] Error: unknown directive
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_dot_annotation.ja:1:1 ]
    │
  1 │ ..annotation

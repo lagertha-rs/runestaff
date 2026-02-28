@@ -1,11 +1,11 @@
+use crate::assembler::{ClassDirective, JasmModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::module::{ClassDirective, JasmModule, SuperDirective};
 use crate::parser::error::{
     IdentifierContext, NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
 use crate::parser::jasm_warning::ParserWarning;
 use crate::token::{JasmAccessFlag, JasmToken, JasmTokenKind, Span};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -20,7 +20,7 @@ pub struct JasmParser {
     tokens: Peekable<IntoIter<JasmToken>>,
     last_span: Span,
 
-    warnings: Vec<Box<dyn Diagnostic>>,
+    diagnostic: Vec<Diagnostic>,
 
     class_directive: ClassDirective,
     super_directives: Vec<SuperDirective>,
@@ -61,8 +61,8 @@ impl JasmParser {
         Ok(tokens)
     }
 
-    fn parse_class_access_flags(&mut self) -> Result<HashMap<JasmAccessFlag, Span>, ParserError> {
-        let mut flags = HashMap::new();
+    fn parse_class_access_flags(&mut self) -> Result<BTreeMap<JasmAccessFlag, Span>, ParserError> {
+        let mut flags = BTreeMap::new();
         loop {
             match self.peek_token_kind() {
                 Some(token) if token.is_access_flag() => {
@@ -82,11 +82,8 @@ impl JasmParser {
             .map(|(k, v)| {
                 let first_span = v[0];
                 if v.len() > 1 {
-                    self.warnings
-                        .push(Box::new(ParserWarning::ClassDuplicateFlag {
-                            flag: k,
-                            spans: v,
-                        }));
+                    self.diagnostic
+                        .push(ParserWarning::ClassDuplicateFlag { flag: k, spans: v }.into());
                 }
                 (k, first_span)
             })
@@ -456,7 +453,7 @@ impl JasmParser {
         Ok(())
     }
 
-    pub fn parse(tokens: Vec<JasmToken>) -> Result<JasmModule, Vec<Box<dyn Diagnostic>>> {
+    pub fn parse(tokens: Vec<JasmToken>) -> Result<JasmModule, Vec<Diagnostic>> {
         if !matches!(tokens.last().unwrap().kind, JasmTokenKind::Eof) {
             return Err(ParserError::Internal(
                 "Token stream must end with an EOF token".to_string(),
@@ -467,7 +464,7 @@ impl JasmParser {
         let mut instance = Self {
             tokens: tokens.into_iter().peekable(),
             last_span: Span::new(0, 0),
-            warnings: Vec::new(),
+            diagnostic: Vec::new(),
 
             class_directive: ClassDirective::default(),
             super_directives: Vec::new(),
@@ -477,7 +474,7 @@ impl JasmParser {
         Ok(JasmModule {
             class_directive: instance.class_directive,
             super_directives: instance.super_directives,
-            diagnostics: instance.warnings,
+            diagnostics: instance.diagnostic,
         })
     }
 

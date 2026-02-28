@@ -1,21 +1,24 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::{JasmAccessFlag, Span};
 use std::ops::Range;
+use strum::EnumProperty;
 
-#[derive(Debug)]
+#[derive(Debug, EnumProperty)]
 pub(super) enum ParserWarning {
+    #[strum(props(code = "W001"))]
     MissingSuperClass {
         class_name: String,
         class_directive_pos: Span,
         default: &'static str,
     },
+    #[strum(props(code = "W002"))]
     ClassDuplicateFlag {
         flag: JasmAccessFlag,
         spans: Vec<Span>,
     },
 }
 
-impl Diagnostic for ParserWarning {
+impl ParserWarning {
     fn message(&self) -> String {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
@@ -37,10 +40,6 @@ impl Diagnostic for ParserWarning {
         }
     }
 
-    fn tier(&self) -> DiagnosticTier {
-        DiagnosticTier::Assembler // TODO: stub
-    }
-
     fn note(&self) -> Option<String> {
         match self {
             ParserWarning::MissingSuperClass { default, .. } => Some(format!(
@@ -53,10 +52,6 @@ impl Diagnostic for ParserWarning {
                 flag
             )),
         }
-    }
-
-    fn severity(&self) -> Severity {
-        Severity::Warning
     }
 
     fn labels(&self) -> Vec<DiagnosticLabel> {
@@ -83,6 +78,20 @@ impl Diagnostic for ParserWarning {
                 }
                 labels
             }
+        }
+    }
+}
+
+impl From<ParserWarning> for Diagnostic {
+    fn from(value: ParserWarning) -> Self {
+        Diagnostic {
+            message: value.message(),
+            code: value.get_str("code").unwrap_or("W000"),
+            primary_location: value.primary_location(),
+            note: value.note(),
+            help: None,
+            tier: DiagnosticTier::AssemblerWarn,
+            labels: value.labels(),
         }
     }
 }

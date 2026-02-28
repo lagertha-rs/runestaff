@@ -1,13 +1,13 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
 .method (I)V .([Z)Ljava/lang/String;
 ----- STDERR -----
-Error: unknown directive
+[E001] Error: unknown directive
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_method_descriptor.ja:1:14 ]
    │
  1 │ .method (I)V .([Z)Ljava/lang/String;

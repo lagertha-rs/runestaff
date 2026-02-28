@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -8,7 +8,7 @@ not generated
     .unknown_directive HelloWorld
 .end
 ----- STDERR -----
-Error: unknown directive
+[E001] Error: unknown directive
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/unknown_directive_as_first_token.ja:1:5 ]
    │
  1 │     .unknown_directive HelloWorld

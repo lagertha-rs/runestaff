@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -8,7 +8,7 @@ not generated
 .method
 .
 ----- STDERR -----
-Error: unexpected end of file
+[E001] Error: unexpected end of file
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_eof.ja:2:1 ]
    │
  2 │ .

@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -10,7 +10,7 @@ not generated
     .;not_comment ;this is also a comment
 .end
 ----- STDERR -----
-Error: unknown directive
+[E001] Error: unknown directive
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_semicolon_comment.ja:3:5 ]
    │
  3 │     .;not_comment ;this is also a comment

@@ -1,6 +1,9 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::{JasmTokenKind, Span};
 use std::ops::Range;
+
+//TODO: same error code for all lexer, try to categorize later if needed
+const LEXER_ERROR_CODE: &str = "E001";
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum LexerError {
@@ -110,34 +113,16 @@ impl LexerError {
     }
 }
 
-impl Diagnostic for LexerError {
-    fn message(&self) -> String {
-        self.get_message()
-    }
-
-    fn primary_location(&self) -> Range<usize> {
-        self.get_primary_location()
-    }
-
-    fn note(&self) -> Option<String> {
-        self.get_note()
-    }
-
-    fn severity(&self) -> Severity {
-        Severity::Error
-    }
-
-    fn tier(&self) -> DiagnosticTier {
-        DiagnosticTier::Syntax
-    }
-
-    fn labels(&self) -> Vec<DiagnosticLabel> {
-        self.get_labels()
-    }
-}
-
-impl From<LexerError> for Box<dyn Diagnostic> {
-    fn from(err: LexerError) -> Self {
-        Box::new(err)
+impl From<LexerError> for Diagnostic {
+    fn from(value: LexerError) -> Self {
+        Diagnostic {
+            message: value.get_message(),
+            code: LEXER_ERROR_CODE,
+            primary_location: value.get_primary_location(),
+            note: value.get_note(),
+            help: None,
+            tier: DiagnosticTier::SyntaxError,
+            labels: value.get_labels(),
+        }
     }
 }

@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -9,7 +9,7 @@ not generated
 "String with no ending quote
 .end
 ----- STDERR -----
-Error: unterminated string literal
+[E001] Error: unterminated string literal
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/strings/basic_unterminated_string.ja:2:1 ]
    │
  2 │ "String with no ending quote

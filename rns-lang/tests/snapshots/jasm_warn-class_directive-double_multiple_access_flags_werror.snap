@@ -10,7 +10,7 @@ not generated
 
 .end class
 ----- STDERR -----
-Warning: duplicate access flag 'public' in class declaration
+[W002] Warning: duplicate access flag 'public' in class declaration
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/double_multiple_access_flags.ja:1:15 ]
    │
  1 │ .class public public final public final EmptyClass
@@ -23,7 +23,7 @@ Warning: duplicate access flag 'public' in class declaration
    │ 
    │ Note: The `public` flag was already specified. You only need to declare it once.
 ───╯
-Warning: duplicate access flag 'final' in class declaration
+[W002] Warning: duplicate access flag 'final' in class declaration
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/double_multiple_access_flags.ja:1:35 ]
    │
  1 │ .class public public final public final EmptyClass

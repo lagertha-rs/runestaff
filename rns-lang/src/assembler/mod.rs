@@ -3,14 +3,14 @@ use crate::token::{JasmAccessFlag, Span};
 use jclass::flags::ClassFlags;
 use jclass::prelude::{AttributeNameMap, ConstantPoolBuilder};
 use jclass::ClassFile;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 mod jvm_warning;
 
 pub struct JasmModule {
     pub class_directive: ClassDirective,
     pub super_directives: Vec<SuperDirective>,
-    pub diagnostics: Vec<Box<dyn Diagnostic>>,
+    pub diagnostics: Vec<Diagnostic>,
 }
 
 #[derive(Default)]
@@ -18,7 +18,8 @@ pub struct ClassDirective {
     pub directive_span: Span,
     pub name: String,
     pub name_span: Span,
-    pub access_flags: HashMap<JasmAccessFlag, Span>,
+    // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
+    pub access_flags: BTreeMap<JasmAccessFlag, Span>,
 }
 
 pub struct SuperDirective {
@@ -28,12 +29,19 @@ pub struct SuperDirective {
 }
 
 impl JasmModule {
-    fn build_class_flags(&self) -> ClassFlags {
+    fn build_class_flags(&mut self) -> ClassFlags {
         let mut res = ClassFlags::new(0);
-        for (flag, _) in &self.class_directive.access_flags {
+        for (flag, span) in &self.class_directive.access_flags {
             match flag {
                 JasmAccessFlag::Public => res.set_public(),
                 JasmAccessFlag::Final => res.set_final(),
+                JasmAccessFlag::Super => res.set_super(),
+                JasmAccessFlag::Interface => res.set_interface(),
+                JasmAccessFlag::Abstract => res.set_abstract(),
+                JasmAccessFlag::Enum => res.set_enum(),
+                JasmAccessFlag::Synthetic => res.set_synthetic(),
+                JasmAccessFlag::Annotation => res.set_annotation(),
+
                 _ => unimplemented!(),
             }
         }
@@ -41,7 +49,7 @@ impl JasmModule {
     }
 
     // TODO: need to test that I build exactly same CP as javac
-    pub fn into_class_file(self) -> (ClassFile, Vec<Box<dyn Diagnostic>>) {
+    pub fn into_class_file(mut self) -> (ClassFile, Vec<Diagnostic>) {
         let mut cp_builder = ConstantPoolBuilder::new();
         let super_name = self.super_directives[0].name.clone().unwrap();
         let class_flags = self.build_class_flags();

@@ -1,13 +1,13 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
 .code -
 ----- STDERR -----
-Error: invalid integer
+[E001] Error: invalid integer
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/integers/minus_only.ja:1:7 ]
    │
  1 │ .code -

@@ -1,4 +1,4 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, Severity};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::instruction::INSTRUCTION_SPECS;
 use crate::token::{JasmAccessFlag, JasmToken, JasmTokenKind, Span};
 use std::ops::Range;
@@ -403,40 +403,22 @@ impl ParserError {
     }
 }
 
-impl Diagnostic for ParserError {
-    fn message(&self) -> String {
-        self.get_message()
-    }
-
-    fn primary_location(&self) -> Range<usize> {
-        self.get_primary_location()
-    }
-
-    fn note(&self) -> Option<String> {
-        self.get_note()
-    }
-
-    fn severity(&self) -> Severity {
-        Severity::Error
-    }
-
-    fn tier(&self) -> DiagnosticTier {
-        DiagnosticTier::Assembler
-    }
-
-    fn labels(&self) -> Vec<DiagnosticLabel> {
-        self.get_labels()
+impl From<ParserError> for Diagnostic {
+    fn from(value: ParserError) -> Self {
+        Diagnostic {
+            message: value.get_message(),
+            code: "PARSER-001",
+            primary_location: value.get_primary_location(),
+            note: value.get_note(),
+            help: None,
+            tier: DiagnosticTier::SyntaxError,
+            labels: value.get_labels(),
+        }
     }
 }
 
-impl From<ParserError> for Box<dyn Diagnostic> {
-    fn from(err: ParserError) -> Self {
-        Box::new(err)
-    }
-}
-
-impl From<ParserError> for Vec<Box<dyn Diagnostic>> {
-    fn from(err: ParserError) -> Self {
-        vec![Box::new(err)]
+impl From<ParserError> for Vec<Diagnostic> {
+    fn from(value: ParserError) -> Self {
+        vec![Diagnostic::from(value)]
     }
 }

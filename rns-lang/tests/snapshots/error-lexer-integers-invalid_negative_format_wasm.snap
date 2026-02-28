@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -8,7 +8,7 @@ not generated
 .class public Test
 .code -5xyz
 ----- STDERR -----
-Error: invalid integer
+[E001] Error: invalid integer
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/integers/invalid_negative_format.ja:2:7 ]
    │
  2 │ .code -5xyz

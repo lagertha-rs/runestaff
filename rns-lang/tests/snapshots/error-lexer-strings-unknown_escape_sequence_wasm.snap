@@ -1,6 +1,6 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
@@ -8,7 +8,7 @@ not generated
 .class public Test
 .code "\u"
 ----- STDERR -----
-Error: invalid escape sequence
+[E001] Error: invalid escape sequence
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/strings/unknown_escape_sequence.ja:2:9 ]
    │
  2 │ .code "\u"

@@ -191,7 +191,7 @@ impl<'a> JasmLexer<'a> {
         })
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<JasmToken>, Box<dyn Diagnostic>> {
+    pub fn tokenize(&mut self) -> Result<Vec<JasmToken>, Diagnostic> {
         let mut tokens = Vec::new();
 
         loop {

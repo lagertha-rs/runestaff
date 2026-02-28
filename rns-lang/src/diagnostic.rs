@@ -28,34 +28,40 @@ impl DiagnosticLabel {
         }
     }
 
-    fn get_color(&self, severity: Severity) -> Color {
-        self.color.unwrap_or_else(|| severity.color())
+    fn get_color(&self, tier: DiagnosticTier) -> Color {
+        self.color.unwrap_or_else(|| tier.into())
     }
 }
 
-pub trait Diagnostic: Debug {
-    fn message(&self) -> String;
-    fn primary_location(&self) -> Range<usize>;
-    fn note(&self) -> Option<String>;
-    fn severity(&self) -> Severity;
-    fn tier(&self) -> DiagnosticTier;
-    fn labels(&self) -> Vec<DiagnosticLabel>;
+#[derive(Debug)]
+pub struct Diagnostic {
+    pub message: String,
+    pub code: &'static str,
+    pub primary_location: Range<usize>,
+    pub note: Option<String>,
+    pub help: Option<String>,
+    pub tier: DiagnosticTier,
+    pub labels: Vec<DiagnosticLabel>,
+}
 
-    fn print(&self, filename: &str, source_code: &str) {
-        let range = self.primary_location();
+impl Diagnostic {
+    pub(crate) fn print(self, filename: &str, source_code: &str) {
+        let range = self.primary_location;
         let filename_owned = filename.to_string();
-        let mut report = Report::build(
-            self.severity().into(),
-            (filename_owned.clone(), range.clone()),
-        )
-        .with_message(self.message());
+        let mut report = Report::build(self.tier.into(), (filename_owned.clone(), range.clone()))
+            .with_code(self.code)
+            .with_message(self.message);
 
-        if let Some(note) = self.note() {
+        if let Some(note) = self.note {
             report = report.with_note(note);
         }
 
-        for label in self.labels() {
-            let color = label.get_color(self.severity());
+        if let Some(help) = self.help {
+            report = report.with_help(help);
+        }
+
+        for label in self.labels {
+            let color = label.get_color(self.tier);
             let ariadne_label =
                 Label::new((filename_owned.clone(), label.span.clone())).with_color(color);
 
@@ -75,32 +81,27 @@ pub trait Diagnostic: Debug {
     }
 }
 
-pub enum DiagnosticTier {
-    Syntax,    // Can't parse - always error
-    Assembler, // Assembler logic issues
-    JvmSpec,   // JVM spec violations
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Severity {
-    Error,
-    Warning,
+pub enum DiagnosticTier {
+    SyntaxError,   // Can't parse - always error
+    AssemblerWarn, // Assembler logic issues
+    JvmSpecWarn,   // JVM spec violations
 }
 
-impl Severity {
-    pub fn color(&self) -> Color {
-        match self {
-            Severity::Error => Color::Red,
-            Severity::Warning => Color::Yellow,
+impl From<DiagnosticTier> for ReportKind<'_> {
+    fn from(tier: DiagnosticTier) -> Self {
+        match tier {
+            DiagnosticTier::SyntaxError => ReportKind::Error,
+            DiagnosticTier::AssemblerWarn | DiagnosticTier::JvmSpecWarn => ReportKind::Warning,
         }
     }
 }
 
-impl From<Severity> for ReportKind<'_> {
-    fn from(severity: Severity) -> Self {
-        match severity {
-            Severity::Error => ReportKind::Error,
-            Severity::Warning => ReportKind::Warning,
+impl From<DiagnosticTier> for Color {
+    fn from(tier: DiagnosticTier) -> Self {
+        match tier {
+            DiagnosticTier::SyntaxError => Color::Red,
+            DiagnosticTier::AssemblerWarn | DiagnosticTier::JvmSpecWarn => Color::Yellow,
         }
     }
 }

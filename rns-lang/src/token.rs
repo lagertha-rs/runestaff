@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::fmt::Display;
 use std::ops::Range;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
 pub enum JasmAccessFlag {
     Public,
     Static,

@@ -1,13 +1,13 @@
 ---
 source: jasm/tests/jasm_test.rs
-expression: "&combined"
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
 ; only a comment, no class at all
 ----- STDERR -----
-Error: file contains no class definition
+[PARSER-001] Error: file contains no class definition
    ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/parser/outside_class_directive/eof.ja:1:35 ]
    │
  1 │ ; only a comment, no class at all
