@@ -1,6 +1,6 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::instruction::INSTRUCTION_SPECS;
-use crate::token::{RnsAccessFlag, RnsToken, RnsTokenKind, Span};
+use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span};
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -333,7 +333,7 @@ impl ParserError {
                 (RnsTokenKind::Integer(_), IdentifierContext::ClassName) => {
                     Some("Integer literals cannot be used as class names. Every class must have a valid identifier as its name.".to_string())
                 }
-                (RnsTokenKind::AccessFlag(RnsAccessFlag::Public) | RnsTokenKind::AccessFlag(RnsAccessFlag::Static), IdentifierContext::ClassName) => {
+                (RnsTokenKind::AccessFlag(RnsFlag::Public) | RnsTokenKind::AccessFlag(RnsFlag::Static), IdentifierContext::ClassName) => {
                     Some(format!("Access flags like '{}' must appear before the class name. Example: '.class {} MyClass'", kind, kind))
                 }
                 (RnsTokenKind::Newline | RnsTokenKind::Eof, IdentifierContext::ClassName) => {

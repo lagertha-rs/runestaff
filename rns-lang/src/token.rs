@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
-pub enum RnsAccessFlag {
+pub enum RnsFlag {
     Public,
     Static,
     Final,
@@ -27,7 +27,7 @@ pub enum RnsTokenKind {
     DotEnd,
     DotAnnotation,
 
-    AccessFlag(RnsAccessFlag),
+    AccessFlag(RnsFlag),
 
     Identifier(String),
     Integer(i32),
@@ -36,39 +36,56 @@ pub enum RnsTokenKind {
     Eof,
 }
 
-impl TryFrom<&str> for RnsAccessFlag {
+impl TryFrom<&str> for RnsFlag {
     type Error = ();
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "public" => Ok(RnsAccessFlag::Public),
-            "static" => Ok(RnsAccessFlag::Static),
-            "final" => Ok(RnsAccessFlag::Final),
-            "super" => Ok(RnsAccessFlag::Super),
-            "interface" => Ok(RnsAccessFlag::Interface),
-            "abstract" => Ok(RnsAccessFlag::Abstract),
-            "enum" => Ok(RnsAccessFlag::Enum),
-            "synthetic" => Ok(RnsAccessFlag::Synthetic),
-            "annotation" => Ok(RnsAccessFlag::Annotation),
-            "module" => Ok(RnsAccessFlag::Module),
+            "public" => Ok(RnsFlag::Public),
+            "static" => Ok(RnsFlag::Static),
+            "final" => Ok(RnsFlag::Final),
+            "super" => Ok(RnsFlag::Super),
+            "interface" => Ok(RnsFlag::Interface),
+            "abstract" => Ok(RnsFlag::Abstract),
+            "enum" => Ok(RnsFlag::Enum),
+            "synthetic" => Ok(RnsFlag::Synthetic),
+            "annotation" => Ok(RnsFlag::Annotation),
+            "module" => Ok(RnsFlag::Module),
             _ => Err(()),
         }
     }
 }
 
-impl Display for RnsAccessFlag {
+impl Display for RnsFlag {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RnsAccessFlag::Public => write!(f, "public"),
-            RnsAccessFlag::Static => write!(f, "static"),
-            RnsAccessFlag::Final => write!(f, "final"),
-            RnsAccessFlag::Super => write!(f, "super"),
-            RnsAccessFlag::Interface => write!(f, "interface"),
-            RnsAccessFlag::Abstract => write!(f, "abstract"),
-            RnsAccessFlag::Enum => write!(f, "enum"),
-            RnsAccessFlag::Synthetic => write!(f, "synthetic"),
-            RnsAccessFlag::Annotation => write!(f, "annotation"),
-            RnsAccessFlag::Module => write!(f, "module"),
+            RnsFlag::Public => write!(f, "public"),
+            RnsFlag::Static => write!(f, "static"),
+            RnsFlag::Final => write!(f, "final"),
+            RnsFlag::Super => write!(f, "super"),
+            RnsFlag::Interface => write!(f, "interface"),
+            RnsFlag::Abstract => write!(f, "abstract"),
+            RnsFlag::Enum => write!(f, "enum"),
+            RnsFlag::Synthetic => write!(f, "synthetic"),
+            RnsFlag::Annotation => write!(f, "annotation"),
+            RnsFlag::Module => write!(f, "module"),
+        }
+    }
+}
+
+impl RnsFlag {
+    pub fn jvm_spec_name(&self) -> &'static str {
+        match self {
+            RnsFlag::Interface => "ACC_INTERFACE",
+            RnsFlag::Abstract => "ACC_ABSTRACT",
+            RnsFlag::Enum => "ACC_ENUM",
+            RnsFlag::Module => "ACC_MODULE",
+            RnsFlag::Public => "ACC_PUBLIC",
+            RnsFlag::Static => "ACC_STATIC",
+            RnsFlag::Final => "ACC_FINAL",
+            RnsFlag::Super => "ACC_SUPER",
+            RnsFlag::Synthetic => "ACC_SYNTHETIC",
+            RnsFlag::Annotation => "ACC_ANNOTATION",
         }
     }
 }
@@ -124,7 +141,7 @@ impl RnsTokenKind {
     }
 
     pub fn from_identifier(name: String) -> Self {
-        if let Ok(access_flag) = RnsAccessFlag::try_from(name.as_str()) {
+        if let Ok(access_flag) = RnsFlag::try_from(name.as_str()) {
             RnsTokenKind::AccessFlag(access_flag)
         } else {
             RnsTokenKind::Identifier(name)

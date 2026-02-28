@@ -1,5 +1,6 @@
+use crate::assembler::jvm_warning::JvmWarning;
 use crate::diagnostic::Diagnostic;
-use crate::token::{RnsAccessFlag, Span};
+use crate::token::{RnsFlag, Span};
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{AttributeNameMap, ConstantPoolBuilder};
@@ -8,7 +9,7 @@ use std::collections::BTreeMap;
 mod jvm_warning;
 
 pub struct RnsModule {
-    pub class_directive: ClassDirective,
+    pub class_dir: ClassDirective,
     pub super_directives: Vec<SuperDirective>,
     pub diagnostics: Vec<Diagnostic>,
 }
@@ -19,7 +20,7 @@ pub struct ClassDirective {
     pub name: String,
     pub name_span: Span,
     // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
-    pub access_flags: BTreeMap<RnsAccessFlag, Span>,
+    pub flags: BTreeMap<RnsFlag, Span>,
 }
 
 pub struct SuperDirective {
@@ -31,17 +32,50 @@ pub struct SuperDirective {
 impl RnsModule {
     fn build_class_flags(&mut self) -> ClassFlags {
         let mut res = ClassFlags::new(0);
-        for (flag, span) in &self.class_directive.access_flags {
+        for (flag, span) in &self.class_dir.flags {
             match flag {
-                RnsAccessFlag::Public => res.set_public(),
-                RnsAccessFlag::Final => res.set_final(),
-                RnsAccessFlag::Super => res.set_super(),
-                RnsAccessFlag::Interface => res.set_interface(),
-                RnsAccessFlag::Abstract => res.set_abstract(),
-                RnsAccessFlag::Enum => res.set_enum(),
-                RnsAccessFlag::Synthetic => res.set_synthetic(),
-                RnsAccessFlag::Annotation => res.set_annotation(),
-
+                RnsFlag::Public => res.set_public(),
+                RnsFlag::Final => res.set_final(),
+                RnsFlag::Super => res.set_super(),
+                RnsFlag::Interface => {
+                    // TODO: put in method?
+                    if !self.class_dir.flags.contains_key(&RnsFlag::Abstract) {
+                        self.diagnostics.push(
+                            JvmWarning::InterfaceFlagWithMissingAbstract {
+                                interface_span: *span,
+                            }
+                            .into(),
+                        )
+                    }
+                    let exclusive_flags = self
+                        .class_dir
+                        .flags
+                        .iter()
+                        .filter(|(f, _)| {
+                            // TODO: add a method, something like "is_exclusive_with_interface" to RnsFlag
+                            matches!(
+                                f,
+                                RnsFlag::Final | RnsFlag::Enum | RnsFlag::Module | RnsFlag::Super
+                            )
+                        })
+                        .map(|(f, s)| (*f, *s))
+                        .collect::<Vec<_>>();
+                    if !exclusive_flags.is_empty() {
+                        self.diagnostics.push(
+                            JvmWarning::InterfaceMutuallyExclusive {
+                                interface_span: *span,
+                                exclusive_flags,
+                            }
+                            .into(),
+                        )
+                    }
+                    res.set_interface()
+                }
+                RnsFlag::Abstract => res.set_abstract(),
+                RnsFlag::Enum => res.set_enum(),
+                RnsFlag::Synthetic => res.set_synthetic(),
+                RnsFlag::Annotation => res.set_annotation(),
+                RnsFlag::Module => res.set_module(),
                 _ => unimplemented!(),
             }
         }
@@ -54,7 +88,7 @@ impl RnsModule {
         let super_name = self.super_directives[0].name.clone().unwrap();
         let class_flags = self.build_class_flags();
 
-        let this_cp_id = cp_builder.add_class(&self.class_directive.name);
+        let this_cp_id = cp_builder.add_class(&self.class_dir.name);
         let super_cp_id = cp_builder.add_class(&super_name);
 
         (

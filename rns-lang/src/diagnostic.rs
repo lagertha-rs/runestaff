@@ -2,6 +2,8 @@ use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
 use std::fmt::Debug;
 use std::ops::Range;
 
+pub const ERROR_DOCS_BASE_URL: &str = "https://rune.lagertha-vm.com/errors/";
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {
     pub span: Range<usize>,

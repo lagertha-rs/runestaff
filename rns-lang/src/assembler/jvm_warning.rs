@@ -1,19 +1,29 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::Span;
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, ERROR_DOCS_BASE_URL};
+use crate::token::{RnsFlag, Span};
 use std::ops::Range;
 use strum::EnumProperty;
 
+const ZERO_JVMS_CODE: &str = "JVMS000";
+
 #[derive(Debug, EnumProperty)]
 pub(super) enum JvmWarning {
-    #[strum(props(code = "JVMS001"))]
+    #[strum(props(code = "JVMS-001"))]
     InterfaceFlagWithMissingAbstract { interface_span: Span },
+    #[strum(props(code = "JVMS-001"))]
+    InterfaceMutuallyExclusive {
+        interface_span: Span,
+        exclusive_flags: Vec<(RnsFlag, Span)>,
+    },
 }
 
 impl JvmWarning {
     fn message(&self) -> String {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. } => {
-                "interface must be declared with the 'abstract' access flag".to_string()
+                "interface must also be declared as 'abstract'".to_string()
+            }
+            JvmWarning::InterfaceMutuallyExclusive { .. } => {
+                "interface cannot be declared with mutually exclusive flags".to_string()
             }
         }
     }
@@ -23,23 +33,37 @@ impl JvmWarning {
             JvmWarning::InterfaceFlagWithMissingAbstract { interface_span } => {
                 interface_span.as_range()
             }
+            JvmWarning::InterfaceMutuallyExclusive { interface_span, .. } => {
+                interface_span.as_range()
+            }
         }
     }
 
-    fn note(&self) -> Option<String> {
-        match self {
-            JvmWarning::InterfaceFlagWithMissingAbstract { .. } => Some(
-                "In the JVM specification, interfaces are implicitly abstract, but they must still be declared with the 'abstract' access flag to be valid.".to_string(),
-            ),
-        }
+    fn note(&self) -> String {
+        format!(
+            "If this violation isn't intentional, see details at:\n{}{}",
+            ERROR_DOCS_BASE_URL,
+            self.get_str("code")
+                .unwrap_or(ZERO_JVMS_CODE)
+                .to_ascii_lowercase()
+        )
     }
 
     fn help(&self) -> Option<String> {
         match self {
-            JvmWarning::InterfaceFlagWithMissingAbstract { .. } => Some(
-                "Add the 'abstract' access flag to the class declaration to fix this warning."
-                    .to_string(),
-            ),
+            JvmWarning::InterfaceFlagWithMissingAbstract { .. } => {
+                Some("Add the 'abstract' access flag to the class declaration.".to_string())
+            }
+            JvmWarning::InterfaceMutuallyExclusive {
+                exclusive_flags, ..
+            } => {
+                let flags_list = exclusive_flags
+                    .iter()
+                    .map(|(flag, _)| format!("'{}'", flag.jvm_spec_name()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                Some(format!("Consider removing: {}.", flags_list))
+            }
         }
     }
 
@@ -48,8 +72,28 @@ impl JvmWarning {
             JvmWarning::InterfaceFlagWithMissingAbstract { interface_span } => {
                 vec![DiagnosticLabel::at(
                     interface_span.as_range(),
-                    "the 'interface' access flag is declared here".to_string(),
+                    format!(
+                        "'{}' requires '{}'",
+                        RnsFlag::Interface.jvm_spec_name(),
+                        RnsFlag::Abstract.jvm_spec_name()
+                    ),
                 )]
+            }
+            JvmWarning::InterfaceMutuallyExclusive {
+                interface_span,
+                exclusive_flags,
+            } => {
+                let mut labels = vec![DiagnosticLabel::context(
+                    interface_span.as_range(),
+                    format!("'{}' is declared here", RnsFlag::Interface.jvm_spec_name(),),
+                )];
+                for (flag, span) in exclusive_flags {
+                    labels.push(DiagnosticLabel::at(
+                        span.as_range(),
+                        format!("'{}' is exclusive", flag.jvm_spec_name()),
+                    ));
+                }
+                labels
             }
         }
     }
@@ -59,9 +103,9 @@ impl From<JvmWarning> for Diagnostic {
     fn from(value: JvmWarning) -> Self {
         Diagnostic {
             message: value.message(),
-            code: value.get_str("code").unwrap_or("JVMS000"),
+            code: value.get_str("code").unwrap_or(ZERO_JVMS_CODE),
             primary_location: value.primary_location(),
-            note: value.note(),
+            note: Some(value.note()),
             help: value.help(),
             tier: DiagnosticTier::JvmSpecWarn,
             labels: value.labels(),

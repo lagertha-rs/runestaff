@@ -4,7 +4,7 @@ use crate::parser::error::{
     IdentifierContext, NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
 use crate::parser::warning::ParserWarning;
-use crate::token::{RnsAccessFlag, RnsToken, RnsTokenKind, Span};
+use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
@@ -61,7 +61,7 @@ impl RnsParser {
         Ok(tokens)
     }
 
-    fn parse_class_access_flags(&mut self) -> Result<BTreeMap<RnsAccessFlag, Span>, ParserError> {
+    fn parse_class_access_flags(&mut self) -> Result<BTreeMap<RnsFlag, Span>, ParserError> {
         let mut flags = BTreeMap::new();
         loop {
             match self.peek_token_kind() {
@@ -416,7 +416,7 @@ impl RnsParser {
             directive_span,
             name: class_name,
             name_span,
-            access_flags,
+            flags: access_flags,
         };
 
         // TODO: test EOF right after class name and check for correct span in error
@@ -472,7 +472,7 @@ impl RnsParser {
 
         instance.parse_class()?;
         Ok(RnsModule {
-            class_directive: instance.class_directive,
+            class_dir: instance.class_directive,
             super_directives: instance.super_directives,
             diagnostics: instance.diagnostic,
         })
