@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
-pub enum JasmAccessFlag {
+pub enum RnsAccessFlag {
     Public,
     Static,
     Final,
@@ -18,7 +18,7 @@ pub enum JasmAccessFlag {
 
 //TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum JasmTokenKind {
+pub enum RnsTokenKind {
     // directives
     DotClass,
     DotSuper,
@@ -27,7 +27,7 @@ pub enum JasmTokenKind {
     DotEnd,
     DotAnnotation,
 
-    AccessFlag(JasmAccessFlag),
+    AccessFlag(RnsAccessFlag),
 
     Identifier(String),
     Integer(i32),
@@ -36,98 +36,98 @@ pub enum JasmTokenKind {
     Eof,
 }
 
-impl TryFrom<&str> for JasmAccessFlag {
+impl TryFrom<&str> for RnsAccessFlag {
     type Error = ();
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "public" => Ok(JasmAccessFlag::Public),
-            "static" => Ok(JasmAccessFlag::Static),
-            "final" => Ok(JasmAccessFlag::Final),
-            "super" => Ok(JasmAccessFlag::Super),
-            "interface" => Ok(JasmAccessFlag::Interface),
-            "abstract" => Ok(JasmAccessFlag::Abstract),
-            "enum" => Ok(JasmAccessFlag::Enum),
-            "synthetic" => Ok(JasmAccessFlag::Synthetic),
-            "annotation" => Ok(JasmAccessFlag::Annotation),
-            "module" => Ok(JasmAccessFlag::Module),
+            "public" => Ok(RnsAccessFlag::Public),
+            "static" => Ok(RnsAccessFlag::Static),
+            "final" => Ok(RnsAccessFlag::Final),
+            "super" => Ok(RnsAccessFlag::Super),
+            "interface" => Ok(RnsAccessFlag::Interface),
+            "abstract" => Ok(RnsAccessFlag::Abstract),
+            "enum" => Ok(RnsAccessFlag::Enum),
+            "synthetic" => Ok(RnsAccessFlag::Synthetic),
+            "annotation" => Ok(RnsAccessFlag::Annotation),
+            "module" => Ok(RnsAccessFlag::Module),
             _ => Err(()),
         }
     }
 }
 
-impl Display for JasmAccessFlag {
+impl Display for RnsAccessFlag {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            JasmAccessFlag::Public => write!(f, "public"),
-            JasmAccessFlag::Static => write!(f, "static"),
-            JasmAccessFlag::Final => write!(f, "final"),
-            JasmAccessFlag::Super => write!(f, "super"),
-            JasmAccessFlag::Interface => write!(f, "interface"),
-            JasmAccessFlag::Abstract => write!(f, "abstract"),
-            JasmAccessFlag::Enum => write!(f, "enum"),
-            JasmAccessFlag::Synthetic => write!(f, "synthetic"),
-            JasmAccessFlag::Annotation => write!(f, "annotation"),
-            JasmAccessFlag::Module => write!(f, "module"),
+            RnsAccessFlag::Public => write!(f, "public"),
+            RnsAccessFlag::Static => write!(f, "static"),
+            RnsAccessFlag::Final => write!(f, "final"),
+            RnsAccessFlag::Super => write!(f, "super"),
+            RnsAccessFlag::Interface => write!(f, "interface"),
+            RnsAccessFlag::Abstract => write!(f, "abstract"),
+            RnsAccessFlag::Enum => write!(f, "enum"),
+            RnsAccessFlag::Synthetic => write!(f, "synthetic"),
+            RnsAccessFlag::Annotation => write!(f, "annotation"),
+            RnsAccessFlag::Module => write!(f, "module"),
         }
     }
 }
 
-impl JasmTokenKind {
+impl RnsTokenKind {
     pub const DIRECTIVES: &[Self] = &[
-        JasmTokenKind::DotClass,
-        JasmTokenKind::DotSuper,
-        JasmTokenKind::DotMethod,
-        JasmTokenKind::DotEnd,
-        JasmTokenKind::DotCode,
-        JasmTokenKind::DotAnnotation,
+        RnsTokenKind::DotClass,
+        RnsTokenKind::DotSuper,
+        RnsTokenKind::DotMethod,
+        RnsTokenKind::DotEnd,
+        RnsTokenKind::DotCode,
+        RnsTokenKind::DotAnnotation,
     ];
 
     // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
     pub fn is_directive(&self) -> bool {
         matches!(
             self,
-            JasmTokenKind::DotClass
-                | JasmTokenKind::DotSuper
-                | JasmTokenKind::DotMethod
-                | JasmTokenKind::DotEnd
-                | JasmTokenKind::DotCode
-                | JasmTokenKind::DotAnnotation
+            RnsTokenKind::DotClass
+                | RnsTokenKind::DotSuper
+                | RnsTokenKind::DotMethod
+                | RnsTokenKind::DotEnd
+                | RnsTokenKind::DotCode
+                | RnsTokenKind::DotAnnotation
         )
     }
 
     pub fn is_class_nested_directive(&self) -> bool {
         matches!(
             self,
-            JasmTokenKind::DotMethod | JasmTokenKind::DotAnnotation | JasmTokenKind::DotSuper
+            RnsTokenKind::DotMethod | RnsTokenKind::DotAnnotation | RnsTokenKind::DotSuper
         )
     }
 
     pub fn is_method_nested_directive(&self) -> bool {
-        matches!(self, JasmTokenKind::DotCode | JasmTokenKind::DotAnnotation)
+        matches!(self, RnsTokenKind::DotCode | RnsTokenKind::DotAnnotation)
     }
 
     pub fn is_access_flag(&self) -> bool {
-        matches!(self, JasmTokenKind::AccessFlag(_))
+        matches!(self, RnsTokenKind::AccessFlag(_))
     }
 
     pub fn from_directive(name: &str) -> Option<Self> {
         match name {
-            "class" => Some(JasmTokenKind::DotClass),
-            "super" => Some(JasmTokenKind::DotSuper),
-            "method" => Some(JasmTokenKind::DotMethod),
-            "end" => Some(JasmTokenKind::DotEnd),
-            "code" => Some(JasmTokenKind::DotCode),
-            "annotation" => Some(JasmTokenKind::DotAnnotation),
+            "class" => Some(RnsTokenKind::DotClass),
+            "super" => Some(RnsTokenKind::DotSuper),
+            "method" => Some(RnsTokenKind::DotMethod),
+            "end" => Some(RnsTokenKind::DotEnd),
+            "code" => Some(RnsTokenKind::DotCode),
+            "annotation" => Some(RnsTokenKind::DotAnnotation),
             _ => None,
         }
     }
 
     pub fn from_identifier(name: String) -> Self {
-        if let Ok(access_flag) = JasmAccessFlag::try_from(name.as_str()) {
-            JasmTokenKind::AccessFlag(access_flag)
+        if let Ok(access_flag) = RnsAccessFlag::try_from(name.as_str()) {
+            RnsTokenKind::AccessFlag(access_flag)
         } else {
-            JasmTokenKind::Identifier(name)
+            RnsTokenKind::Identifier(name)
         }
     }
 
@@ -137,39 +137,39 @@ impl JasmTokenKind {
 
     pub fn as_string_token_type(&self) -> String {
         match self {
-            JasmTokenKind::DotClass
-            | JasmTokenKind::DotSuper
-            | JasmTokenKind::DotMethod
-            | JasmTokenKind::DotEnd
-            | JasmTokenKind::DotAnnotation
-            | JasmTokenKind::DotCode => "directive".to_string(),
-            JasmTokenKind::AccessFlag(_) => "keyword".to_string(), // TODO: keywords or access flags?
-            JasmTokenKind::Identifier(_) => "identifier".to_string(),
-            JasmTokenKind::StringLiteral(_) => "string literal".to_string(),
-            JasmTokenKind::Integer(_) => "integer".to_string(),
-            JasmTokenKind::Newline => "newline".to_string(),
-            JasmTokenKind::Eof => "eof".to_string(),
+            RnsTokenKind::DotClass
+            | RnsTokenKind::DotSuper
+            | RnsTokenKind::DotMethod
+            | RnsTokenKind::DotEnd
+            | RnsTokenKind::DotAnnotation
+            | RnsTokenKind::DotCode => "directive".to_string(),
+            RnsTokenKind::AccessFlag(_) => "keyword".to_string(), // TODO: keywords or access flags?
+            RnsTokenKind::Identifier(_) => "identifier".to_string(),
+            RnsTokenKind::StringLiteral(_) => "string literal".to_string(),
+            RnsTokenKind::Integer(_) => "integer".to_string(),
+            RnsTokenKind::Newline => "newline".to_string(),
+            RnsTokenKind::Eof => "eof".to_string(),
         }
     }
 }
 
-impl Display for JasmTokenKind {
+impl Display for RnsTokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            JasmTokenKind::DotClass => write!(f, ".class"),
-            JasmTokenKind::DotSuper => write!(f, ".super"),
-            JasmTokenKind::DotMethod => write!(f, ".method"),
-            JasmTokenKind::DotEnd => write!(f, ".end"),
-            JasmTokenKind::DotCode => write!(f, ".code"),
-            JasmTokenKind::DotAnnotation => write!(f, ".annotation"),
-            JasmTokenKind::Newline => write!(f, "newline"),
-            JasmTokenKind::Eof => write!(f, "eof"),
-            JasmTokenKind::AccessFlag(flag) => write!(f, "{}", flag),
-            JasmTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
-            JasmTokenKind::StringLiteral(value) => {
+            RnsTokenKind::DotClass => write!(f, ".class"),
+            RnsTokenKind::DotSuper => write!(f, ".super"),
+            RnsTokenKind::DotMethod => write!(f, ".method"),
+            RnsTokenKind::DotEnd => write!(f, ".end"),
+            RnsTokenKind::DotCode => write!(f, ".code"),
+            RnsTokenKind::DotAnnotation => write!(f, ".annotation"),
+            RnsTokenKind::Newline => write!(f, "newline"),
+            RnsTokenKind::Eof => write!(f, "eof"),
+            RnsTokenKind::AccessFlag(flag) => write!(f, "{}", flag),
+            RnsTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
+            RnsTokenKind::StringLiteral(value) => {
                 write!(f, "{}", value.escape_default())
             }
-            JasmTokenKind::Integer(value) => write!(f, "{}", value),
+            RnsTokenKind::Integer(value) => write!(f, "{}", value),
         }
     }
 }
@@ -191,7 +191,7 @@ impl Span {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct JasmToken {
-    pub(crate) kind: JasmTokenKind,
+pub struct RnsToken {
+    pub(crate) kind: RnsTokenKind,
     pub(crate) span: Span,
 }

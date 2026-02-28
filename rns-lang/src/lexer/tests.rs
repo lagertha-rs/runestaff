@@ -10,7 +10,7 @@ mod snapshot_tests {
 
     const SNAPSHOT_PATH: &str = "snapshots";
 
-    fn format_tokens(tokens: &[JasmToken], source: &str) -> String {
+    fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
         let mut tw = TabWriter::new(vec![]);
 
         // Header
@@ -19,9 +19,9 @@ mod snapshot_tests {
 
         for token in tokens {
             let kind_str = match &token.kind {
-                JasmTokenKind::Identifier(s) => format!("Identifier({:?})", s),
-                JasmTokenKind::StringLiteral(s) => format!("StringLiteral({:?})", s),
-                JasmTokenKind::Integer(n) => format!("Integer({})", n),
+                RnsTokenKind::Identifier(s) => format!("Identifier({:?})", s),
+                RnsTokenKind::StringLiteral(s) => format!("StringLiteral({:?})", s),
+                RnsTokenKind::Integer(n) => format!("Integer({})", n),
                 other => format!("{:?}", other),
             };
 
@@ -79,7 +79,7 @@ mod snapshot_tests {
         path: PathBuf,
     ) {
         let source = std::fs::read_to_string(&path).expect("Unable to read file");
-        let mut lexer = JasmLexer::new(&source);
+        let mut lexer = RnsLexer::new(&source);
         let tokens = lexer
             .tokenize()
             .expect("Lexer should succeed for success test cases");

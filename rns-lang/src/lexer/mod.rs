@@ -1,6 +1,6 @@
 use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
-use crate::token::{JasmToken, JasmTokenKind, Span};
+use crate::token::{RnsToken, RnsTokenKind, Span};
 use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
 
@@ -8,12 +8,12 @@ mod error;
 #[cfg(test)]
 mod tests;
 
-pub struct JasmLexer<'a> {
+pub struct RnsLexer<'a> {
     data: Peekable<CharIndices<'a>>,
     byte_pos: usize,
 }
 
-impl<'a> JasmLexer<'a> {
+impl<'a> RnsLexer<'a> {
     // TODO: do I really need an instance?
     pub fn new(source: &'a str) -> Self {
         Self {
@@ -123,15 +123,15 @@ impl<'a> JasmLexer<'a> {
         Err(LexerError::UnterminatedString(Span::new(start, start + 1)))
     }
 
-    fn read_number(&mut self, start: usize) -> Result<JasmTokenKind, LexerError> {
+    fn read_number(&mut self, start: usize) -> Result<RnsTokenKind, LexerError> {
         // TODO: implement all number formats and types, right now only integers are supported
         let number_str = self.read_to_delimiter();
         i32::from_str(&number_str)
-            .map(JasmTokenKind::Integer)
+            .map(RnsTokenKind::Integer)
             .map_err(|_| LexerError::InvalidNumber(Span::new(start, self.byte_pos), number_str))
     }
 
-    fn handle_directive(&mut self, start: usize) -> Result<JasmTokenKind, LexerError> {
+    fn handle_directive(&mut self, start: usize) -> Result<RnsTokenKind, LexerError> {
         self.next_char(); // consume '.'
 
         let directive = self.read_to_delimiter();
@@ -142,27 +142,27 @@ impl<'a> JasmLexer<'a> {
                     ch,
                     Some(format!(
                         "Expected one of the directives: {}",
-                        JasmTokenKind::list_directives()
+                        RnsTokenKind::list_directives()
                     )),
                 ));
             }
             return Err(LexerError::UnexpectedEof(Span::new(start, start + 1)));
         }
 
-        JasmTokenKind::from_directive(&directive).ok_or(LexerError::UnknownDirective(
+        RnsTokenKind::from_directive(&directive).ok_or(LexerError::UnknownDirective(
             Span::new(start, self.byte_pos),
             format!(".{directive}"),
         ))
     }
 
-    fn next_token(&mut self) -> Result<JasmToken, LexerError> {
+    fn next_token(&mut self) -> Result<RnsToken, LexerError> {
         self.skip_whitespaces_and_comments();
 
         let start = self.byte_pos;
 
         let Some(&(_, ch)) = self.data.peek() else {
-            return Ok(JasmToken {
-                kind: JasmTokenKind::Eof,
+            return Ok(RnsToken {
+                kind: RnsTokenKind::Eof,
                 span: Span::new(start, start),
             });
         };
@@ -170,33 +170,33 @@ impl<'a> JasmLexer<'a> {
         let kind = match ch {
             '.' => self.handle_directive(start)?,
             '0'..='9' | '-' => self.read_number(start)?,
-            '"' => JasmTokenKind::StringLiteral(self.read_string(start)?),
+            '"' => RnsTokenKind::StringLiteral(self.read_string(start)?),
             '\n' => {
                 self.next_char();
-                return Ok(JasmToken {
-                    kind: JasmTokenKind::Newline,
+                return Ok(RnsToken {
+                    kind: RnsTokenKind::Newline,
                     span: Span::new(start, self.byte_pos),
                 });
             }
             _ => {
                 let str = self.read_to_delimiter();
-                JasmTokenKind::from_identifier(str)
+                RnsTokenKind::from_identifier(str)
             }
         };
 
         let end = self.byte_pos;
-        Ok(JasmToken {
+        Ok(RnsToken {
             kind,
             span: Span::new(start, end),
         })
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<JasmToken>, Diagnostic> {
+    pub fn tokenize(&mut self) -> Result<Vec<RnsToken>, Diagnostic> {
         let mut tokens = Vec::new();
 
         loop {
             let token = self.next_token()?;
-            if let JasmTokenKind::Eof = token.kind {
+            if let RnsTokenKind::Eof = token.kind {
                 tokens.push(token);
                 break;
             }

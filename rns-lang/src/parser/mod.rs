@@ -1,23 +1,23 @@
-use crate::assembler::{ClassDirective, JasmModule, SuperDirective};
+use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
 use crate::parser::error::{
     IdentifierContext, NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
-use crate::parser::jasm_warning::ParserWarning;
-use crate::token::{JasmAccessFlag, JasmToken, JasmTokenKind, Span};
+use crate::parser::warning::ParserWarning;
+use crate::token::{RnsAccessFlag, RnsToken, RnsTokenKind, Span};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
 mod error;
-mod jasm_warning;
 #[cfg(test)]
 mod tests;
+mod warning;
 
 const JAVA_LANG_OBJECT: &str = "java/lang/Object";
 
-pub struct JasmParser {
-    tokens: Peekable<IntoIter<JasmToken>>,
+pub struct RnsParser {
+    tokens: Peekable<IntoIter<RnsToken>>,
     last_span: Span,
 
     diagnostic: Vec<Diagnostic>,
@@ -26,19 +26,19 @@ pub struct JasmParser {
     super_directives: Vec<SuperDirective>,
 }
 
-impl JasmParser {
-    fn peek_token_kind(&mut self) -> Option<&JasmTokenKind> {
+impl RnsParser {
+    fn peek_token_kind(&mut self) -> Option<&RnsTokenKind> {
         self.tokens.peek().map(|token| &token.kind)
     }
 
     fn skip_newlines(&mut self) -> Result<(), ParserError> {
-        while let Some(JasmTokenKind::Newline) = self.peek_token_kind() {
+        while let Some(RnsTokenKind::Newline) = self.peek_token_kind() {
             self.next_token()?;
         }
         Ok(())
     }
 
-    fn next_token(&mut self) -> Result<JasmToken, ParserError> {
+    fn next_token(&mut self) -> Result<RnsToken, ParserError> {
         match self.tokens.next() {
             Some(token) => {
                 self.last_span = token.span;
@@ -50,10 +50,10 @@ impl JasmParser {
         }
     }
 
-    fn next_until_newline(&mut self) -> Result<Vec<JasmToken>, ParserError> {
+    fn next_until_newline(&mut self) -> Result<Vec<RnsToken>, ParserError> {
         let mut tokens = Vec::new();
         while let Some(token) = self.tokens.peek() {
-            if matches!(token.kind, JasmTokenKind::Newline | JasmTokenKind::Eof) {
+            if matches!(token.kind, RnsTokenKind::Newline | RnsTokenKind::Eof) {
                 break;
             }
             tokens.push(self.next_token()?);
@@ -61,13 +61,13 @@ impl JasmParser {
         Ok(tokens)
     }
 
-    fn parse_class_access_flags(&mut self) -> Result<BTreeMap<JasmAccessFlag, Span>, ParserError> {
+    fn parse_class_access_flags(&mut self) -> Result<BTreeMap<RnsAccessFlag, Span>, ParserError> {
         let mut flags = BTreeMap::new();
         loop {
             match self.peek_token_kind() {
                 Some(token) if token.is_access_flag() => {
                     let next_token = self.next_token()?;
-                    if let JasmTokenKind::AccessFlag(flag) = next_token.kind {
+                    if let RnsTokenKind::AccessFlag(flag) = next_token.kind {
                         flags
                             .entry(flag)
                             .or_insert_with(Vec::new)
@@ -102,8 +102,8 @@ impl JasmParser {
     ) -> Result<(String, Span), ParserError> {
         let token = self.next_token()?;
         match token.kind {
-            JasmTokenKind::Identifier(name) => Ok((name, token.span)),
-            JasmTokenKind::Eof | JasmTokenKind::Newline => Err(ParserError::IdentifierExpected(
+            RnsTokenKind::Identifier(name) => Ok((name, token.span)),
+            RnsTokenKind::Eof | RnsTokenKind::Newline => Err(ParserError::IdentifierExpected(
                 Span::new(prev_token_end, prev_token_end),
                 token.kind,
                 context,
@@ -133,8 +133,8 @@ impl JasmParser {
     ) -> Result<u32, ParserError> {
         let token = self.next_token()?;
         match token.kind {
-            JasmTokenKind::Integer(value) if value >= 0 => Ok(value as u32),
-            JasmTokenKind::Eof | JasmTokenKind::Newline => {
+            RnsTokenKind::Integer(value) if value >= 0 => Ok(value as u32),
+            RnsTokenKind::Eof | RnsTokenKind::Newline => {
                 Err(ParserError::NonNegativeIntegerExpected(
                     Span::new(prev_token_end, prev_token_end),
                     token.kind,
@@ -397,10 +397,10 @@ impl JasmParser {
     fn parse_class(&mut self) -> Result<(), ParserError> {
         self.skip_newlines()?;
         let class_token = self.next_token()?;
-        if matches!(class_token.kind, JasmTokenKind::Eof) {
+        if matches!(class_token.kind, RnsTokenKind::Eof) {
             return Err(ParserError::EmptyFile(class_token.span));
         }
-        if !matches!(class_token.kind, JasmTokenKind::DotClass) {
+        if !matches!(class_token.kind, RnsTokenKind::DotClass) {
             return Err(ParserError::ClassDirectiveExpected(
                 class_token.span,
                 class_token.kind,
@@ -424,17 +424,17 @@ impl JasmParser {
 
         while let Some(token) = self.tokens.peek() {
             match token.kind {
-                JasmTokenKind::Newline => {
+                RnsTokenKind::Newline => {
                     self.next_token()?;
                 }
-                JasmTokenKind::DotMethod => {
+                RnsTokenKind::DotMethod => {
                     unimplemented!("method parsing is not implemented yet")
                 }
-                JasmTokenKind::DotSuper => self.parse_super_directive()?,
-                JasmTokenKind::DotEnd => {
+                RnsTokenKind::DotSuper => self.parse_super_directive()?,
+                RnsTokenKind::DotEnd => {
                     self.next_token()?; // consume .end
                     if let Some(token) = self.tokens.peek() {
-                        if let JasmTokenKind::Identifier(ref s) = token.kind {
+                        if let RnsTokenKind::Identifier(ref s) = token.kind {
                             if s == "class" {
                                 self.next_token()?; // consume "class"
                                 break; // .end class - finish parsing
@@ -442,7 +442,7 @@ impl JasmParser {
                         }
                     }
                 }
-                JasmTokenKind::Eof => break,
+                RnsTokenKind::Eof => break,
                 _ => {
                     eprintln!("DEBUG: Unexpected token in class body: {:?}", token.kind);
                     todo!("Unexpected token in class body")
@@ -453,8 +453,8 @@ impl JasmParser {
         Ok(())
     }
 
-    pub fn parse(tokens: Vec<JasmToken>) -> Result<JasmModule, Vec<Diagnostic>> {
-        if !matches!(tokens.last().unwrap().kind, JasmTokenKind::Eof) {
+    pub fn parse(tokens: Vec<RnsToken>) -> Result<RnsModule, Vec<Diagnostic>> {
+        if !matches!(tokens.last().unwrap().kind, RnsTokenKind::Eof) {
             return Err(ParserError::Internal(
                 "Token stream must end with an EOF token".to_string(),
             )
@@ -471,7 +471,7 @@ impl JasmParser {
         };
 
         instance.parse_class()?;
-        Ok(JasmModule {
+        Ok(RnsModule {
             class_directive: instance.class_directive,
             super_directives: instance.super_directives,
             diagnostics: instance.diagnostic,

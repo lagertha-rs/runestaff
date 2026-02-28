@@ -1,5 +1,5 @@
 ---
-source: jasm/tests/jasm_test.rs
+source: rns/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -11,7 +11,7 @@ not generated
 .enum ;??
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/directives/dot_enum.ja:4:1 ]
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_enum.ja:4:1 ]
    │
  4 │ .enum ;??
    │ ──┬──  

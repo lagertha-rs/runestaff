@@ -1,12 +1,9 @@
 ---
-source: jasm/tests/jasm_test.rs
+source: rns/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
-.class public final EmptyClass
-.super java/lang/Object
-
-.end class
+not generated
 ----- INPUT -----
 .class public public final public EmptyClass
 .super java/lang/Object
@@ -14,7 +11,7 @@ expression: "&snapshot_content"
 .end class
 ----- STDERR -----
 [W002] Warning: duplicate access flag 'public' in class declaration
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/jasm_warn/class_directive/multiple_access_flags.ja:1:15 ]
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/rns_warn/class_directive/multiple_access_flags.ja:1:15 ]
    │
  1 │ .class public public final public EmptyClass
    │        ───┬── ───┬──       ───┬──  
@@ -27,4 +24,4 @@ expression: "&snapshot_content"
    │ Note: The `public` flag was already specified. You only need to declare it once.
 ───╯
 ----- HASH -----
-15660cc72b14de356de78864cb002c7909cd787fae77332babaf3fb942963ddc
+not generated

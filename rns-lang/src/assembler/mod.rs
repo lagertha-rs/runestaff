@@ -1,13 +1,13 @@
 use crate::diagnostic::Diagnostic;
-use crate::token::{JasmAccessFlag, Span};
+use crate::token::{RnsAccessFlag, Span};
+use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{AttributeNameMap, ConstantPoolBuilder};
-use jclass::ClassFile;
 use std::collections::BTreeMap;
 
 mod jvm_warning;
 
-pub struct JasmModule {
+pub struct RnsModule {
     pub class_directive: ClassDirective,
     pub super_directives: Vec<SuperDirective>,
     pub diagnostics: Vec<Diagnostic>,
@@ -19,7 +19,7 @@ pub struct ClassDirective {
     pub name: String,
     pub name_span: Span,
     // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
-    pub access_flags: BTreeMap<JasmAccessFlag, Span>,
+    pub access_flags: BTreeMap<RnsAccessFlag, Span>,
 }
 
 pub struct SuperDirective {
@@ -28,19 +28,19 @@ pub struct SuperDirective {
     pub directive_span: Span,
 }
 
-impl JasmModule {
+impl RnsModule {
     fn build_class_flags(&mut self) -> ClassFlags {
         let mut res = ClassFlags::new(0);
         for (flag, span) in &self.class_directive.access_flags {
             match flag {
-                JasmAccessFlag::Public => res.set_public(),
-                JasmAccessFlag::Final => res.set_final(),
-                JasmAccessFlag::Super => res.set_super(),
-                JasmAccessFlag::Interface => res.set_interface(),
-                JasmAccessFlag::Abstract => res.set_abstract(),
-                JasmAccessFlag::Enum => res.set_enum(),
-                JasmAccessFlag::Synthetic => res.set_synthetic(),
-                JasmAccessFlag::Annotation => res.set_annotation(),
+                RnsAccessFlag::Public => res.set_public(),
+                RnsAccessFlag::Final => res.set_final(),
+                RnsAccessFlag::Super => res.set_super(),
+                RnsAccessFlag::Interface => res.set_interface(),
+                RnsAccessFlag::Abstract => res.set_abstract(),
+                RnsAccessFlag::Enum => res.set_enum(),
+                RnsAccessFlag::Synthetic => res.set_synthetic(),
+                RnsAccessFlag::Annotation => res.set_annotation(),
 
                 _ => unimplemented!(),
             }

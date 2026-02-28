@@ -1,17 +1,17 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::instruction::INSTRUCTION_SPECS;
-use crate::token::{JasmAccessFlag, JasmToken, JasmTokenKind, Span};
+use crate::token::{RnsAccessFlag, RnsToken, RnsTokenKind, Span};
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum ParserError {
-    ClassDirectiveExpected(Span, JasmTokenKind),
-    TrailingTokens(Vec<JasmToken>, TrailingTokensContext),
-    IdentifierExpected(Span, JasmTokenKind, IdentifierContext),
+    ClassDirectiveExpected(Span, RnsTokenKind),
+    TrailingTokens(Vec<RnsToken>, TrailingTokensContext),
+    IdentifierExpected(Span, RnsTokenKind, IdentifierContext),
 
-    UnexpectedCodeDirectiveArg(Span, JasmTokenKind),
+    UnexpectedCodeDirectiveArg(Span, RnsTokenKind),
 
-    NonNegativeIntegerExpected(Span, JasmTokenKind, NonNegativeIntegerContext),
+    NonNegativeIntegerExpected(Span, RnsTokenKind, NonNegativeIntegerContext),
 
     UnknownInstruction(Span, String),
 
@@ -77,7 +77,7 @@ impl ParserError {
             }
             ParserError::IdentifierExpected(_, token, context) => match context {
                 IdentifierContext::ClassName => match token {
-                    JasmTokenKind::Newline | JasmTokenKind::Eof => {
+                    RnsTokenKind::Newline | RnsTokenKind::Eof => {
                         "missing class name in '.class' directive".to_string()
                     }
                     _ if token.is_directive() => {
@@ -131,11 +131,11 @@ impl ParserError {
                             _ if first_token_kind.is_access_flag() => {
                                 "access flags must appear before the class name".to_string()
                             }
-                            JasmTokenKind::Integer(_) => {
+                            RnsTokenKind::Integer(_) => {
                                 "integer literals are not allowed here".to_string()
                             }
-                            JasmTokenKind::Identifier(_) => "not allowed here".to_string(),
-                            JasmTokenKind::StringLiteral(_) => {
+                            RnsTokenKind::Identifier(_) => "not allowed here".to_string(),
+                            RnsTokenKind::StringLiteral(_) => {
                                 "string literals are not allowed here".to_string()
                             }
                             _ => "not allowed here".to_string(),
@@ -161,7 +161,7 @@ impl ParserError {
                     _ if token.is_method_nested_directive() => {
                         format!("'{}' is only allowed inside a method definition", token)
                     }
-                    JasmTokenKind::DotEnd => {
+                    RnsTokenKind::DotEnd => {
                         format!("'{}' has no matching start directive", token)
                     }
                     _ => format!(
@@ -174,7 +174,7 @@ impl ParserError {
             ParserError::IdentifierExpected(_, token, context) => {
                 let msg = match context {
                     IdentifierContext::ClassName => match token {
-                        JasmTokenKind::Newline | JasmTokenKind::Eof => {
+                        RnsTokenKind::Newline | RnsTokenKind::Eof => {
                             "expected a class name here".to_string()
                         }
                         _ if token.is_directive() => {
@@ -250,26 +250,26 @@ impl ParserError {
                     "Access flags must appear within a '.class' or '.method' directive.".to_string(),
                 ),
                 // TODO: is class nested instead?
-                JasmTokenKind::DotMethod | JasmTokenKind::DotSuper => {
+                RnsTokenKind::DotMethod | RnsTokenKind::DotSuper => {
                     Some("Define a class first using '.class [access_flags] <name>'.".to_string())
                 }
-                JasmTokenKind::DotCode => Some(
+                RnsTokenKind::DotCode => Some(
                     "The '.code' directive is only valid inside a method definition. Define a method first using '.method [access_flags] <name> <descriptor>'."
                         .to_string(),
                 ),
-                JasmTokenKind::DotEnd => Some(
+                RnsTokenKind::DotEnd => Some(
                     "The '.end' directive must match a previous '.method', '.code', or '.class' directive.".to_string(),
                 ),
-                JasmTokenKind::Identifier(name) => Some(
+                RnsTokenKind::Identifier(name) => Some(
                     format!("Found identifier '{}' before any class was defined. Did you forget to start the class? Try: '.class {}'", name, name),
                 ),
-                JasmTokenKind::Integer(_) => Some(
+                RnsTokenKind::Integer(_) => Some(
                     "Integer literals are typically used as instruction arguments inside '.code' blocks.".to_string(),
                 ),
-                JasmTokenKind::StringLiteral(_) => Some(
+                RnsTokenKind::StringLiteral(_) => Some(
                     "String literals are constant values that must appear inside '.code' blocks as instruction arguments.".to_string(),
                 ),
-                JasmTokenKind::DotAnnotation => Some(
+                RnsTokenKind::DotAnnotation => Some(
                     "The '.annotation' directive is only valid inside a class or method definition."
                         .to_string(),
                 ),
@@ -288,22 +288,22 @@ impl ParserError {
                             // TODO: bad note, almost the same as the label
                             Some("Access flags must appear before the class name: '.class [access_flags] <name>'".to_string())
                         }
-                        JasmTokenKind::DotClass => {
+                        RnsTokenKind::DotClass => {
                             Some("The '.class' directive cannot be nested. Consider removing the second '.class' (todo when nested metada data is supported explain it).".to_string())
                         }
-                        JasmTokenKind::DotCode => {
+                        RnsTokenKind::DotCode => {
                             Some("The '.code' directive must be inside a method definition, not directly after the class name.".to_string())
                         }
-                        JasmTokenKind::DotEnd => {
+                        RnsTokenKind::DotEnd => {
                             Some("The '.end' directive must match a previous '.method', '.code', or '.class' directive. It cannot appear directly after the class name.".to_string())
                         }
-                        JasmTokenKind::Integer(_) => {
+                        RnsTokenKind::Integer(_) => {
                             Some("Integer literals belong inside '.code' blocks as instruction arguments.".to_string())
                         }
-                        JasmTokenKind::StringLiteral(_) => {
+                        RnsTokenKind::StringLiteral(_) => {
                             Some("String literals belong inside '.code' blocks as instruction arguments.".to_string())
                         }
-                        JasmTokenKind::Identifier(_) => {
+                        RnsTokenKind::Identifier(_) => {
                             Some("The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.".to_string())
                         }
                         _ => Some("The class definition should end after the class name.".to_string()),
@@ -321,22 +321,22 @@ impl ParserError {
             }
             ParserError::IdentifierExpected(_, kind, context) => match (kind, context) {
                 (
-                    JasmTokenKind::StringLiteral(_),
+                    RnsTokenKind::StringLiteral(_),
                     IdentifierContext::ClassName | IdentifierContext::SuperName,
                 ) => Some("Consider removing the quotes around the class name".to_string()),
-                (JasmTokenKind::StringLiteral(_), IdentifierContext::MethodName) => {
+                (RnsTokenKind::StringLiteral(_), IdentifierContext::MethodName) => {
                     Some("Consider removing the quotes around the method name".to_string())
                 }
-                (JasmTokenKind::DotClass | JasmTokenKind::DotMethod | JasmTokenKind::DotSuper | JasmTokenKind::DotCode | JasmTokenKind::DotEnd, IdentifierContext::ClassName) => {
+                (RnsTokenKind::DotClass | RnsTokenKind::DotMethod | RnsTokenKind::DotSuper | RnsTokenKind::DotCode | RnsTokenKind::DotEnd, IdentifierContext::ClassName) => {
                     Some("Directives are reserved keywords. If you meant to start a new directive, do so on a new line.".to_string())
                 }
-                (JasmTokenKind::Integer(_), IdentifierContext::ClassName) => {
+                (RnsTokenKind::Integer(_), IdentifierContext::ClassName) => {
                     Some("Integer literals cannot be used as class names. Every class must have a valid identifier as its name.".to_string())
                 }
-                (JasmTokenKind::AccessFlag(JasmAccessFlag::Public) | JasmTokenKind::AccessFlag(JasmAccessFlag::Static), IdentifierContext::ClassName) => {
+                (RnsTokenKind::AccessFlag(RnsAccessFlag::Public) | RnsTokenKind::AccessFlag(RnsAccessFlag::Static), IdentifierContext::ClassName) => {
                     Some(format!("Access flags like '{}' must appear before the class name. Example: '.class {} MyClass'", kind, kind))
                 }
-                (JasmTokenKind::Newline | JasmTokenKind::Eof, IdentifierContext::ClassName) => {
+                (RnsTokenKind::Newline | RnsTokenKind::Eof, IdentifierContext::ClassName) => {
                     Some("Every class definition needs a name. Example: '.class public MyClass'".to_string())
                 }
                 (_, IdentifierContext::ClassName) => Some(

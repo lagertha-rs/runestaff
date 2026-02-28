@@ -1,5 +1,5 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::{JasmAccessFlag, Span};
+use crate::token::{RnsAccessFlag, Span};
 use std::ops::Range;
 use strum::EnumProperty;
 
@@ -13,7 +13,7 @@ pub(super) enum ParserWarning {
     },
     #[strum(props(code = "W002"))]
     ClassDuplicateFlag {
-        flag: JasmAccessFlag,
+        flag: RnsAccessFlag,
         spans: Vec<Span>,
     },
 }

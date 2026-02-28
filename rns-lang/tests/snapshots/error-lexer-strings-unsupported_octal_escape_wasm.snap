@@ -1,5 +1,5 @@
 ---
-source: jasm/tests/jasm_test.rs
+source: rns/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 .code "\123"
 ----- STDERR -----
 [E001] Error: invalid escape sequence
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/jasm/test_data/integration/error/lexer/strings/unsupported_octal_escape.ja:2:9 ]
+   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/strings/unsupported_octal_escape.ja:2:9 ]
    │
  2 │ .code "\123"
    │         ┬  

@@ -1,6 +1,6 @@
 use crate::diagnostic::DiagnosticTier;
-use crate::lexer::JasmLexer;
-use crate::parser::JasmParser;
+use crate::lexer::RnsLexer;
+use crate::parser::RnsParser;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -13,7 +13,7 @@ mod token;
 mod utils;
 
 #[derive(Parser)]
-#[command(name = "jasm", about = "Java assembler and disassembler")]
+#[command(name = "rns", about = "Java assembler and disassembler")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Command>,
@@ -55,7 +55,7 @@ fn main() {
             if let Some(file) = cli.file {
                 assemble(&file, None, false, false);
             } else {
-                eprintln!("Usage: jasm <file.ja> or jasm asm <file.ja> or jasm dis <file.class>");
+                eprintln!("Usage: rns <file.ja> or rns asm <file.ja> or rns dis <file.class>");
                 std::process::exit(1);
             }
         }
@@ -69,7 +69,7 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
         std::process::exit(1);
     });
 
-    let mut lexer = JasmLexer::new(&contents);
+    let mut lexer = RnsLexer::new(&contents);
 
     let tokens = match lexer.tokenize() {
         Ok(tokens) => tokens,
@@ -79,7 +79,7 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
         }
     };
 
-    let jasm_module = match JasmParser::parse(tokens) {
+    let rns_module = match RnsParser::parse(tokens) {
         Ok(module) => module,
         Err(errors) => {
             for err in errors {
@@ -89,7 +89,7 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
         }
     };
 
-    let (class, diagnostics) = jasm_module.into_class_file();
+    let (class, diagnostics) = rns_module.into_class_file();
 
     let mut has_error = false;
     for diag in diagnostics {
@@ -124,6 +124,6 @@ fn disassemble(path: &PathBuf) {
         std::process::exit(1);
     });
 
-    let ja_text = class_file.fmt_jasm();
+    let ja_text = class_file.fmt_rns();
     print!("{}", ja_text.unwrap());
 }

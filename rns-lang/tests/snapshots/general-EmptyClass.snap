@@ -1,6 +1,6 @@
 ---
-source: jasm/tests/jasm_test.rs
-expression: "&combined"
+source: rns/tests/rns_test.rs
+expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 .class public EmptyClass
