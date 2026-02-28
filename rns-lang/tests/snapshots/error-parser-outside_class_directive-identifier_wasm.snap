@@ -12,7 +12,7 @@ HelloWorld
 .class public HelloWorld
 ----- STDERR -----
 [PARSER-001] Error: unexpected identifier before class definition
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/parser/outside_class_directive/identifier.ja:4:1 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/identifier.ja:4:1 ]
    │
  4 │ HelloWorld
    │ ─────┬────  

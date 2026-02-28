@@ -8,7 +8,7 @@ not generated
 .code -99999999999999999999
 ----- STDERR -----
 [E001] Error: invalid integer
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/integers/overflow_negative.ja:1:7 ]
+   ╭─[ test_data/integration/error/lexer/integers/overflow_negative.ja:1:7 ]
    │
  1 │ .code -99999999999999999999
    │       ──────────┬──────────  

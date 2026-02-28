@@ -8,7 +8,7 @@ not generated
 ."Hello@World!"      ;;;;;;;;;; -_-
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_string_literal.ja:1:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_string_literal.ja:1:1 ]
    │
  1 │ ."Hello@World!"      ;;;;;;;;;; -_-
    │ ───────┬───────  

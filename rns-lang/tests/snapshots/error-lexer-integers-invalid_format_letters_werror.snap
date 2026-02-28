@@ -9,7 +9,7 @@ not generated
 .code 123abc
 ----- STDERR -----
 [E001] Error: invalid integer
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/integers/invalid_format_letters.ja:2:7 ]
+   ╭─[ test_data/integration/error/lexer/integers/invalid_format_letters.ja:2:7 ]
    │
  2 │ .code 123abc
    │       ───┬──  

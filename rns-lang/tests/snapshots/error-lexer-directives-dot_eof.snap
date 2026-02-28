@@ -9,7 +9,7 @@ not generated
 .
 ----- STDERR -----
 [E001] Error: unexpected end of file
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_eof.ja:2:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_eof.ja:2:1 ]
    │
  2 │ .
    │ ┬  

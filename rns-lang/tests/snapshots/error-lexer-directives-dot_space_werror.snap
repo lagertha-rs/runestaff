@@ -10,7 +10,7 @@ not generated
 .end
 ----- STDERR -----
 [E001] Error: unexpected character
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_space.ja:2:6 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_space.ja:2:6 ]
    │
  2 │     . whaaat?
    │      ┬  

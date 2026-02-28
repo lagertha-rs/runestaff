@@ -8,7 +8,7 @@ not generated
 . class
 ----- STDERR -----
 [E001] Error: unexpected character
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_space_class.ja:1:2 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_space_class.ja:1:2 ]
    │
  1 │ . class
    │  ┬  

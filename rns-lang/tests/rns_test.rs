@@ -2,11 +2,36 @@ use assert_cmd::cargo_bin_cmd;
 use insta::with_settings;
 use rstest::rstest;
 use sha2::{Digest, Sha256};
+use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Output;
 
 const SNAPSHOT_PATH: &str = "snapshots";
+
+fn normalize_stderr_paths(stderr: &str, input_path: &Path) -> String {
+    if let Ok(absolute) = input_path.canonicalize() {
+        let abs_str = absolute.to_string_lossy();
+        let mut normalized = stderr.to_string();
+
+        let cwd = env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+        let rel_path = if let Ok(rel) = absolute.strip_prefix(&cwd) {
+            rel.to_string_lossy()
+        } else {
+            input_path.to_string_lossy()
+        };
+
+        normalized = normalized.replace(&*abs_str, &rel_path);
+
+        let abs_with_colon = format!("{}:", abs_str);
+        let rel_with_colon = format!("{}:", rel_path);
+        normalized = normalized.replace(&abs_with_colon, &rel_with_colon);
+
+        return normalized;
+    }
+
+    stderr.to_string()
+}
 
 fn get_file_contents(path: &Path) -> String {
     fs::read_to_string(path).expect("Unable to read file")
@@ -195,7 +220,8 @@ fn test_integration(
     let (disassembled, hash) = process_assembly_result(&assemble_output, &class_file);
     verify_assembly_behavior(&disassembled, &hash, &assemble_output, &class_file);
 
-    let snapshot_content = create_snapshot_content(&disassembled, &path, &stderr, &hash);
+    let normalized_stderr = normalize_stderr_paths(&stderr, &path);
+    let snapshot_content = create_snapshot_content(&disassembled, &path, &normalized_stderr, &hash);
 
     with_settings!(
         {

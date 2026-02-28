@@ -10,7 +10,7 @@ not generated
 .end
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_semicolon.ja:2:5 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_semicolon.ja:2:5 ]
    │
  2 │     .;comment after semicolon
    │     ────┬────  

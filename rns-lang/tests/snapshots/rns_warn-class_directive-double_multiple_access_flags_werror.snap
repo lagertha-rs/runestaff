@@ -11,7 +11,7 @@ not generated
 .end class
 ----- STDERR -----
 [W002] Warning: duplicate access flag 'public' in class declaration
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/rns_warn/class_directive/double_multiple_access_flags.ja:1:15 ]
+   ╭─[ test_data/integration/rns_warn/class_directive/double_multiple_access_flags.ja:1:15 ]
    │
  1 │ .class public public final public final EmptyClass
    │        ───┬── ───┬──       ───┬──  
@@ -24,7 +24,7 @@ not generated
    │ Note: The `public` flag was already specified. You only need to declare it once.
 ───╯
 [W002] Warning: duplicate access flag 'final' in class declaration
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/rns_warn/class_directive/double_multiple_access_flags.ja:1:35 ]
+   ╭─[ test_data/integration/rns_warn/class_directive/double_multiple_access_flags.ja:1:35 ]
    │
  1 │ .class public public final public final EmptyClass
    │                      ──┬──        ──┬──  

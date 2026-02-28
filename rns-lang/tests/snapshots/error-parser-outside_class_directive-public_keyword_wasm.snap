@@ -9,7 +9,7 @@ not generated
 .class public HelloWorld
 ----- STDERR -----
 [PARSER-001] Error: unexpected keyword before class definition
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/parser/outside_class_directive/public_keyword.ja:1:4 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/public_keyword.ja:1:4 ]
    │
  1 │    public
    │    ───┬──  

@@ -9,7 +9,7 @@ not generated
 ..class
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_dot_class.ja:2:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_dot_class.ja:2:1 ]
    │
  2 │ ..class
    │ ───┬───  

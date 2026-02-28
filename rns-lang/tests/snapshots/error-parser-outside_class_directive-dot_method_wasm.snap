@@ -10,7 +10,7 @@ not generated
 .class public HelloWorld
 ----- STDERR -----
 [PARSER-001] Error: unexpected directive before class definition
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/parser/outside_class_directive/dot_method.ja:2:1 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/dot_method.ja:2:1 ]
    │
  2 │ .method public static main ([Ljava/lang/String;)V
    │ ───┬───  

@@ -11,7 +11,7 @@ not generated
 .enum ;??
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ /home/amyroshn/workspace/projects/lagertha-vm/rns/test_data/integration/error/lexer/directives/dot_enum.ja:4:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_enum.ja:4:1 ]
    │
  4 │ .enum ;??
    │ ──┬──  
