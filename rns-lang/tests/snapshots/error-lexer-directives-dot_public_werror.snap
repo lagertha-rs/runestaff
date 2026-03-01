@@ -8,7 +8,7 @@ not generated
 .public static HelloWorl
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_public.ja:1:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_public.rns:1:1 ]
    │
  1 │ .public static HelloWorl
    │ ───┬───  

@@ -1,15 +1,12 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, ERROR_DOCS_BASE_URL};
 use crate::token::{RnsFlag, Span};
 use std::ops::Range;
-use strum::EnumProperty;
 
-const ZERO_JVMS_CODE: &str = "JVMS000";
-
-#[derive(Debug, EnumProperty)]
+#[derive(Debug)]
 pub(super) enum JvmWarning {
-    #[strum(props(code = "JVMS-001"))]
-    InterfaceFlagWithMissingAbstract { interface_span: Span },
-    #[strum(props(code = "JVMS-001"))]
+    InterfaceFlagWithMissingAbstract {
+        interface_span: Span,
+    },
     InterfaceMutuallyExclusive {
         interface_span: Span,
         exclusive_flags: Vec<(RnsFlag, Span)>,
@@ -17,6 +14,12 @@ pub(super) enum JvmWarning {
 }
 
 impl JvmWarning {
+    fn code(&self) -> &'static str {
+        match self {
+            JvmWarning::InterfaceFlagWithMissingAbstract { .. }
+            | JvmWarning::InterfaceMutuallyExclusive { .. } => "JVMS001",
+        }
+    }
     fn message(&self) -> String {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. } => {
@@ -43,9 +46,7 @@ impl JvmWarning {
         format!(
             "If this violation isn't intentional, see details at:\n{}{}",
             ERROR_DOCS_BASE_URL,
-            self.get_str("code")
-                .unwrap_or(ZERO_JVMS_CODE)
-                .to_ascii_lowercase()
+            self.code().to_ascii_lowercase()
         )
     }
 
@@ -103,7 +104,7 @@ impl From<JvmWarning> for Diagnostic {
     fn from(value: JvmWarning) -> Self {
         Diagnostic {
             message: value.message(),
-            code: value.get_str("code").unwrap_or(ZERO_JVMS_CODE),
+            code: value.code(),
             primary_location: value.primary_location(),
             note: Some(value.note()),
             help: value.help(),

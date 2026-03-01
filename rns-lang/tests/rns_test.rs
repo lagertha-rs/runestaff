@@ -205,7 +205,7 @@ fn test_integration(
     #[case] _flag: &str,
     #[case] flag: Option<&str>,
     #[base_dir = "test_data/integration/"]
-    #[files("**/*.ja")]
+    #[files("**/*.rns")]
     path: PathBuf,
 ) {
     let class_file = TempClassFile::new(&path, flag);

@@ -8,7 +8,7 @@ not generated
 .method      ..code
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_dot_code.ja:1:14 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_dot_code.rns:1:14 ]
    │
  1 │ .method      ..code
    │              ───┬──  

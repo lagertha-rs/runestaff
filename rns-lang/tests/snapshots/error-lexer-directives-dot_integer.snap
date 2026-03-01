@@ -12,7 +12,7 @@ not generated
 42 42 42 42 42
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_integer.ja:2:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_integer.rns:2:1 ]
    │
  2 │ .42 42 42 42 42
    │ ─┬─  

@@ -1,21 +1,27 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::{RnsFlag, Span};
 use std::ops::Range;
-use strum::EnumProperty;
 
-#[derive(Debug, EnumProperty)]
+#[derive(Debug)]
 pub(super) enum ParserWarning {
-    #[strum(props(code = "W001"))]
     MissingSuperClass {
         class_name: String,
         class_directive_pos: Span,
         default: &'static str,
     },
-    #[strum(props(code = "W002"))]
-    ClassDuplicateFlag { flag: RnsFlag, spans: Vec<Span> },
+    ClassDuplicateFlag {
+        flag: RnsFlag,
+        spans: Vec<Span>,
+    },
 }
 
 impl ParserWarning {
+    fn code(&self) -> &'static str {
+        match self {
+            ParserWarning::MissingSuperClass { .. } => "W001",
+            ParserWarning::ClassDuplicateFlag { .. } => "W002",
+        }
+    }
     fn message(&self) -> String {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
@@ -83,7 +89,7 @@ impl From<ParserWarning> for Diagnostic {
     fn from(value: ParserWarning) -> Self {
         Diagnostic {
             message: value.message(),
-            code: value.get_str("code").unwrap_or("W000"),
+            code: value.code(),
             primary_location: value.primary_location(),
             note: value.note(),
             help: None,

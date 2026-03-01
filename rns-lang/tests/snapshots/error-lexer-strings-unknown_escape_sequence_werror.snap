@@ -9,7 +9,7 @@ not generated
 .code "\u"
 ----- STDERR -----
 [E001] Error: invalid escape sequence
-   ╭─[ test_data/integration/error/lexer/strings/unknown_escape_sequence.ja:2:9 ]
+   ╭─[ test_data/integration/error/lexer/strings/unknown_escape_sequence.rns:2:9 ]
    │
  2 │ .code "\u"
    │         ┬  

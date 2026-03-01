@@ -9,7 +9,7 @@ not generated
 "
 ----- STDERR -----
 [E001] Error: unterminated string literal
-   ╭─[ test_data/integration/error/lexer/strings/unterminated_empty_string.ja:2:1 ]
+   ╭─[ test_data/integration/error/lexer/strings/unterminated_empty_string.rns:2:1 ]
    │
  2 │ "
    │ ┬  

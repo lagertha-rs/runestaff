@@ -10,8 +10,8 @@ not generated
 
 .end class
 ----- STDERR -----
-[JVMS-001] Warning: interface cannot be declared with mutually exclusive flags
-   ╭─[ test_data/integration/jvms/001-interface-flag/with_all_exclusive_shuffled.ja:1:33 ]
+[JVMS001] Warning: interface cannot be declared with mutually exclusive flags
+   ╭─[ test_data/integration/jvms/001-interface-flag/with_all_exclusive_shuffled.rns:1:33 ]
    │
  1 │ .class  final abstract   super  interface   enum    module EmptyClass
    │         ──┬──            ──┬──  ────┬────   ──┬─    ───┬──  
@@ -28,7 +28,7 @@ not generated
    │ Help: Consider removing: 'ACC_FINAL', 'ACC_SUPER', 'ACC_ENUM', 'ACC_MODULE'.
    │ 
    │ Note: If this violation isn't intentional, see details at:
-   │       https://rune.lagertha-vm.com/errors/jvms-001
+   │       https://rune.lagertha-vm.com/errors/jvms001
 ───╯
 ----- HASH -----
 not generated

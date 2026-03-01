@@ -10,7 +10,7 @@ not generated
 .method
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_static.ja:2:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_static.rns:2:1 ]
    │
  2 │ .static
    │ ───┬───  

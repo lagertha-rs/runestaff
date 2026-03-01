@@ -8,7 +8,7 @@ not generated
 .method (I)V .([Z)Ljava/lang/String;
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_method_descriptor.ja:1:14 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_method_descriptor.rns:1:14 ]
    │
  1 │ .method (I)V .([Z)Ljava/lang/String;
    │              ───────────┬───────────  

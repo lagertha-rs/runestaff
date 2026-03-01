@@ -9,7 +9,7 @@ not generated
 .class public HelloWorld
 ----- STDERR -----
 [PARSER-001] Error: unexpected integer before class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/integer.ja:1:1 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/integer.rns:1:1 ]
    │
  1 │ 42 ; the answer
    │ ─┬  

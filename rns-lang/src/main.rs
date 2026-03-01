@@ -55,7 +55,7 @@ fn main() {
             if let Some(file) = cli.file {
                 assemble(&file, None, false, false);
             } else {
-                eprintln!("Usage: rns <file.ja> or rns asm <file.ja> or rns dis <file.class>");
+                eprintln!("Usage: rns <file.rns> or rns asm <file.rns> or rns dis <file.class>");
                 std::process::exit(1);
             }
         }
@@ -109,7 +109,7 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
     let bytes = class.to_bytes();
     let output_path = output
         .map(|p| p.to_string_lossy().to_string())
-        .unwrap_or_else(|| filename.replace(".ja", ".class"));
+        .unwrap_or_else(|| filename.replace(".rns", ".class"));
     std::fs::write(output_path, bytes).expect("Failed to write output file");
 }
 

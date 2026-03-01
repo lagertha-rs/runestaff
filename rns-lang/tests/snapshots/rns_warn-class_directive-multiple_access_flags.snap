@@ -14,7 +14,7 @@ expression: "&snapshot_content"
 .end class
 ----- STDERR -----
 [W002] Warning: duplicate access flag 'public' in class declaration
-   ╭─[ test_data/integration/rns_warn/class_directive/multiple_access_flags.ja:1:15 ]
+   ╭─[ test_data/integration/rns_warn/class_directive/multiple_access_flags.rns:1:15 ]
    │
  1 │ .class public public final public EmptyClass
    │        ───┬── ───┬──       ───┬──  

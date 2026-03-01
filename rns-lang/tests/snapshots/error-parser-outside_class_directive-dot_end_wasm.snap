@@ -9,7 +9,7 @@ not generated
 .class public HelloWorld
 ----- STDERR -----
 [PARSER-001] Error: unexpected directive before class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/dot_end.ja:1:1 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/dot_end.rns:1:1 ]
    │
  1 │ .end method ; trailing comment
    │ ──┬─  

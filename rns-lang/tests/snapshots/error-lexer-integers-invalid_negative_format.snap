@@ -9,7 +9,7 @@ not generated
 .code -5xyz
 ----- STDERR -----
 [E001] Error: invalid integer
-   ╭─[ test_data/integration/error/lexer/integers/invalid_negative_format.ja:2:7 ]
+   ╭─[ test_data/integration/error/lexer/integers/invalid_negative_format.rns:2:7 ]
    │
  2 │ .code -5xyz
    │       ──┬──  

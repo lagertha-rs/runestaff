@@ -10,7 +10,7 @@ not generated
 .end
 ----- STDERR -----
 [E001] Error: unterminated string literal
-   ╭─[ test_data/integration/error/lexer/strings/basic_unterminated_string.ja:2:1 ]
+   ╭─[ test_data/integration/error/lexer/strings/basic_unterminated_string.rns:2:1 ]
    │
  2 │ "String with no ending quote
    │ ┬  

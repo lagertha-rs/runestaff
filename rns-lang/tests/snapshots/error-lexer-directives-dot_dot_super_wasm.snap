@@ -8,7 +8,7 @@ not generated
 dot_dot_super ..super
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_dot_super.ja:1:15 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_dot_super.rns:1:15 ]
    │
  1 │ dot_dot_super ..super
    │               ───┬───  

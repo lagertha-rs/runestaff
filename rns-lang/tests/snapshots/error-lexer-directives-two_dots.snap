@@ -8,7 +8,7 @@ not generated
 ..
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/two_dots.ja:1:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/two_dots.rns:1:1 ]
    │
  1 │ ..
    │ ─┬  

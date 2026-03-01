@@ -9,7 +9,7 @@ not generated
 .end
 ----- STDERR -----
 [E001] Error: unexpected character
-   ╭─[ test_data/integration/error/lexer/directives/dot_tab.ja:1:2 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_tab.rns:1:2 ]
    │
  1 │ .
    │  ┬  

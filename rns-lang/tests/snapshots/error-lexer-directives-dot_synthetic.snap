@@ -8,7 +8,7 @@ not generated
 .synthetic
 ----- STDERR -----
 [E001] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_synthetic.ja:1:1 ]
+   ╭─[ test_data/integration/error/lexer/directives/dot_synthetic.rns:1:1 ]
    │
  1 │ .synthetic
    │ ─────┬────  

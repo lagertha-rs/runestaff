@@ -8,7 +8,7 @@ not generated
 ; only a comment, no class at all
 ----- STDERR -----
 [PARSER-001] Error: file contains no class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/eof.ja:1:35 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/eof.rns:1:35 ]
    │
  1 │ ; only a comment, no class at all
    │                                   │ 

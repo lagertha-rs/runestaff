@@ -75,7 +75,7 @@ mod snapshot_tests {
     #[rstest]
     fn success_cases(
         #[base_dir = "test_data/unit/lexer/"]
-        #[files("**/*.ja")]
+        #[files("**/*.rns")]
         path: PathBuf,
     ) {
         let source = std::fs::read_to_string(&path).expect("Unable to read file");
