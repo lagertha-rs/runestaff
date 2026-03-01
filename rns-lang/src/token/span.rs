@@ -1,4 +1,3 @@
-use crate::token::RnsFlag;
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
@@ -18,37 +17,13 @@ impl Span {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SpannedString {
-    pub value: String,
+pub struct Spanned<T> {
+    pub value: T,
     pub span: Span,
 }
 
-impl SpannedString {
-    pub fn new(value: String, span: Span) -> Self {
-        Self { value, span }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SpannedInteger {
-    pub value: i32,
-    pub span: Span,
-}
-
-impl SpannedInteger {
-    pub fn new(value: i32, span: Span) -> Self {
-        Self { value, span }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SpannedFlag {
-    pub value: RnsFlag,
-    pub span: Span,
-}
-
-impl SpannedFlag {
-    pub fn new(value: RnsFlag, span: Span) -> Self {
+impl<T> Spanned<T> {
+    pub fn new(value: T, span: Span) -> Self {
         Self { value, span }
     }
 }

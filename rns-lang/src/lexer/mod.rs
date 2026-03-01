@@ -1,6 +1,6 @@
 use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
-use crate::token::{RnsToken, Span, SpannedInteger, SpannedString};
+use crate::token::{RnsToken, Span, Spanned};
 use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
 
@@ -135,7 +135,7 @@ impl<'a> RnsLexer<'a> {
         let number_str = self.read_to_delimiter();
         let number_end_pos = self.byte_pos;
         i32::from_str(&number_str)
-            .map(|n| RnsToken::Integer(SpannedInteger::new(n, Span::new(start, number_end_pos))))
+            .map(|n| RnsToken::Integer(Spanned::new(n, Span::new(start, number_end_pos))))
             .map_err(|_| LexerError::InvalidNumber(Span::new(start, number_end_pos), number_str))
     }
 
@@ -182,7 +182,7 @@ impl<'a> RnsLexer<'a> {
         let token = match ch {
             '.' => self.handle_directive(start)?,
             '0'..='9' | '-' => self.read_number(start)?,
-            '"' => RnsToken::StringLiteral(SpannedString::new(
+            '"' => RnsToken::StringLiteral(Spanned::new(
                 self.read_string(start)?,
                 Span::new(start, self.byte_pos),
             )),
@@ -191,12 +191,12 @@ impl<'a> RnsLexer<'a> {
                 if let Some(next) = self.peek_char()
                     && next == '"'
                 {
-                    RnsToken::Identifier(SpannedString::new(
+                    RnsToken::Identifier(Spanned::new(
                         self.read_string(start)?,
                         Span::new(start, self.byte_pos),
                     ))
                 } else {
-                    RnsToken::Identifier(SpannedString::new(
+                    RnsToken::Identifier(Spanned::new(
                         self.extend_to_delimiter(String::new()),
                         Span::new(start, self.byte_pos),
                     ))

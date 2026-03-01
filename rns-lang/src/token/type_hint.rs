@@ -1,12 +1,12 @@
-use crate::token::span::{SpannedInteger, SpannedString};
+use crate::token::span::Spanned;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum TypeHint {
-    Utf8(SpannedString),
-    Integer(SpannedInteger),
-    String(SpannedString),
-    Class(SpannedString),
-    Methodref(SpannedString, SpannedString, SpannedString),
+    Utf8(Spanned<String>),
+    Integer(Spanned<i32>),
+    String(Spanned<String>),
+    Class(Spanned<String>),
+    Methodref(Spanned<String>, Spanned<String>, Spanned<String>),
     Fieldref,
     InterfaceMethodref,
     Float,

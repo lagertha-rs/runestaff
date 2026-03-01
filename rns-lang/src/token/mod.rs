@@ -1,4 +1,4 @@
-pub(crate) use crate::token::span::{Span, SpannedFlag, SpannedInteger, SpannedString};
+pub(crate) use crate::token::span::{Span, Spanned};
 use itertools::Itertools;
 use std::fmt::Display;
 
@@ -30,11 +30,11 @@ pub enum RnsToken {
     DotEnd(Span),
     DotAnnotation(Span),
 
-    AccessFlag(SpannedFlag),
+    AccessFlag(Spanned<RnsFlag>),
 
-    Identifier(SpannedString),
-    Integer(SpannedInteger),
-    StringLiteral(SpannedString),
+    Identifier(Spanned<String>),
+    Integer(Spanned<i32>),
+    StringLiteral(Spanned<String>),
     Newline(Span),
     Eof(Span),
 }
@@ -146,9 +146,9 @@ impl RnsToken {
 
     pub fn from_identifier(name: String, span: Span) -> Self {
         if let Ok(access_flag) = RnsFlag::try_from(name.as_str()) {
-            RnsToken::AccessFlag(SpannedFlag::new(access_flag, span))
+            RnsToken::AccessFlag(Spanned::new(access_flag, span))
         } else {
-            RnsToken::Identifier(SpannedString::new(name, span))
+            RnsToken::Identifier(Spanned::new(name, span))
         }
     }
 
