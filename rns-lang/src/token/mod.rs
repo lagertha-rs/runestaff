@@ -1,28 +1,9 @@
+pub(crate) use crate::token::span::{Span, SpannedFlag, SpannedInteger, SpannedString};
 use itertools::Itertools;
 use std::fmt::Display;
-use std::ops::Range;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum TypeHint {
-    Utf8(String),
-    Integer(i32),
-    String(String),
-    Class(String),
-    Methodref(String, String, String),
-    // TODO: below aren't implemented yet
-    Fieldref,
-    InterfaceMethodref,
-    Float,
-    Long,
-    Double,
-    NameAndType,
-    MethodHandle,
-    MethodType,
-    Dynamic,
-    InvokeDynamic,
-    Module,
-    Package,
-}
+pub(crate) mod span;
+pub(crate) mod type_hint;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 pub enum RnsFlag {
@@ -228,57 +209,5 @@ impl Display for RnsToken {
             }
             RnsToken::Integer(spanned) => write!(f, "{}", spanned.value),
         }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
-pub struct Span {
-    pub start: usize,
-    pub end: usize, // is exclusive
-}
-
-impl Span {
-    pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
-    }
-
-    pub(crate) fn as_range(&self) -> Range<usize> {
-        self.start..self.end
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SpannedString {
-    pub value: String,
-    pub span: Span,
-}
-
-impl SpannedString {
-    pub fn new(value: String, span: Span) -> Self {
-        Self { value, span }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SpannedInteger {
-    pub value: i32,
-    pub span: Span,
-}
-
-impl SpannedInteger {
-    pub fn new(value: i32, span: Span) -> Self {
-        Self { value, span }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct SpannedFlag {
-    pub value: RnsFlag,
-    pub span: Span,
-}
-
-impl SpannedFlag {
-    pub fn new(value: RnsFlag, span: Span) -> Self {
-        Self { value, span }
     }
 }
