@@ -4,7 +4,7 @@ use crate::parser::error::{
     IdentifierContext, NonNegativeIntegerContext, ParserError, TrailingTokensContext,
 };
 use crate::parser::warning::ParserWarning;
-use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span};
+use crate::token::{RnsFlag, RnsToken, Span};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
@@ -27,12 +27,12 @@ pub struct RnsParser {
 }
 
 impl RnsParser {
-    fn peek_token_kind(&mut self) -> Option<&RnsTokenKind> {
-        self.tokens.peek().map(|token| &token.kind)
+    fn peek_token(&mut self) -> Option<&RnsToken> {
+        self.tokens.peek()
     }
 
     fn skip_newlines(&mut self) -> Result<(), ParserError> {
-        while let Some(RnsTokenKind::Newline) = self.peek_token_kind() {
+        while let Some(RnsToken::Newline(_)) = self.peek_token() {
             self.next_token()?;
         }
         Ok(())
@@ -41,7 +41,7 @@ impl RnsParser {
     fn next_token(&mut self) -> Result<RnsToken, ParserError> {
         match self.tokens.next() {
             Some(token) => {
-                self.last_span = token.span;
+                self.last_span = token.span();
                 Ok(token)
             }
             None => Err(ParserError::Internal(
@@ -53,7 +53,7 @@ impl RnsParser {
     fn next_until_newline(&mut self) -> Result<Vec<RnsToken>, ParserError> {
         let mut tokens = Vec::new();
         while let Some(token) = self.tokens.peek() {
-            if matches!(token.kind, RnsTokenKind::Newline | RnsTokenKind::Eof) {
+            if matches!(token, RnsToken::Newline(_) | RnsToken::Eof(_)) {
                 break;
             }
             tokens.push(self.next_token()?);
@@ -64,14 +64,15 @@ impl RnsParser {
     fn parse_class_access_flags(&mut self) -> Result<BTreeMap<RnsFlag, Span>, ParserError> {
         let mut flags = BTreeMap::new();
         loop {
-            match self.peek_token_kind() {
+            match self.peek_token() {
                 Some(token) if token.is_access_flag() => {
                     let next_token = self.next_token()?;
-                    if let RnsTokenKind::AccessFlag(flag) = next_token.kind {
+                    let next_token_span = next_token.span();
+                    if let RnsToken::AccessFlag(spanned) = next_token {
                         flags
-                            .entry(flag)
+                            .entry(spanned.value)
                             .or_insert_with(Vec::new)
-                            .push(next_token.span);
+                            .push(next_token_span);
                     }
                 }
                 _ => break,
@@ -101,15 +102,18 @@ impl RnsParser {
         prev_token_end: usize,
     ) -> Result<(String, Span), ParserError> {
         let token = self.next_token()?;
-        match token.kind {
-            RnsTokenKind::Identifier(name) => Ok((name, token.span)),
-            RnsTokenKind::Eof | RnsTokenKind::Newline => Err(ParserError::IdentifierExpected(
+        let token_span = token.span();
+        match token {
+            RnsToken::Identifier(spanned) => Ok((spanned.value, token_span)),
+            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(ParserError::IdentifierExpected(
                 Span::new(prev_token_end, prev_token_end),
-                token.kind,
+                token,
                 context,
             )),
             _ => Err(ParserError::IdentifierExpected(
-                token.span, token.kind, context,
+                token.span(),
+                token,
+                context,
             )),
         }
     }
@@ -132,17 +136,19 @@ impl RnsParser {
         prev_token_end: usize,
     ) -> Result<u32, ParserError> {
         let token = self.next_token()?;
-        match token.kind {
-            RnsTokenKind::Integer(value) if value >= 0 => Ok(value as u32),
-            RnsTokenKind::Eof | RnsTokenKind::Newline => {
+        match token {
+            RnsToken::Integer(spanned) if spanned.value >= 0 => Ok(spanned.value as u32),
+            RnsToken::Eof(_) | RnsToken::Newline(_) => {
                 Err(ParserError::NonNegativeIntegerExpected(
                     Span::new(prev_token_end, prev_token_end),
-                    token.kind,
+                    token,
                     context,
                 ))
             }
             _ => Err(ParserError::NonNegativeIntegerExpected(
-                token.span, token.kind, context,
+                token.span(),
+                token,
+                context,
             )),
         }
     }
@@ -385,10 +391,10 @@ impl RnsParser {
     fn parse_super_directive(&mut self) -> Result<(), ParserError> {
         let dot_super = self.next_token()?; // consume .super token
         let (super_name, super_name_span) =
-            self.expect_next_identifier(IdentifierContext::SuperName, dot_super.span.end)?;
+            self.expect_next_identifier(IdentifierContext::SuperName, dot_super.span().end)?;
         self.super_directives.push(SuperDirective {
             name: Some(super_name),
-            directive_span: dot_super.span,
+            directive_span: dot_super.span(),
             identifier_span: Some(super_name_span),
         });
         self.expect_no_trailing_tokens(TrailingTokensContext::Super)
@@ -397,16 +403,16 @@ impl RnsParser {
     fn parse_class(&mut self) -> Result<(), ParserError> {
         self.skip_newlines()?;
         let class_token = self.next_token()?;
-        if matches!(class_token.kind, RnsTokenKind::Eof) {
-            return Err(ParserError::EmptyFile(class_token.span));
+        if matches!(class_token, RnsToken::Eof(_)) {
+            return Err(ParserError::EmptyFile(class_token.span()));
         }
-        if !matches!(class_token.kind, RnsTokenKind::DotClass) {
+        if !matches!(class_token, RnsToken::DotClass(_)) {
             return Err(ParserError::ClassDirectiveExpected(
-                class_token.span,
-                class_token.kind,
+                class_token.span(),
+                class_token,
             ));
         }
-        let directive_span = class_token.span;
+        let directive_span = class_token.span();
         let access_flags = self.parse_class_access_flags()?;
 
         let (class_name, name_span) =
@@ -423,28 +429,28 @@ impl RnsParser {
         self.expect_no_trailing_tokens(TrailingTokensContext::Class)?;
 
         while let Some(token) = self.tokens.peek() {
-            match token.kind {
-                RnsTokenKind::Newline => {
+            match token {
+                RnsToken::Newline(_) => {
                     self.next_token()?;
                 }
-                RnsTokenKind::DotMethod => {
+                RnsToken::DotMethod(_) => {
                     unimplemented!("method parsing is not implemented yet")
                 }
-                RnsTokenKind::DotSuper => self.parse_super_directive()?,
-                RnsTokenKind::DotEnd => {
+                RnsToken::DotSuper(_) => self.parse_super_directive()?,
+                RnsToken::DotEnd(_) => {
                     self.next_token()?; // consume .end
                     if let Some(token) = self.tokens.peek() {
-                        if let RnsTokenKind::Identifier(ref s) = token.kind {
-                            if s == "class" {
+                        if let RnsToken::Identifier(s) = token {
+                            if s.value == "class" {
                                 self.next_token()?; // consume "class"
                                 break; // .end class - finish parsing
                             }
                         }
                     }
                 }
-                RnsTokenKind::Eof => break,
+                RnsToken::Eof(_) => break,
                 _ => {
-                    eprintln!("DEBUG: Unexpected token in class body: {:?}", token.kind);
+                    eprintln!("DEBUG: Unexpected token in class body: {:?}", token);
                     todo!("Unexpected token in class body")
                 }
             }
@@ -454,7 +460,7 @@ impl RnsParser {
     }
 
     pub fn parse(tokens: Vec<RnsToken>) -> Result<RnsModule, Vec<Diagnostic>> {
-        if !matches!(tokens.last().unwrap().kind, RnsTokenKind::Eof) {
+        if !matches!(tokens.last().unwrap(), RnsToken::Eof(_)) {
             return Err(ParserError::Internal(
                 "Token stream must end with an EOF token".to_string(),
             )

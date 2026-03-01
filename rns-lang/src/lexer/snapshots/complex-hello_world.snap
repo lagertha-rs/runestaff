@@ -29,7 +29,7 @@ expression: formatted
 KIND                                  | SPAN      | TEXT
 ----                                  | ----      | ----
 DotClass                              | 0..6      | .class
-AccessFlag(Public)                    | 7..13     | public
+AccessFlag(public)                    | 7..13     | public
 Identifier("HelloWorld")              | 14..24    | HelloWorld
 Newline                               | 24..25    | \n
 DotSuper                              | 25..31    | .super
@@ -37,7 +37,7 @@ Identifier("java/lang/Object")        | 32..48    | java/lang/Object
 Newline                               | 48..49    | \n
 Newline                               | 49..50    | \n
 DotMethod                             | 50..57    | .method
-AccessFlag(Public)                    | 58..64    | public
+AccessFlag(public)                    | 58..64    | public
 Identifier("<init>")                  | 65..71    | <init>
 Identifier("()V")                     | 72..75    | ()V
 Newline                               | 75..76    | \n
@@ -65,8 +65,8 @@ Newline                               | 200..201  | \n
 Newline                               | 201..202  | \n
 Newline                               | 202..203  | \n
 DotMethod                             | 203..210  | .method
-AccessFlag(Public)                    | 211..217  | public
-AccessFlag(Static)                    | 218..224  | static
+AccessFlag(public)                    | 211..217  | public
+AccessFlag(static)                    | 218..224  | static
 Identifier("main")                    | 225..229  | main
 Identifier("([Ljava/lang/String;)V")  | 230..252  | ([Ljava/lang/String;)V
 Newline                               | 252..253  | \n

@@ -18,15 +18,23 @@ mod snapshot_tests {
         writeln!(tw, "----\t| ----\t| ----").unwrap();
 
         for token in tokens {
-            let kind_str = match &token.kind {
-                RnsTokenKind::Identifier(s) => format!("Identifier({:?})", s),
-                RnsTokenKind::StringLiteral(s) => format!("StringLiteral({:?})", s),
-                RnsTokenKind::Integer(n) => format!("Integer({})", n),
-                other => format!("{:?}", other),
+            let kind_str = match &token {
+                RnsToken::Identifier(s) => format!("Identifier({:?})", s.value),
+                RnsToken::StringLiteral(s) => format!("StringLiteral({:?})", s.value),
+                RnsToken::Integer(n) => format!("Integer({})", n.value),
+                RnsToken::DotCode(_) => "DotCode".to_string(),
+                RnsToken::DotClass(_) => "DotClass".to_string(),
+                RnsToken::DotEnd(_) => "DotEnd".to_string(),
+                RnsToken::DotMethod(_) => "DotMethod".to_string(),
+                RnsToken::DotSuper(_) => "DotSuper".to_string(),
+                RnsToken::Newline(_) => "Newline".to_string(),
+                RnsToken::Eof(_) => "Eof".to_string(),
+                RnsToken::AccessFlag(spanned) => format!("AccessFlag({})", spanned.value),
+                RnsToken::DotAnnotation(_) => "DotAnnotation".to_string(),
             };
 
-            let span_str = format!("{}..{}", token.span.start, token.span.end);
-            let text = &source[token.span.start..token.span.end];
+            let span_str = format!("{}..{}", token.span().start, token.span().end);
+            let text = &source[token.span().start..token.span().end];
             // Escape newlines and other control characters for display
             let text_display = text
                 .replace('\n', "\\n")

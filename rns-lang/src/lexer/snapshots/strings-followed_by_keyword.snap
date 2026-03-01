@@ -8,5 +8,5 @@ expression: formatted
 KIND                     | SPAN    | TEXT
 ----                     | ----    | ----
 StringLiteral("string")  | 0..8    | "string"
-AccessFlag(Public)       | 9..15   | public
+AccessFlag(public)       | 9..15   | public
 Eof                      | 15..15  |

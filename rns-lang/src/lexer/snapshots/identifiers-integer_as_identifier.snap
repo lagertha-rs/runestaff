@@ -1,0 +1,12 @@
+---
+source: rns/src/lexer/tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.super #"42"
+----- TOKENS -----
+KIND              | SPAN    | TEXT
+----              | ----    | ----
+DotSuper          | 0..6    | .super
+Identifier("42")  | 7..12   | #"42"
+Eof               | 12..12  |

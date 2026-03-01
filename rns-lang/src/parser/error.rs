@@ -1,17 +1,17 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::instruction::INSTRUCTION_SPECS;
-use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span};
+use crate::token::{RnsToken, Span};
 use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum ParserError {
-    ClassDirectiveExpected(Span, RnsTokenKind),
+    ClassDirectiveExpected(Span, RnsToken),
     TrailingTokens(Vec<RnsToken>, TrailingTokensContext),
-    IdentifierExpected(Span, RnsTokenKind, IdentifierContext),
+    IdentifierExpected(Span, RnsToken, IdentifierContext),
 
-    UnexpectedCodeDirectiveArg(Span, RnsTokenKind),
+    UnexpectedCodeDirectiveArg(Span, RnsToken),
 
-    NonNegativeIntegerExpected(Span, RnsTokenKind, NonNegativeIntegerContext),
+    NonNegativeIntegerExpected(Span, RnsToken, NonNegativeIntegerContext),
 
     UnknownInstruction(Span, String),
 
@@ -55,7 +55,7 @@ impl ParserError {
                 token.as_string_token_type()
             ),
             ParserError::TrailingTokens(tokens, context) => {
-                let first_token_kind = &tokens[0].kind;
+                let first_token_kind = &tokens[0];
                 match context {
                     TrailingTokensContext::Class => format!(
                         "unexpected {} after class name",
@@ -77,7 +77,7 @@ impl ParserError {
             }
             ParserError::IdentifierExpected(_, token, context) => match context {
                 IdentifierContext::ClassName => match token {
-                    RnsTokenKind::Newline | RnsTokenKind::Eof => {
+                    RnsToken::Newline(_) | RnsToken::Eof(_) => {
                         "missing class name in '.class' directive".to_string()
                     }
                     _ if token.is_directive() => {
@@ -120,7 +120,7 @@ impl ParserError {
             ParserError::TrailingTokens(tokens, context) => {
                 let msg = match context {
                     TrailingTokensContext::Class => {
-                        let first_token_kind = &tokens[0].kind;
+                        let first_token_kind = &tokens[0];
                         match first_token_kind {
                             _ if first_token_kind.is_class_nested_directive() => {
                                 "must start on a new line".to_string()
@@ -131,11 +131,11 @@ impl ParserError {
                             _ if first_token_kind.is_access_flag() => {
                                 "access flags must appear before the class name".to_string()
                             }
-                            RnsTokenKind::Integer(_) => {
+                            RnsToken::Integer(_) => {
                                 "integer literals are not allowed here".to_string()
                             }
-                            RnsTokenKind::Identifier(_) => "not allowed here".to_string(),
-                            RnsTokenKind::StringLiteral(_) => {
+                            RnsToken::Identifier(_) => "not allowed here".to_string(),
+                            RnsToken::StringLiteral(_) => {
                                 "string literals are not allowed here".to_string()
                             }
                             _ => "not allowed here".to_string(),
@@ -161,7 +161,7 @@ impl ParserError {
                     _ if token.is_method_nested_directive() => {
                         format!("'{}' is only allowed inside a method definition", token)
                     }
-                    RnsTokenKind::DotEnd => {
+                    RnsToken::DotEnd(_) => {
                         format!("'{}' has no matching start directive", token)
                     }
                     _ => format!(
@@ -174,7 +174,7 @@ impl ParserError {
             ParserError::IdentifierExpected(_, token, context) => {
                 let msg = match context {
                     IdentifierContext::ClassName => match token {
-                        RnsTokenKind::Newline | RnsTokenKind::Eof => {
+                        RnsToken::Newline(_) | RnsToken::Eof(_) => {
                             "expected a class name here".to_string()
                         }
                         _ if token.is_directive() => {
@@ -250,26 +250,26 @@ impl ParserError {
                     "Access flags must appear within a '.class' or '.method' directive.".to_string(),
                 ),
                 // TODO: is class nested instead?
-                RnsTokenKind::DotMethod | RnsTokenKind::DotSuper => {
+                RnsToken::DotMethod(_) | RnsToken::DotSuper(_) => {
                     Some("Define a class first using '.class [access_flags] <name>'.".to_string())
                 }
-                RnsTokenKind::DotCode => Some(
+                RnsToken::DotCode(_) => Some(
                     "The '.code' directive is only valid inside a method definition. Define a method first using '.method [access_flags] <name> <descriptor>'."
                         .to_string(),
                 ),
-                RnsTokenKind::DotEnd => Some(
+                RnsToken::DotEnd(_) => Some(
                     "The '.end' directive must match a previous '.method', '.code', or '.class' directive.".to_string(),
                 ),
-                RnsTokenKind::Identifier(name) => Some(
-                    format!("Found identifier '{}' before any class was defined. Did you forget to start the class? Try: '.class {}'", name, name),
+                RnsToken::Identifier(spanned) => Some(
+                    format!("Found identifier '{}' before any class was defined. Did you forget to start the class? Try: '.class {}'", spanned.value, spanned.value),
                 ),
-                RnsTokenKind::Integer(_) => Some(
+                RnsToken::Integer(_) => Some(
                     "Integer literals are typically used as instruction arguments inside '.code' blocks.".to_string(),
                 ),
-                RnsTokenKind::StringLiteral(_) => Some(
+                RnsToken::StringLiteral(_) => Some(
                     "String literals are constant values that must appear inside '.code' blocks as instruction arguments.".to_string(),
                 ),
-                RnsTokenKind::DotAnnotation => Some(
+                RnsToken::DotAnnotation(_) => Some(
                     "The '.annotation' directive is only valid inside a class or method definition."
                         .to_string(),
                 ),
@@ -278,7 +278,7 @@ impl ParserError {
                 }
             },
             ParserError::TrailingTokens(tokens, context) => {
-                let first_token_kind = &tokens[0].kind;
+                let first_token_kind = &tokens[0];
                 match context {
                     TrailingTokensContext::Class => match first_token_kind {
                         _ if first_token_kind.is_class_nested_directive() => {
@@ -288,22 +288,22 @@ impl ParserError {
                             // TODO: bad note, almost the same as the label
                             Some("Access flags must appear before the class name: '.class [access_flags] <name>'".to_string())
                         }
-                        RnsTokenKind::DotClass => {
+                        RnsToken::DotClass(_) => {
                             Some("The '.class' directive cannot be nested. Consider removing the second '.class' (todo when nested metada data is supported explain it).".to_string())
                         }
-                        RnsTokenKind::DotCode => {
+                        RnsToken::DotCode(_) => {
                             Some("The '.code' directive must be inside a method definition, not directly after the class name.".to_string())
                         }
-                        RnsTokenKind::DotEnd => {
+                        RnsToken::DotEnd(_) => {
                             Some("The '.end' directive must match a previous '.method', '.code', or '.class' directive. It cannot appear directly after the class name.".to_string())
                         }
-                        RnsTokenKind::Integer(_) => {
+                        RnsToken::Integer(_) => {
                             Some("Integer literals belong inside '.code' blocks as instruction arguments.".to_string())
                         }
-                        RnsTokenKind::StringLiteral(_) => {
+                        RnsToken::StringLiteral(_) => {
                             Some("String literals belong inside '.code' blocks as instruction arguments.".to_string())
                         }
-                        RnsTokenKind::Identifier(_) => {
+                        RnsToken::Identifier(_) => {
                             Some("The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.".to_string())
                         }
                         _ => Some("The class definition should end after the class name.".to_string()),
@@ -321,22 +321,19 @@ impl ParserError {
             }
             ParserError::IdentifierExpected(_, kind, context) => match (kind, context) {
                 (
-                    RnsTokenKind::StringLiteral(_),
+                    RnsToken::StringLiteral(_),
                     IdentifierContext::ClassName | IdentifierContext::SuperName,
                 ) => Some("Consider removing the quotes around the class name".to_string()),
-                (RnsTokenKind::StringLiteral(_), IdentifierContext::MethodName) => {
+                (RnsToken::StringLiteral(_), IdentifierContext::MethodName) => {
                     Some("Consider removing the quotes around the method name".to_string())
                 }
-                (RnsTokenKind::DotClass | RnsTokenKind::DotMethod | RnsTokenKind::DotSuper | RnsTokenKind::DotCode | RnsTokenKind::DotEnd, IdentifierContext::ClassName) => {
+                (RnsToken::DotClass(_) | RnsToken::DotMethod(_) | RnsToken::DotSuper(_) | RnsToken::DotCode(_) | RnsToken::DotEnd(_), IdentifierContext::ClassName) => {
                     Some("Directives are reserved keywords. If you meant to start a new directive, do so on a new line.".to_string())
                 }
-                (RnsTokenKind::Integer(_), IdentifierContext::ClassName) => {
+                (RnsToken::Integer(_), IdentifierContext::ClassName) => {
                     Some("Integer literals cannot be used as class names. Every class must have a valid identifier as its name.".to_string())
                 }
-                (RnsTokenKind::AccessFlag(RnsFlag::Public) | RnsTokenKind::AccessFlag(RnsFlag::Static), IdentifierContext::ClassName) => {
-                    Some(format!("Access flags like '{}' must appear before the class name. Example: '.class {} MyClass'", kind, kind))
-                }
-                (RnsTokenKind::Newline | RnsTokenKind::Eof, IdentifierContext::ClassName) => {
+                (RnsToken::Newline(_) | RnsToken::Eof(_), IdentifierContext::ClassName) => {
                     Some("Every class definition needs a name. Example: '.class public MyClass'".to_string())
                 }
                 (_, IdentifierContext::ClassName) => Some(
@@ -396,7 +393,7 @@ impl ParserError {
             | ParserError::NonNegativeIntegerExpected(span, _, _)
             | ParserError::UnknownInstruction(span, _) => span.as_range(),
             ParserError::TrailingTokens(tokens, _) => {
-                tokens[0].span.start..tokens.last().map(|v| v.span.end).unwrap_or(0)
+                tokens[0].span().start..tokens.last().map(|v| v.span().end).unwrap_or(0)
             }
             ParserError::Internal(_) => 0..0,
         }

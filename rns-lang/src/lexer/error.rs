@@ -1,5 +1,5 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::{RnsTokenKind, Span};
+use crate::token::{RnsToken, Span};
 use std::ops::Range;
 
 //TODO: same error code for all lexer, try to categorize later if needed
@@ -32,7 +32,7 @@ impl LexerError {
         let note = match self {
             LexerError::UnexpectedEof(_) => format!(
                 "Expected one of the directives: {}",
-                RnsTokenKind::list_directives()
+                RnsToken::list_directives()
             ),
             LexerError::UnexpectedChar(_, _, context) => return context.clone(),
 
@@ -43,7 +43,7 @@ impl LexerError {
                 format!("The character '\\{}' is not a valid escape sequence.", c)
             }
             LexerError::UnknownDirective(_, _) => {
-                format!("Valid directives are {}", RnsTokenKind::list_directives())
+                format!("Valid directives are {}", RnsToken::list_directives())
             }
             LexerError::InvalidNumber(_, value) => {
                 if value.starts_with("0x") || value.starts_with("0X") {
@@ -65,7 +65,7 @@ impl LexerError {
             LexerError::UnknownDirective(_, name) => {
                 let mut closest = None;
                 let mut min_dist = usize::MAX;
-                for directive in RnsTokenKind::DIRECTIVES {
+                for directive in RnsToken::DIRECTIVES {
                     let d_str = directive.to_string();
                     let dist = crate::utils::levenshtein_distance(name, &d_str);
                     if dist < min_dist && dist <= 2 {

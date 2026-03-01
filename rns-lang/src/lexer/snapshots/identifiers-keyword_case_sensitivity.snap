@@ -11,6 +11,6 @@ Identifier("Public")  | 0..6    | Public
 Identifier("PUBLIC")  | 7..13   | PUBLIC
 Identifier("Static")  | 14..20  | Static
 Identifier("STATIC")  | 21..27  | STATIC
-AccessFlag(Public)    | 28..34  | public
-AccessFlag(Static)    | 35..41  | static
+AccessFlag(public)    | 28..34  | public
+AccessFlag(static)    | 35..41  | static
 Eof                   | 41..41  |

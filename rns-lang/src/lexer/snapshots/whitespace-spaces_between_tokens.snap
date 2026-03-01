@@ -8,7 +8,7 @@ expression: formatted
 KIND                | SPAN    | TEXT
 ----                | ----    | ----
 DotClass            | 0..6    | .class
-AccessFlag(Public)  | 10..16  | public
+AccessFlag(public)  | 10..16  | public
 Identifier("Test")  | 20..24  | Test
 Newline             | 24..25  | \n
 Eof                 | 25..25  |

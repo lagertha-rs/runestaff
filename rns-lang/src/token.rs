@@ -2,7 +2,29 @@ use itertools::Itertools;
 use std::fmt::Display;
 use std::ops::Range;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum TypeHint {
+    Utf8(String),
+    Integer(i32),
+    String(String),
+    Class(String),
+    Methodref(String, String, String),
+    // TODO: below aren't implemented yet
+    Fieldref,
+    InterfaceMethodref,
+    Float,
+    Long,
+    Double,
+    NameAndType,
+    MethodHandle,
+    MethodType,
+    Dynamic,
+    InvokeDynamic,
+    Module,
+    Package,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 pub enum RnsFlag {
     Public,
     Static,
@@ -18,22 +40,22 @@ pub enum RnsFlag {
 
 //TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum RnsTokenKind {
+pub enum RnsToken {
     // directives
-    DotClass,
-    DotSuper,
-    DotMethod,
-    DotCode,
-    DotEnd,
-    DotAnnotation,
+    DotClass(Span),
+    DotSuper(Span),
+    DotMethod(Span),
+    DotCode(Span),
+    DotEnd(Span),
+    DotAnnotation(Span),
 
-    AccessFlag(RnsFlag),
+    AccessFlag(SpannedFlag),
 
-    Identifier(String),
-    Integer(i32),
-    StringLiteral(String),
-    Newline,
-    Eof,
+    Identifier(SpannedString),
+    Integer(SpannedInteger),
+    StringLiteral(SpannedString),
+    Newline(Span),
+    Eof(Span),
 }
 
 impl TryFrom<&str> for RnsFlag {
@@ -90,61 +112,79 @@ impl RnsFlag {
     }
 }
 
-impl RnsTokenKind {
+impl RnsToken {
+    const DEFAULT_SPAN: Span = Span { start: 0, end: 0 };
     pub const DIRECTIVES: &[Self] = &[
-        RnsTokenKind::DotClass,
-        RnsTokenKind::DotSuper,
-        RnsTokenKind::DotMethod,
-        RnsTokenKind::DotEnd,
-        RnsTokenKind::DotCode,
-        RnsTokenKind::DotAnnotation,
+        RnsToken::DotClass(RnsToken::DEFAULT_SPAN),
+        RnsToken::DotSuper(RnsToken::DEFAULT_SPAN),
+        RnsToken::DotMethod(RnsToken::DEFAULT_SPAN),
+        RnsToken::DotEnd(RnsToken::DEFAULT_SPAN),
+        RnsToken::DotCode(RnsToken::DEFAULT_SPAN),
+        RnsToken::DotAnnotation(RnsToken::DEFAULT_SPAN),
     ];
 
     // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
     pub fn is_directive(&self) -> bool {
         matches!(
             self,
-            RnsTokenKind::DotClass
-                | RnsTokenKind::DotSuper
-                | RnsTokenKind::DotMethod
-                | RnsTokenKind::DotEnd
-                | RnsTokenKind::DotCode
-                | RnsTokenKind::DotAnnotation
+            RnsToken::DotClass(_)
+                | RnsToken::DotSuper(_)
+                | RnsToken::DotMethod(_)
+                | RnsToken::DotEnd(_)
+                | RnsToken::DotCode(_)
+                | RnsToken::DotAnnotation(_)
         )
     }
 
     pub fn is_class_nested_directive(&self) -> bool {
         matches!(
             self,
-            RnsTokenKind::DotMethod | RnsTokenKind::DotAnnotation | RnsTokenKind::DotSuper
+            RnsToken::DotMethod(_) | RnsToken::DotAnnotation(_) | RnsToken::DotSuper(_)
         )
     }
 
     pub fn is_method_nested_directive(&self) -> bool {
-        matches!(self, RnsTokenKind::DotCode | RnsTokenKind::DotAnnotation)
+        matches!(self, RnsToken::DotCode(_) | RnsToken::DotAnnotation(_))
     }
 
     pub fn is_access_flag(&self) -> bool {
-        matches!(self, RnsTokenKind::AccessFlag(_))
+        matches!(self, RnsToken::AccessFlag(_))
     }
 
-    pub fn from_directive(name: &str) -> Option<Self> {
+    pub fn from_directive(name: &str, span: Span) -> Option<Self> {
         match name {
-            "class" => Some(RnsTokenKind::DotClass),
-            "super" => Some(RnsTokenKind::DotSuper),
-            "method" => Some(RnsTokenKind::DotMethod),
-            "end" => Some(RnsTokenKind::DotEnd),
-            "code" => Some(RnsTokenKind::DotCode),
-            "annotation" => Some(RnsTokenKind::DotAnnotation),
+            "class" => Some(RnsToken::DotClass(span)),
+            "super" => Some(RnsToken::DotSuper(span)),
+            "method" => Some(RnsToken::DotMethod(span)),
+            "end" => Some(RnsToken::DotEnd(span)),
+            "code" => Some(RnsToken::DotCode(span)),
+            "annotation" => Some(RnsToken::DotAnnotation(span)),
             _ => None,
         }
     }
 
-    pub fn from_identifier(name: String) -> Self {
+    pub fn from_identifier(name: String, span: Span) -> Self {
         if let Ok(access_flag) = RnsFlag::try_from(name.as_str()) {
-            RnsTokenKind::AccessFlag(access_flag)
+            RnsToken::AccessFlag(SpannedFlag::new(access_flag, span))
         } else {
-            RnsTokenKind::Identifier(name)
+            RnsToken::Identifier(SpannedString::new(name, span))
+        }
+    }
+
+    pub fn span(&self) -> Span {
+        match self {
+            RnsToken::DotClass(span)
+            | RnsToken::DotSuper(span)
+            | RnsToken::DotMethod(span)
+            | RnsToken::DotEnd(span)
+            | RnsToken::DotCode(span)
+            | RnsToken::DotAnnotation(span)
+            | RnsToken::Newline(span)
+            | RnsToken::Eof(span) => *span,
+            RnsToken::AccessFlag(spanned) => spanned.span,
+            RnsToken::Identifier(spanned) => spanned.span,
+            RnsToken::StringLiteral(spanned) => spanned.span,
+            RnsToken::Integer(spanned) => spanned.span,
         }
     }
 
@@ -154,39 +194,39 @@ impl RnsTokenKind {
 
     pub fn as_string_token_type(&self) -> String {
         match self {
-            RnsTokenKind::DotClass
-            | RnsTokenKind::DotSuper
-            | RnsTokenKind::DotMethod
-            | RnsTokenKind::DotEnd
-            | RnsTokenKind::DotAnnotation
-            | RnsTokenKind::DotCode => "directive".to_string(),
-            RnsTokenKind::AccessFlag(_) => "keyword".to_string(), // TODO: keywords or access flags?
-            RnsTokenKind::Identifier(_) => "identifier".to_string(),
-            RnsTokenKind::StringLiteral(_) => "string literal".to_string(),
-            RnsTokenKind::Integer(_) => "integer".to_string(),
-            RnsTokenKind::Newline => "newline".to_string(),
-            RnsTokenKind::Eof => "eof".to_string(),
+            RnsToken::DotClass(_)
+            | RnsToken::DotSuper(_)
+            | RnsToken::DotMethod(_)
+            | RnsToken::DotEnd(_)
+            | RnsToken::DotAnnotation(_)
+            | RnsToken::DotCode(_) => "directive".to_string(),
+            RnsToken::AccessFlag(_) => "keyword".to_string(), // TODO: keywords or access flags?
+            RnsToken::Identifier(_) => "identifier".to_string(),
+            RnsToken::StringLiteral(_) => "string literal".to_string(),
+            RnsToken::Integer(_) => "integer".to_string(),
+            RnsToken::Newline(_) => "newline".to_string(),
+            RnsToken::Eof(_) => "eof".to_string(),
         }
     }
 }
 
-impl Display for RnsTokenKind {
+impl Display for RnsToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RnsTokenKind::DotClass => write!(f, ".class"),
-            RnsTokenKind::DotSuper => write!(f, ".super"),
-            RnsTokenKind::DotMethod => write!(f, ".method"),
-            RnsTokenKind::DotEnd => write!(f, ".end"),
-            RnsTokenKind::DotCode => write!(f, ".code"),
-            RnsTokenKind::DotAnnotation => write!(f, ".annotation"),
-            RnsTokenKind::Newline => write!(f, "newline"),
-            RnsTokenKind::Eof => write!(f, "eof"),
-            RnsTokenKind::AccessFlag(flag) => write!(f, "{}", flag),
-            RnsTokenKind::Identifier(name) => write!(f, "{}", name.escape_default()),
-            RnsTokenKind::StringLiteral(value) => {
-                write!(f, "{}", value.escape_default())
+            RnsToken::DotClass(_) => write!(f, ".class"),
+            RnsToken::DotSuper(_) => write!(f, ".super"),
+            RnsToken::DotMethod(_) => write!(f, ".method"),
+            RnsToken::DotEnd(_) => write!(f, ".end"),
+            RnsToken::DotCode(_) => write!(f, ".code"),
+            RnsToken::DotAnnotation(_) => write!(f, ".annotation"),
+            RnsToken::Newline(_) => write!(f, "newline"),
+            RnsToken::Eof(_) => write!(f, "eof"),
+            RnsToken::AccessFlag(spanned) => write!(f, "{}", spanned.value),
+            RnsToken::Identifier(spanned) => write!(f, "{}", spanned.value.escape_default()),
+            RnsToken::StringLiteral(spanned) => {
+                write!(f, "{}", spanned.value.escape_default())
             }
-            RnsTokenKind::Integer(value) => write!(f, "{}", value),
+            RnsToken::Integer(spanned) => write!(f, "{}", spanned.value),
         }
     }
 }
@@ -208,7 +248,37 @@ impl Span {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub struct RnsToken {
-    pub(crate) kind: RnsTokenKind,
-    pub(crate) span: Span,
+pub struct SpannedString {
+    pub value: String,
+    pub span: Span,
+}
+
+impl SpannedString {
+    pub fn new(value: String, span: Span) -> Self {
+        Self { value, span }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct SpannedInteger {
+    pub value: i32,
+    pub span: Span,
+}
+
+impl SpannedInteger {
+    pub fn new(value: i32, span: Span) -> Self {
+        Self { value, span }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct SpannedFlag {
+    pub value: RnsFlag,
+    pub span: Span,
+}
+
+impl SpannedFlag {
+    pub fn new(value: RnsFlag, span: Span) -> Self {
+        Self { value, span }
+    }
 }

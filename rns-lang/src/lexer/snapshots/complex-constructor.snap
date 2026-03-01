@@ -16,7 +16,7 @@ expression: formatted
 KIND                            | SPAN      | TEXT
 ----                            | ----      | ----
 DotClass                        | 0..6      | .class
-AccessFlag(Public)              | 7..13     | public
+AccessFlag(public)              | 7..13     | public
 Identifier("Example")           | 14..21    | Example
 Newline                         | 21..22    | \n
 DotSuper                        | 22..28    | .super
@@ -24,7 +24,7 @@ Identifier("java/lang/Object")  | 29..45    | java/lang/Object
 Newline                         | 45..46    | \n
 Newline                         | 46..47    | \n
 DotMethod                       | 47..54    | .method
-AccessFlag(Public)              | 55..61    | public
+AccessFlag(public)              | 55..61    | public
 Identifier("<init>")            | 62..68    | <init>
 Identifier("()V")               | 69..72    | ()V
 Newline                         | 72..73    | \n

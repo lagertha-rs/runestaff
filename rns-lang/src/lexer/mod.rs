@@ -1,6 +1,6 @@
 use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
-use crate::token::{RnsToken, RnsTokenKind, Span};
+use crate::token::{RnsToken, Span, SpannedInteger, SpannedString};
 use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
 
@@ -22,6 +22,10 @@ impl<'a> RnsLexer<'a> {
         }
     }
 
+    fn peek_char(&mut self) -> Option<char> {
+        self.data.peek().map(|&(_, c)| c)
+    }
+
     fn next_char(&mut self) -> Option<char> {
         if let Some((idx, c)) = self.data.next() {
             self.byte_pos = idx + c.len_utf8();
@@ -32,15 +36,15 @@ impl<'a> RnsLexer<'a> {
     }
 
     pub fn skip_whitespaces_and_comments(&mut self) {
-        while let Some((_, c)) = self.data.peek() {
+        while let Some(c) = self.peek_char() {
             match c {
                 ' ' | '\t' | '\r' => {
                     self.next_char();
                 }
                 ';' => {
                     self.next_char();
-                    while let Some((_, c2)) = self.data.peek() {
-                        if *c2 != '\n' {
+                    while let Some(c2) = self.peek_char() {
+                        if c2 != '\n' {
                             self.next_char();
                         } else {
                             break;
@@ -56,17 +60,20 @@ impl<'a> RnsLexer<'a> {
         c.is_whitespace()
     }
 
-    fn read_to_delimiter(&mut self) -> String {
-        let mut result = String::new();
-        while let Some(&(_, c)) = self.data.peek() {
+    fn extend_to_delimiter(&mut self, mut start: String) -> String {
+        while let Some(c) = self.peek_char() {
             if !Self::is_delimiter(c) {
-                result.push(c);
+                start.push(c);
                 self.next_char();
             } else {
                 break;
             }
         }
-        result
+        start
+    }
+
+    fn read_to_delimiter(&mut self) -> String {
+        self.extend_to_delimiter(String::new())
     }
 
     fn read_string(&mut self, start: usize) -> Result<String, LexerError> {
@@ -74,7 +81,7 @@ impl<'a> RnsLexer<'a> {
 
         self.next_char(); // consume opening quote
 
-        while let Some(&(_, c)) = self.data.peek() {
+        while let Some(c) = self.peek_char() {
             match c {
                 '"' => {
                     self.next_char(); // consume closing quote
@@ -85,7 +92,7 @@ impl<'a> RnsLexer<'a> {
                 }
                 '\\' => {
                     self.next_char(); // consume '\'
-                    if let Some(&(_, next_char)) = self.data.peek() {
+                    if let Some(next_char) = self.peek_char() {
                         match next_char {
                             'n' => result.push('\n'),
                             't' => result.push('\t'),
@@ -123,36 +130,44 @@ impl<'a> RnsLexer<'a> {
         Err(LexerError::UnterminatedString(Span::new(start, start + 1)))
     }
 
-    fn read_number(&mut self, start: usize) -> Result<RnsTokenKind, LexerError> {
+    fn read_number(&mut self, start: usize) -> Result<RnsToken, LexerError> {
         // TODO: implement all number formats and types, right now only integers are supported
         let number_str = self.read_to_delimiter();
+        let number_end_pos = self.byte_pos;
         i32::from_str(&number_str)
-            .map(RnsTokenKind::Integer)
-            .map_err(|_| LexerError::InvalidNumber(Span::new(start, self.byte_pos), number_str))
+            .map(|n| RnsToken::Integer(SpannedInteger::new(n, Span::new(start, number_end_pos))))
+            .map_err(|_| LexerError::InvalidNumber(Span::new(start, number_end_pos), number_str))
     }
 
-    fn handle_directive(&mut self, start: usize) -> Result<RnsTokenKind, LexerError> {
+    fn handle_directive(&mut self, start: usize) -> Result<RnsToken, LexerError> {
         self.next_char(); // consume '.'
 
         let directive = self.read_to_delimiter();
         if directive.is_empty() {
-            if let Some(&(_, ch)) = self.data.peek() {
+            if let Some(ch) = self.peek_char() {
                 return Err(LexerError::UnexpectedChar(
                     Span::new(self.byte_pos, self.byte_pos + ch.len_utf8()),
                     ch,
                     Some(format!(
                         "Expected one of the directives: {}",
-                        RnsTokenKind::list_directives()
+                        RnsToken::list_directives()
                     )),
                 ));
             }
             return Err(LexerError::UnexpectedEof(Span::new(start, start + 1)));
         }
 
-        RnsTokenKind::from_directive(&directive).ok_or(LexerError::UnknownDirective(
-            Span::new(start, self.byte_pos),
-            format!(".{directive}"),
-        ))
+        let span = Span::new(start, self.byte_pos);
+        RnsToken::from_directive(&directive, span)
+            .ok_or(LexerError::UnknownDirective(span, format!(".{directive}")))
+    }
+
+    fn handle_type_hint(&mut self, start: usize) -> Result<RnsToken, LexerError> {
+        self.next_char(); // consume '@'
+
+        let type_hint = self.read_to_delimiter();
+
+        todo!()
     }
 
     fn next_token(&mut self) -> Result<RnsToken, LexerError> {
@@ -160,35 +175,44 @@ impl<'a> RnsLexer<'a> {
 
         let start = self.byte_pos;
 
-        let Some(&(_, ch)) = self.data.peek() else {
-            return Ok(RnsToken {
-                kind: RnsTokenKind::Eof,
-                span: Span::new(start, start),
-            });
+        let Some(ch) = self.peek_char() else {
+            return Ok(RnsToken::Eof(Span::new(start, start)));
         };
 
-        let kind = match ch {
+        let token = match ch {
             '.' => self.handle_directive(start)?,
             '0'..='9' | '-' => self.read_number(start)?,
-            '"' => RnsTokenKind::StringLiteral(self.read_string(start)?),
+            '"' => RnsToken::StringLiteral(SpannedString::new(
+                self.read_string(start)?,
+                Span::new(start, self.byte_pos),
+            )),
+            '#' => {
+                self.next_char();
+                if let Some(next) = self.peek_char()
+                    && next == '"'
+                {
+                    RnsToken::Identifier(SpannedString::new(
+                        self.read_string(start)?,
+                        Span::new(start, self.byte_pos),
+                    ))
+                } else {
+                    RnsToken::Identifier(SpannedString::new(
+                        self.extend_to_delimiter(String::new()),
+                        Span::new(start, self.byte_pos),
+                    ))
+                }
+            }
+            '@' => self.handle_type_hint(start)?,
             '\n' => {
                 self.next_char();
-                return Ok(RnsToken {
-                    kind: RnsTokenKind::Newline,
-                    span: Span::new(start, self.byte_pos),
-                });
+                RnsToken::Newline(Span::new(start, self.byte_pos))
             }
             _ => {
                 let str = self.read_to_delimiter();
-                RnsTokenKind::from_identifier(str)
+                RnsToken::from_identifier(str, Span::new(start, self.byte_pos))
             }
         };
-
-        let end = self.byte_pos;
-        Ok(RnsToken {
-            kind,
-            span: Span::new(start, end),
-        })
+        Ok(token)
     }
 
     pub fn tokenize(&mut self) -> Result<Vec<RnsToken>, Diagnostic> {
@@ -196,7 +220,7 @@ impl<'a> RnsLexer<'a> {
 
         loop {
             let token = self.next_token()?;
-            if let RnsTokenKind::Eof = token.kind {
+            if let RnsToken::Eof(_) = token {
                 tokens.push(token);
                 break;
             }
