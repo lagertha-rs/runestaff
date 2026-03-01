@@ -1,9 +1,16 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
 use std::ops::Range;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 const LEXER_ERROR_CODE: &str = "E001";
+const IDENTIFIER_HELP_URL: &str =
+    "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
+const INTEGER_HELP_URL: &str =
+    "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
+const STRING_HELP_URL: &str =
+    "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum LexerError {
@@ -13,6 +20,7 @@ pub(super) enum LexerError {
     UnterminatedString(Span),
     InvalidEscape(Span, char),
     InvalidNumber(Span, String),
+    UnexpectedHintOperand(RnsToken, TypeHintKind),
 }
 
 impl LexerError {
@@ -24,12 +32,14 @@ impl LexerError {
             LexerError::UnterminatedString(_) => "unterminated string literal",
             LexerError::InvalidEscape(_, _) => "invalid escape sequence",
             LexerError::InvalidNumber(_, _) => "invalid integer",
+            LexerError::UnexpectedHintOperand(_, _) => "unexpected operand for type hint",
         }
         .to_string()
     }
 
     fn get_note(&self) -> Option<String> {
         let note = match self {
+            LexerError::UnexpectedHintOperand(token, expected_hint) => format!("note msg"),
             LexerError::UnexpectedEof(_) => format!(
                 "Expected one of the directives: {}",
                 RnsToken::list_directives()
@@ -59,6 +69,11 @@ impl LexerError {
 
     fn get_labels(&self) -> Vec<DiagnosticLabel> {
         let msg = match self {
+            LexerError::UnexpectedHintOperand(token, expected_hint) => format!(
+                "found '{}' here, but expected a type hint operand for '{}'",
+                token.as_string_token_type(),
+                expected_hint
+            ),
             LexerError::UnexpectedChar(_, c, _) => {
                 format!("found '{}' here", c.escape_default())
             }
@@ -109,6 +124,7 @@ impl LexerError {
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
             | LexerError::InvalidNumber(span, _) => span.as_range(),
+            LexerError::UnexpectedHintOperand(token, _) => token.span().as_range(),
         }
     }
 }

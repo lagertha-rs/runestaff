@@ -1,4 +1,76 @@
 use crate::token::span::Spanned;
+use std::fmt::Display;
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum TypeHintKind {
+    Utf8,
+    Integer,
+    String,
+    Class,
+    Methodref,
+    Fieldref,
+    InterfaceMethodref,
+    Float,
+    Long,
+    Double,
+    NameAndType,
+    MethodHandle,
+    MethodType,
+    Dynamic,
+    InvokeDynamic,
+    Module,
+    Package,
+}
+
+impl TypeHintKind {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "utf8" => Some(Self::Utf8),
+            "int" => Some(Self::Integer),
+            "string" => Some(Self::String),
+            "class" => Some(Self::Class),
+            "methodref" => Some(Self::Methodref),
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn argument_count(&self) -> usize {
+        match self {
+            Self::Utf8 | Self::Integer | Self::String | Self::Class => 1,
+            Self::Methodref => 3,
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn expected_argument_types(&self) -> Vec<&'static str> {
+        match self {
+            Self::Utf8 => vec!["identifier"],
+            Self::Integer => vec!["integer"],
+            Self::String => vec!["string literal"],
+            Self::Class => vec!["identifier"],
+            Self::Methodref => vec![
+                "identifier (class)",
+                "identifier (method name)",
+                "identifier (method descriptor)",
+            ],
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl Display for TypeHintKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Self::Utf8 => "utf8",
+            Self::Integer => "integer",
+            Self::String => "string",
+            Self::Class => "class",
+            Self::Methodref => "methodref",
+            _ => unimplemented!(),
+        };
+        write!(f, "{s}")
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum TypeHint {

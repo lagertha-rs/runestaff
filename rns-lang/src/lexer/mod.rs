@@ -1,5 +1,6 @@
 use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
+use crate::token::type_hint::{TypeHint, TypeHintKind};
 use crate::token::{RnsToken, Span, Spanned};
 use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
@@ -165,8 +166,68 @@ impl<'a> RnsLexer<'a> {
     fn handle_type_hint(&mut self, start: usize) -> Result<RnsToken, LexerError> {
         self.next_char(); // consume '@'
 
-        let type_hint = self.read_to_delimiter();
+        let type_hint_str = self.read_to_delimiter();
+        let type_hint_kind = TypeHintKind::from_str(&type_hint_str).unwrap();
 
+        self.skip_whitespaces_and_comments();
+
+        let next_char = self.next_char();
+        match next_char {
+            Some('(') => {}
+            Some(ch) => {
+                return Err(LexerError::UnexpectedChar(
+                    Span::new(self.byte_pos - ch.len_utf8(), self.byte_pos),
+                    ch,
+                    Some("Expected '(' after type hint".to_string()),
+                ));
+            }
+            None => {
+                return Err(LexerError::UnexpectedEof(Span::new(
+                    self.byte_pos,
+                    self.byte_pos,
+                )));
+            }
+        }
+
+        let type_hint = match type_hint_kind {
+            TypeHintKind::Utf8 => {
+                let next_token = self.next_token()?;
+                match next_token {
+                    RnsToken::Identifier(spanned) => TypeHint::Utf8(spanned),
+                    _ => {
+                        return Err(LexerError::UnexpectedHintOperand(
+                            next_token,
+                            TypeHintKind::Utf8,
+                        ));
+                    }
+                }
+            }
+            TypeHintKind::Integer => todo!(),
+            TypeHintKind::String => todo!(),
+            TypeHintKind::Class => todo!(),
+            TypeHintKind::Methodref => todo!(),
+            _ => unimplemented!(),
+        };
+
+        self.skip_whitespaces_and_comments();
+
+        let next_char = self.next_char();
+        match next_char {
+            Some(')') => {}
+            Some(ch) => {
+                return Err(LexerError::UnexpectedChar(
+                    Span::new(self.byte_pos - ch.len_utf8(), self.byte_pos),
+                    ch,
+                    Some("Expected ')' after type hint".to_string()),
+                ));
+            }
+            None => {
+                return Err(LexerError::UnexpectedEof(Span::new(
+                    self.byte_pos,
+                    self.byte_pos,
+                )));
+            }
+        }
         todo!()
     }
 
