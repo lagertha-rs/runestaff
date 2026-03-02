@@ -163,72 +163,68 @@ impl<'a> RnsLexer<'a> {
             .ok_or(LexerError::UnknownDirective(span, format!(".{directive}")))
     }
 
+    fn expect_identifier(
+        &mut self,
+        on_err: impl FnOnce(RnsToken) -> LexerError,
+    ) -> Result<Spanned<String>, LexerError> {
+        let next_token = self.next_token()?;
+        match next_token {
+            RnsToken::Identifier(spanned) => Ok(spanned),
+            other => Err(on_err(other)),
+        }
+    }
+
     fn handle_type_hint(&mut self, start: usize) -> Result<RnsToken, LexerError> {
         self.next_char(); // consume '@'
 
         let type_hint_str = self.read_to_delimiter();
+        let type_hint_pos = Span::new(start, self.byte_pos);
         let type_hint_kind = TypeHintKind::from_str(&type_hint_str).unwrap();
 
         self.skip_whitespaces_and_comments();
 
-        let next_char = self.next_char();
-        match next_char {
-            Some('(') => {}
-            Some(ch) => {
-                return Err(LexerError::UnexpectedChar(
-                    Span::new(self.byte_pos - ch.len_utf8(), self.byte_pos),
-                    ch,
-                    Some("Expected '(' after type hint".to_string()),
-                ));
-            }
-            None => {
-                return Err(LexerError::UnexpectedEof(Span::new(
-                    self.byte_pos,
-                    self.byte_pos,
-                )));
-            }
-        }
-
-        let type_hint = match type_hint_kind {
-            TypeHintKind::Utf8 => {
-                let next_token = self.next_token()?;
-                match next_token {
-                    RnsToken::Identifier(spanned) => TypeHint::Utf8(spanned),
-                    _ => {
-                        return Err(LexerError::UnexpectedHintOperand(
-                            next_token,
-                            TypeHintKind::Utf8,
-                        ));
+        let type_hint =
+            match type_hint_kind {
+                TypeHintKind::Utf8 => TypeHint::Utf8(self.expect_identifier(|t| {
+                    LexerError::UnexpectedHintOperand {
+                        hint_position: type_hint_pos,
+                        operand_token: t,
+                        hint_kind: type_hint_kind,
+                        operand_order_nbr: 0,
                     }
+                })?),
+                TypeHintKind::Integer => todo!(),
+                TypeHintKind::String => todo!(),
+                TypeHintKind::Class => todo!(),
+                TypeHintKind::Methodref => {
+                    let class = self.expect_identifier(|t| LexerError::UnexpectedHintOperand {
+                        hint_position: type_hint_pos,
+                        operand_token: t,
+                        hint_kind: type_hint_kind.clone(),
+                        operand_order_nbr: 0,
+                    })?;
+                    self.skip_whitespaces_and_comments();
+                    let method_name =
+                        self.expect_identifier(|t| LexerError::UnexpectedHintOperand {
+                            hint_position: type_hint_pos,
+                            operand_token: t,
+                            hint_kind: type_hint_kind.clone(),
+                            operand_order_nbr: 1,
+                        })?;
+                    self.skip_whitespaces_and_comments();
+                    let method_desc =
+                        self.expect_identifier(|t| LexerError::UnexpectedHintOperand {
+                            hint_position: type_hint_pos,
+                            operand_token: t,
+                            hint_kind: type_hint_kind,
+                            operand_order_nbr: 2,
+                        })?;
+                    TypeHint::Methodref(class, method_name, method_desc)
                 }
-            }
-            TypeHintKind::Integer => todo!(),
-            TypeHintKind::String => todo!(),
-            TypeHintKind::Class => todo!(),
-            TypeHintKind::Methodref => todo!(),
-            _ => unimplemented!(),
-        };
+                _ => unimplemented!(),
+            };
 
-        self.skip_whitespaces_and_comments();
-
-        let next_char = self.next_char();
-        match next_char {
-            Some(')') => {}
-            Some(ch) => {
-                return Err(LexerError::UnexpectedChar(
-                    Span::new(self.byte_pos - ch.len_utf8(), self.byte_pos),
-                    ch,
-                    Some("Expected ')' after type hint".to_string()),
-                ));
-            }
-            None => {
-                return Err(LexerError::UnexpectedEof(Span::new(
-                    self.byte_pos,
-                    self.byte_pos,
-                )));
-            }
-        }
-        todo!()
+        Ok(RnsToken::Typed(Spanned::new(type_hint, type_hint_pos)))
     }
 
     fn next_token(&mut self) -> Result<RnsToken, LexerError> {

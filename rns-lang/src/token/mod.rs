@@ -1,4 +1,5 @@
 pub(crate) use crate::token::span::{Span, Spanned};
+use crate::token::type_hint::TypeHint;
 use itertools::Itertools;
 use std::fmt::Display;
 
@@ -31,6 +32,7 @@ pub enum RnsToken {
     DotAnnotation(Span),
 
     AccessFlag(Spanned<RnsFlag>),
+    Typed(Spanned<TypeHint>),
 
     Identifier(Spanned<String>),
     Integer(Spanned<i32>),
@@ -166,6 +168,7 @@ impl RnsToken {
             RnsToken::Identifier(spanned) => spanned.span,
             RnsToken::StringLiteral(spanned) => spanned.span,
             RnsToken::Integer(spanned) => spanned.span,
+            RnsToken::Typed(spanned) => spanned.span,
         }
     }
 
@@ -187,6 +190,7 @@ impl RnsToken {
             RnsToken::Integer(_) => "integer".to_string(),
             RnsToken::Newline(_) => "newline".to_string(),
             RnsToken::Eof(_) => "eof".to_string(),
+            RnsToken::Typed(_) => "typed hint".to_string(),
         }
     }
 }
@@ -208,6 +212,7 @@ impl Display for RnsToken {
                 write!(f, "{}", spanned.value.escape_default())
             }
             RnsToken::Integer(spanned) => write!(f, "{}", spanned.value),
+            RnsToken::Typed(spanned) => write!(f, "{}", spanned.value),
         }
     }
 }

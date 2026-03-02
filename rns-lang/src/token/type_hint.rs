@@ -42,14 +42,14 @@ impl TypeHintKind {
         }
     }
 
-    pub fn expected_argument_types(&self) -> Vec<&'static str> {
+    pub fn expected_argument_types(&self) -> &'static [&'static str] {
         match self {
-            Self::Utf8 => vec!["identifier"],
-            Self::Integer => vec!["integer"],
-            Self::String => vec!["string literal"],
-            Self::Class => vec!["identifier"],
-            Self::Methodref => vec![
-                "identifier (class)",
+            Self::Utf8 => &["identifier"],
+            Self::Integer => &["integer"],
+            Self::String => &["string literal"],
+            Self::Class => &["identifier"],
+            Self::Methodref => &[
+                "identifier (class name)",
                 "identifier (method name)",
                 "identifier (method descriptor)",
             ],
@@ -91,4 +91,21 @@ pub enum TypeHint {
     InvokeDynamic,
     Module,
     Package,
+}
+
+impl Display for TypeHint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Utf8(s) => write!(f, "@utf8 {}", s.value),
+            Self::Integer(n) => write!(f, "@int {}", n.value),
+            Self::String(s) => write!(f, "@string \"{}\"", s.value),
+            Self::Class(s) => write!(f, "@class {}", s.value),
+            Self::Methodref(class, name, descriptor) => write!(
+                f,
+                "@methodref {} {} {}",
+                class.value, name.value, descriptor.value
+            ),
+            _ => unimplemented!(),
+        }
+    }
 }

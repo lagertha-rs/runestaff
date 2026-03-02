@@ -20,26 +20,32 @@ pub(super) enum LexerError {
     UnterminatedString(Span),
     InvalidEscape(Span, char),
     InvalidNumber(Span, String),
-    UnexpectedHintOperand(RnsToken, TypeHintKind),
+    UnexpectedHintOperand {
+        hint_position: Span,
+        operand_token: RnsToken,
+        hint_kind: TypeHintKind,
+        operand_order_nbr: usize, // TODO: confusing name, it is like position (first, second, etc)
+    },
 }
 
 impl LexerError {
     fn get_message(&self) -> String {
         match self {
-            LexerError::UnexpectedChar(_, _, _) => "unexpected character",
-            LexerError::UnknownDirective(_, _) => "unknown directive",
-            LexerError::UnexpectedEof(_) => "unexpected end of file",
-            LexerError::UnterminatedString(_) => "unterminated string literal",
-            LexerError::InvalidEscape(_, _) => "invalid escape sequence",
-            LexerError::InvalidNumber(_, _) => "invalid integer",
-            LexerError::UnexpectedHintOperand(_, _) => "unexpected operand for type hint",
+            LexerError::UnexpectedChar(_, _, _) => "unexpected character".to_string(),
+            LexerError::UnknownDirective(_, _) => "unknown directive".to_string(),
+            LexerError::UnexpectedEof(_) => "unexpected end of file".to_string(),
+            LexerError::UnterminatedString(_) => "unterminated string literal".to_string(),
+            LexerError::InvalidEscape(_, _) => "invalid escape sequence".to_string(),
+            LexerError::InvalidNumber(_, _) => "invalid integer".to_string(),
+            LexerError::UnexpectedHintOperand { hint_kind, .. } => {
+                format!("unexpected operand for '{}' type hint", hint_kind)
+            }
         }
-        .to_string()
     }
 
     fn get_note(&self) -> Option<String> {
         let note = match self {
-            LexerError::UnexpectedHintOperand(token, expected_hint) => format!("note msg"),
+            LexerError::UnexpectedHintOperand { .. } => format!("note msg"),
             LexerError::UnexpectedEof(_) => format!(
                 "Expected one of the directives: {}",
                 RnsToken::list_directives()
@@ -67,15 +73,46 @@ impl LexerError {
         Some(note)
     }
 
+    // TODO: do better
+    fn conjugate_ordinal(n: usize) -> &'static str {
+        match n {
+            0 => "first",
+            1 => "second",
+            2 => "third",
+            _ => "nth",
+        }
+    }
+
     fn get_labels(&self) -> Vec<DiagnosticLabel> {
-        let msg = match self {
-            LexerError::UnexpectedHintOperand(token, expected_hint) => format!(
-                "found '{}' here, but expected a type hint operand for '{}'",
-                token.as_string_token_type(),
-                expected_hint
-            ),
+        match self {
+            LexerError::UnexpectedHintOperand {
+                hint_position,
+                operand_token,
+                hint_kind,
+                operand_order_nbr: operand_nbr,
+            } => {
+                let ordinal = Self::conjugate_ordinal(*operand_nbr);
+                vec![
+                    DiagnosticLabel::context(
+                        hint_position.as_range(),
+                        format!(
+                            "the '{}' {} operand is expected to be {}",
+                            hint_kind,
+                            ordinal,
+                            hint_kind.expected_argument_types()[*operand_nbr]
+                        ),
+                    ),
+                    DiagnosticLabel::at(
+                        operand_token.span().as_range(),
+                        format!("but {} found instead", operand_token.as_string_token_type()),
+                    ),
+                ]
+            }
             LexerError::UnexpectedChar(_, c, _) => {
-                format!("found '{}' here", c.escape_default())
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location(),
+                    format!("found '{}' here", c.escape_default()),
+                )]
             }
             LexerError::UnknownDirective(_, name) => {
                 let mut closest = None;
@@ -89,19 +126,29 @@ impl LexerError {
                     }
                 }
 
-                if let Some(suggestion) = closest {
+                let msg = if let Some(suggestion) = closest {
                     format!("did you mean '{}' ?", suggestion)
                 } else {
                     "unknown directive".to_string()
-                }
+                };
+                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
             }
-            LexerError::UnexpectedEof(_) => "unexpected end of file".to_string(),
+            LexerError::UnexpectedEof(_) => vec![DiagnosticLabel::at(
+                self.get_primary_location(),
+                "unexpected end of file".to_string(),
+            )],
             LexerError::UnterminatedString(_) => {
-                "this string literal is not terminated".to_string()
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location(),
+                    "this string literal is not terminated".to_string(),
+                )]
             }
-            LexerError::InvalidEscape(_, c) => format!("invalid escape sequence '\\{}'", c),
+            LexerError::InvalidEscape(_, c) => vec![DiagnosticLabel::at(
+                self.get_primary_location(),
+                format!("invalid escape sequence '\\{}'", c),
+            )],
             LexerError::InvalidNumber(_, value) => {
-                if value.parse::<i128>().is_ok() {
+                let msg = if value.parse::<i128>().is_ok() {
                     format!(
                         "integer '{}' is too large for a 32-bit signed integer",
                         value
@@ -110,10 +157,10 @@ impl LexerError {
                     format!("'{}' contains invalid characters", value)
                 } else {
                     format!("'{}' is not a valid integer", value)
-                }
+                };
+                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
             }
-        };
-        vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+        }
     }
 
     fn get_primary_location(&self) -> Range<usize> {
@@ -124,7 +171,7 @@ impl LexerError {
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
             | LexerError::InvalidNumber(span, _) => span.as_range(),
-            LexerError::UnexpectedHintOperand(token, _) => token.span().as_range(),
+            LexerError::UnexpectedHintOperand { hint_position, .. } => hint_position.as_range(),
         }
     }
 }
