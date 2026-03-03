@@ -1,19 +1,11 @@
-use crate::diagnostic::DiagnosticTier;
-use crate::lexer::RnsLexer;
-use crate::parser::RnsParser;
 use clap::{Parser, Subcommand};
+use rns::diagnostic::DiagnosticTier;
+use rns::lexer::RnsLexer;
+use rns::parser::RnsParser;
 use std::path::PathBuf;
 
-mod assembler;
-mod diagnostic;
-mod instruction;
-mod lexer;
-mod parser;
-mod token;
-mod utils;
-
 #[derive(Parser)]
-#[command(name = "rns", about = "Java assembler and disassembler")]
+#[command(name = "rns-asm", about = "Java assembler and disassembler")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Command>,
@@ -55,7 +47,9 @@ fn main() {
             if let Some(file) = cli.file {
                 assemble(&file, None, false, false);
             } else {
-                eprintln!("Usage: rns <file.rns> or rns asm <file.rns> or rns dis <file.class>");
+                eprintln!(
+                    "Usage: rns-asm <file.rns> or rns-asm asm <file.rns> or rns-asm dis <file.class>"
+                );
                 std::process::exit(1);
             }
         }

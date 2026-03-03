@@ -47,7 +47,7 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
-    pub(crate) fn print(self, filename: &str, source_code: &str) {
+    pub fn print(self, filename: &str, source_code: &str) {
         let range = self.primary_location;
         let filename_owned = filename.to_string();
         let mut report = Report::build(self.tier.into(), (filename_owned.clone(), range.clone()))

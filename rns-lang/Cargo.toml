@@ -3,9 +3,12 @@ name = "rns"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "rns"
+path = "src/lib.rs"
+
 [dependencies]
 ariadne = { version = "0.6.0", features = ["auto-color"] }
-clap = { version = "4", features = ["derive"] }
 itertools = "0.14.0"
 jclass = { path = "../jclass", features = ["rns_assemble", "rns_disassemble"] }
 phf = { version = "0.11", features = ["macros"] }
@@ -13,8 +16,4 @@ phf = { version = "0.11", features = ["macros"] }
 [dev-dependencies]
 rstest = "0.26.1"
 insta = "1.46.2"
-assert_cmd = "2"
 tabwriter = "1"
-sha2 = "0.10"
-rand = "0.8"
-
