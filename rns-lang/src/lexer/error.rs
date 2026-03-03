@@ -1,7 +1,6 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
-use std::ops::Range;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 const LEXER_ERROR_CODE: &str = "E001";
@@ -110,7 +109,7 @@ impl LexerError {
             }
             LexerError::UnexpectedChar(_, c, _) => {
                 vec![DiagnosticLabel::at(
-                    self.get_primary_location(),
+                    self.get_primary_location().as_range(),
                     format!("found '{}' here", c.escape_default()),
                 )]
             }
@@ -131,20 +130,23 @@ impl LexerError {
                 } else {
                     "unknown directive".to_string()
                 };
-                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location().as_range(),
+                    msg,
+                )]
             }
             LexerError::UnexpectedEof(_) => vec![DiagnosticLabel::at(
-                self.get_primary_location(),
+                self.get_primary_location().as_range(),
                 "unexpected end of file".to_string(),
             )],
             LexerError::UnterminatedString(_) => {
                 vec![DiagnosticLabel::at(
-                    self.get_primary_location(),
+                    self.get_primary_location().as_range(),
                     "this string literal is not terminated".to_string(),
                 )]
             }
             LexerError::InvalidEscape(_, c) => vec![DiagnosticLabel::at(
-                self.get_primary_location(),
+                self.get_primary_location().as_range(),
                 format!("invalid escape sequence '\\{}'", c),
             )],
             LexerError::InvalidNumber(_, value) => {
@@ -158,20 +160,23 @@ impl LexerError {
                 } else {
                     format!("'{}' is not a valid integer", value)
                 };
-                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location().as_range(),
+                    msg,
+                )]
             }
         }
     }
 
-    fn get_primary_location(&self) -> Range<usize> {
+    fn get_primary_location(&self) -> Span {
         match self {
             LexerError::UnexpectedChar(span, _, _)
             | LexerError::UnknownDirective(span, _)
             | LexerError::UnexpectedEof(span)
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
-            | LexerError::InvalidNumber(span, _) => span.as_range(),
-            LexerError::UnexpectedHintOperand { hint_position, .. } => hint_position.as_range(),
+            | LexerError::InvalidNumber(span, _) => *span,
+            LexerError::UnexpectedHintOperand { hint_position, .. } => *hint_position,
         }
     }
 }

@@ -1,6 +1,5 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::{RnsFlag, Span};
-use std::ops::Range;
 
 #[derive(Debug)]
 pub(super) enum ParserWarning {
@@ -31,14 +30,14 @@ impl ParserWarning {
         }
     }
 
-    fn primary_location(&self) -> Range<usize> {
+    fn primary_location(&self) -> Span {
         match self {
             ParserWarning::MissingSuperClass {
                 class_directive_pos,
                 ..
-            } => class_directive_pos.as_range(),
+            } => *class_directive_pos,
             ParserWarning::ClassDuplicateFlag { spans, .. } => {
-                spans.get(1).copied().unwrap_or_default().as_range()
+                spans.get(1).copied().unwrap_or_default()
             }
         }
     }

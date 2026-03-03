@@ -99,14 +99,21 @@ impl RnsParser {
     fn expect_next_identifier(
         &mut self,
         context: IdentifierContext,
-        prev_token_end: usize,
+        prev_token_byte_end: usize,
+        prev_token_col_end: usize,
     ) -> Result<(String, Span), ParserError> {
         let token = self.next_token()?;
         let token_span = token.span();
         match token {
             RnsToken::Identifier(spanned) => Ok((spanned.value, token_span)),
             RnsToken::Eof(t) | RnsToken::Newline(t) => Err(ParserError::IdentifierExpected(
-                Span::new(prev_token_end, prev_token_end, t.line),
+                Span {
+                    byte_start: prev_token_byte_end,
+                    byte_end: prev_token_byte_end,
+                    line: t.line,
+                    col_start: prev_token_col_end,
+                    col_end: prev_token_col_end,
+                },
                 token,
                 context,
             )),
@@ -130,17 +137,25 @@ impl RnsParser {
     }
 
     // TODO: this is wrong.. also need to review integer token.. it is i32
+    // TODO: why I need here prev token info? I can just use current token info for error
     fn expect_next_non_negative_integer(
         &mut self,
         context: NonNegativeIntegerContext,
-        prev_token_end: usize,
+        prev_token_byte_end: usize,
+        prev_token_col_end: usize,
     ) -> Result<u32, ParserError> {
         let token = self.next_token()?;
         match token {
             RnsToken::Integer(spanned) if spanned.value >= 0 => Ok(spanned.value as u32),
             RnsToken::Eof(t) | RnsToken::Newline(t) => {
                 Err(ParserError::NonNegativeIntegerExpected(
-                    Span::new(prev_token_end, prev_token_end, t.line),
+                    Span {
+                        byte_start: prev_token_byte_end,
+                        byte_end: prev_token_byte_end,
+                        line: t.line,
+                        col_start: prev_token_col_end,
+                        col_end: prev_token_col_end,
+                    },
                     token,
                     context,
                 ))
@@ -390,8 +405,11 @@ impl RnsParser {
 
     fn parse_super_directive(&mut self) -> Result<(), ParserError> {
         let dot_super = self.next_token()?; // consume .super token
-        let (super_name, super_name_span) =
-            self.expect_next_identifier(IdentifierContext::SuperName, dot_super.span().end)?;
+        let (super_name, super_name_span) = self.expect_next_identifier(
+            IdentifierContext::SuperName,
+            dot_super.span().byte_end,
+            dot_super.span().col_end,
+        )?;
         self.super_directives.push(SuperDirective {
             name: Some(super_name),
             directive_span: dot_super.span(),
@@ -415,8 +433,11 @@ impl RnsParser {
         let directive_span = class_token.span();
         let access_flags = self.parse_class_access_flags()?;
 
-        let (class_name, name_span) =
-            self.expect_next_identifier(IdentifierContext::ClassName, self.last_span.end)?;
+        let (class_name, name_span) = self.expect_next_identifier(
+            IdentifierContext::ClassName,
+            self.last_span.byte_end,
+            self.last_span.col_end,
+        )?;
 
         self.class_directive = ClassDirective {
             directive_span,
@@ -469,7 +490,13 @@ impl RnsParser {
 
         let mut instance = Self {
             tokens: tokens.into_iter().peekable(),
-            last_span: Span::new(0, 0, 0),
+            last_span: Span {
+                byte_start: 0,
+                byte_end: 0,
+                line: 0,
+                col_start: 0,
+                col_end: 0,
+            },
             diagnostic: Vec::new(),
 
             class_directive: ClassDirective::default(),

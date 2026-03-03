@@ -1,19 +1,21 @@
 use std::ops::Range;
 
+// TODO: use u32 instead of usize?
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Default)]
 pub struct Span {
-    pub start: usize,
-    pub end: usize, // is exclusive
+    // Global position
+    pub byte_start: usize,
+    pub byte_end: usize, // is exclusive
+
+    // Relative positions
     pub line: usize,
+    pub col_start: usize,
+    pub col_end: usize, // is exclusive
 }
 
 impl Span {
-    pub fn new(start: usize, end: usize, line: usize) -> Self {
-        Self { start, end, line }
-    }
-
     pub(crate) fn as_range(&self) -> Range<usize> {
-        self.start..self.end
+        self.byte_start..self.byte_end
     }
 }
 

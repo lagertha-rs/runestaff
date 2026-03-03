@@ -1,3 +1,4 @@
+use rns::lexer::RnsLexer;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
@@ -8,26 +9,32 @@ struct RnsLanguageServer {
 }
 
 impl RnsLanguageServer {
-    async fn publish_fake_diagnostic(&self, uri: Uri) {
-        let diagnostic = Diagnostic {
-            range: Range {
-                start: Position {
-                    line: 0,
-                    character: 0,
-                },
-                end: Position {
-                    line: 0,
-                    character: 5,
-                },
-            },
-            severity: Some(DiagnosticSeverity::ERROR),
-            message: "rns-lsp is alive".to_string(),
-            ..Default::default()
-        };
+    async fn analyze_and_publish(&self, uri: Uri, text: String) {
+        let mut lexer = RnsLexer::new(&text);
+        let tokens = lexer.tokenize();
 
-        self.client
-            .publish_diagnostics(uri, vec![diagnostic], None)
-            .await;
+        if let Err(err) = tokens {
+            let span = err.primary_location;
+            let diagnostic = Diagnostic {
+                range: Range {
+                    start: Position {
+                        line: span.line as u32,
+                        character: span.col_start as u32,
+                    },
+                    end: Position {
+                        line: span.line as u32,
+                        character: span.col_end as u32,
+                    },
+                },
+                severity: Some(DiagnosticSeverity::ERROR),
+                message: err.message,
+                ..Default::default()
+            };
+
+            self.client
+                .publish_diagnostics(uri, vec![diagnostic], None)
+                .await;
+        }
     }
 }
 
@@ -59,11 +66,16 @@ impl LanguageServer for RnsLanguageServer {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        self.publish_fake_diagnostic(params.text_document.uri).await;
+        self.analyze_and_publish(params.text_document.uri, params.text_document.text)
+            .await;
     }
 
-    async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        self.publish_fake_diagnostic(params.text_document.uri).await;
+    async fn did_change(&self, mut params: DidChangeTextDocumentParams) {
+        self.analyze_and_publish(
+            params.text_document.uri,
+            params.content_changes.pop().unwrap().text,
+        )
+        .await;
     }
 }
 

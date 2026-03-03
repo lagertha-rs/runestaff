@@ -1,3 +1,4 @@
+use crate::token::Span;
 use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
 use std::fmt::Debug;
 use std::ops::Range;
@@ -39,7 +40,7 @@ impl DiagnosticLabel {
 pub struct Diagnostic {
     pub message: String,
     pub code: &'static str,
-    pub primary_location: Range<usize>,
+    pub primary_location: Span,
     pub note: Option<String>,
     pub help: Option<String>,
     pub tier: DiagnosticTier,
@@ -48,7 +49,7 @@ pub struct Diagnostic {
 
 impl Diagnostic {
     pub fn print(self, filename: &str, source_code: &str) {
-        let range = self.primary_location;
+        let range = self.primary_location.as_range();
         let filename_owned = filename.to_string();
         let mut report = Report::build(self.tier.into(), (filename_owned.clone(), range.clone()))
             .with_code(self.code)

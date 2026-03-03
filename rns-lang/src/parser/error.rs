@@ -1,7 +1,6 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::instruction::INSTRUCTION_SPECS;
 use crate::token::{RnsToken, Span};
-use std::ops::Range;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum ParserError {
@@ -143,7 +142,10 @@ impl ParserError {
                     }
                     _ => "not allowed here".to_string(),
                 };
-                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location().as_range(),
+                    msg,
+                )]
             }
             ParserError::ClassDirectiveExpected(_, token) => {
                 let msg = match token {
@@ -169,7 +171,10 @@ impl ParserError {
                         token.as_string_token_type()
                     ),
                 };
-                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location().as_range(),
+                    msg,
+                )]
             }
             ParserError::IdentifierExpected(_, token, context) => {
                 let msg = match context {
@@ -203,16 +208,19 @@ impl ParserError {
                         "expected a field descriptor".to_string()
                     }
                 };
-                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location().as_range(),
+                    msg,
+                )]
             }
             ParserError::UnexpectedCodeDirectiveArg(_, token) => {
                 vec![DiagnosticLabel::at(
-                    self.get_primary_location(),
+                    self.get_primary_location().as_range(),
                     format!("'{}' is not a valid argument for '.code'", token),
                 )]
             }
             ParserError::NonNegativeIntegerExpected(_, token, _) => vec![DiagnosticLabel::at(
-                self.get_primary_location(),
+                self.get_primary_location().as_range(),
                 format!("expected a non-negative integer, found '{}'", token),
             )],
             ParserError::UnknownInstruction(_, name) => {
@@ -231,12 +239,15 @@ impl ParserError {
                 } else {
                     "unknown instruction".to_string()
                 };
-                vec![DiagnosticLabel::at(self.get_primary_location(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.get_primary_location().as_range(),
+                    msg,
+                )]
             }
             ParserError::Internal(_) => vec![],
             ParserError::EmptyFile(_) => {
                 vec![DiagnosticLabel::at(
-                    self.get_primary_location(),
+                    self.get_primary_location().as_range(),
                     "the file is empty or contains only comments",
                 )]
             }
@@ -384,18 +395,22 @@ impl ParserError {
         }
     }
 
-    fn get_primary_location(&self) -> Range<usize> {
+    fn get_primary_location(&self) -> Span {
         match self {
             ParserError::ClassDirectiveExpected(span, _)
             | ParserError::EmptyFile(span)
             | ParserError::IdentifierExpected(span, _, _)
             | ParserError::UnexpectedCodeDirectiveArg(span, _)
             | ParserError::NonNegativeIntegerExpected(span, _, _)
-            | ParserError::UnknownInstruction(span, _) => span.as_range(),
-            ParserError::TrailingTokens(tokens, _) => {
-                tokens[0].span().start..tokens.last().map(|v| v.span().end).unwrap_or(0)
-            }
-            ParserError::Internal(_) => 0..0,
+            | ParserError::UnknownInstruction(span, _) => *span,
+            ParserError::TrailingTokens(tokens, _) => Span {
+                byte_start: tokens[0].span().byte_start,
+                byte_end: tokens.last().map(|v| v.span().byte_end).unwrap_or(0),
+                line: tokens[0].span().line,
+                col_start: tokens[0].span().col_start,
+                col_end: tokens.last().map(|v| v.span().col_end).unwrap_or(0),
+            },
+            ParserError::Internal(_) => Span::default(),
         }
     }
 }

@@ -32,8 +32,8 @@ mod snapshot_tests {
                 RnsToken::DotAnnotation(_) => "DotAnnotation".to_string(),
             };
 
-            let span_str = format!("{}..{}", token.span().start, token.span().end);
-            let text = &source[token.span().start..token.span().end];
+            let span_str = format!("{}..{}", token.span().byte_start, token.span().byte_end);
+            let text = &source[token.span().byte_start..token.span().byte_end];
             // Escape newlines and other control characters for display
             let text_display = text
                 .replace('\n', "\\n")

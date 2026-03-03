@@ -1,6 +1,5 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, ERROR_DOCS_BASE_URL};
 use crate::token::{RnsFlag, Span};
-use std::ops::Range;
 
 #[derive(Debug)]
 pub(super) enum JvmWarning {
@@ -31,14 +30,10 @@ impl JvmWarning {
         }
     }
 
-    fn primary_location(&self) -> Range<usize> {
+    fn primary_location(&self) -> Span {
         match self {
-            JvmWarning::InterfaceFlagWithMissingAbstract { interface_span } => {
-                interface_span.as_range()
-            }
-            JvmWarning::InterfaceMutuallyExclusive { interface_span, .. } => {
-                interface_span.as_range()
-            }
+            JvmWarning::InterfaceFlagWithMissingAbstract { interface_span } => *interface_span,
+            JvmWarning::InterfaceMutuallyExclusive { interface_span, .. } => *interface_span,
         }
     }
 
