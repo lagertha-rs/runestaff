@@ -105,8 +105,8 @@ impl RnsParser {
         let token_span = token.span();
         match token {
             RnsToken::Identifier(spanned) => Ok((spanned.value, token_span)),
-            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(ParserError::IdentifierExpected(
-                Span::new(prev_token_end, prev_token_end),
+            RnsToken::Eof(t) | RnsToken::Newline(t) => Err(ParserError::IdentifierExpected(
+                Span::new(prev_token_end, prev_token_end, t.line),
                 token,
                 context,
             )),
@@ -138,9 +138,9 @@ impl RnsParser {
         let token = self.next_token()?;
         match token {
             RnsToken::Integer(spanned) if spanned.value >= 0 => Ok(spanned.value as u32),
-            RnsToken::Eof(_) | RnsToken::Newline(_) => {
+            RnsToken::Eof(t) | RnsToken::Newline(t) => {
                 Err(ParserError::NonNegativeIntegerExpected(
-                    Span::new(prev_token_end, prev_token_end),
+                    Span::new(prev_token_end, prev_token_end, t.line),
                     token,
                     context,
                 ))
@@ -469,7 +469,7 @@ impl RnsParser {
 
         let mut instance = Self {
             tokens: tokens.into_iter().peekable(),
-            last_span: Span::new(0, 0),
+            last_span: Span::new(0, 0, 0),
             diagnostic: Vec::new(),
 
             class_directive: ClassDirective::default(),

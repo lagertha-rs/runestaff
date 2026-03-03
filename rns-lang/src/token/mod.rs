@@ -96,7 +96,12 @@ impl RnsFlag {
 }
 
 impl RnsToken {
-    const DEFAULT_SPAN: Span = Span { start: 0, end: 0 };
+    const DEFAULT_SPAN: Span = Span {
+        start: 0,
+        end: 0,
+        line: 0,
+    };
+
     pub const DIRECTIVES: &[Self] = &[
         RnsToken::DotClass(RnsToken::DEFAULT_SPAN),
         RnsToken::DotSuper(RnsToken::DEFAULT_SPAN),

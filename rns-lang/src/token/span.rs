@@ -4,11 +4,12 @@ use std::ops::Range;
 pub struct Span {
     pub start: usize,
     pub end: usize, // is exclusive
+    pub line: usize,
 }
 
 impl Span {
-    pub fn new(start: usize, end: usize) -> Self {
-        Self { start, end }
+    pub fn new(start: usize, end: usize, line: usize) -> Self {
+        Self { start, end, line }
     }
 
     pub(crate) fn as_range(&self) -> Range<usize> {

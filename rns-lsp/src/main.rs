@@ -11,8 +11,14 @@ impl RnsLanguageServer {
     async fn publish_fake_diagnostic(&self, uri: Uri) {
         let diagnostic = Diagnostic {
             range: Range {
-                start: Position { line: 0, character: 0 },
-                end: Position { line: 0, character: 5 },
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 5,
+                },
             },
             severity: Some(DiagnosticSeverity::ERROR),
             message: "rns-lsp is alive".to_string(),
@@ -34,6 +40,7 @@ impl LanguageServer for RnsLanguageServer {
             }),
             capabilities: ServerCapabilities {
                 text_document_sync: Some(TextDocumentSyncCapability::Kind(
+                    // TODO: consider using INCREMENTAL in future
                     TextDocumentSyncKind::FULL,
                 )),
                 ..Default::default()

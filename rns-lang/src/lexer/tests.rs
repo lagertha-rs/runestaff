@@ -2,7 +2,6 @@ use super::*;
 
 mod snapshot_tests {
     use super::*;
-    use insta::with_settings;
     use rstest::rstest;
     use std::io::Write;
     use std::path::{Path, PathBuf};
