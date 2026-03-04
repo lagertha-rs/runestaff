@@ -1,12 +1,12 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 "string" public
 ----- TOKENS -----
-KIND                     | SPAN    | TEXT
-----                     | ----    | ----
-StringLiteral("string")  | 0..8    | "string"
-AccessFlag(public)       | 9..15   | public
-Eof                      | 15..15  |
+KIND                     | SPAN    | LSP       | TEXT
+----                     | ----    | ---       | ----
+StringLiteral("string")  | 0..8    | 0:0..8    | "string"
+AccessFlag(public)       | 9..15   | 0:9..15   | public
+Eof                      | 15..15  | 0:15..15  |

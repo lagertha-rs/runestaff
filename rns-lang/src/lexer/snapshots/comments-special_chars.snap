@@ -1,11 +1,11 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 ; comment with special chars !@#$%^&*()
 ----- TOKENS -----
-KIND     | SPAN    | TEXT
-----     | ----    | ----
-Newline  | 39..40  | \n
-Eof      | 40..40  |
+KIND     | SPAN    | LSP       | TEXT
+----     | ----    | ---       | ----
+Newline  | 39..40  | 0:39..40  | \n
+Eof      | 40..40  | 1:0..0    |

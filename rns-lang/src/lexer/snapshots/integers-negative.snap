@@ -1,14 +1,14 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 -1 -42 -0
 ----- TOKENS -----
-KIND          | SPAN    | TEXT
-----          | ----    | ----
-Integer(-1)   | 0..2    | -1
-Integer(-42)  | 3..6    | -42
-Integer(0)    | 7..9    | -0
-Newline       | 9..10   | \n
-Eof           | 10..10  |
+KIND          | SPAN    | LSP      | TEXT
+----          | ----    | ---      | ----
+Integer(-1)   | 0..2    | 0:0..2   | -1
+Integer(-42)  | 3..6    | 0:3..6   | -42
+Integer(0)    | 7..9    | 0:7..9   | -0
+Newline       | 9..10   | 0:9..10  | \n
+Eof           | 10..10  | 1:0..0   |

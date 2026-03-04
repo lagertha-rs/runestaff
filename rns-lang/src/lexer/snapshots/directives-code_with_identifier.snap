@@ -1,12 +1,12 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 .code myLabel
 ----- TOKENS -----
-KIND                   | SPAN    | TEXT
-----                   | ----    | ----
-DotCode                | 0..5    | .code
-Identifier("myLabel")  | 6..13   | myLabel
-Eof                    | 13..13  |
+KIND                   | SPAN    | LSP       | TEXT
+----                   | ----    | ---       | ----
+DotCode                | 0..5    | 0:0..5    | .code
+Identifier("myLabel")  | 6..13   | 0:6..13   | myLabel
+Eof                    | 13..13  | 0:13..13  |

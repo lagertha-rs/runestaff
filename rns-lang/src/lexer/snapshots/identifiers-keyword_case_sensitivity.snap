@@ -1,16 +1,16 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 Public PUBLIC Static STATIC public static
 ----- TOKENS -----
-KIND                  | SPAN    | TEXT
-----                  | ----    | ----
-Identifier("Public")  | 0..6    | Public
-Identifier("PUBLIC")  | 7..13   | PUBLIC
-Identifier("Static")  | 14..20  | Static
-Identifier("STATIC")  | 21..27  | STATIC
-AccessFlag(public)    | 28..34  | public
-AccessFlag(static)    | 35..41  | static
-Eof                   | 41..41  |
+KIND                  | SPAN    | LSP       | TEXT
+----                  | ----    | ---       | ----
+Identifier("Public")  | 0..6    | 0:0..6    | Public
+Identifier("PUBLIC")  | 7..13   | 0:7..13   | PUBLIC
+Identifier("Static")  | 14..20  | 0:14..20  | Static
+Identifier("STATIC")  | 21..27  | 0:21..27  | STATIC
+AccessFlag(public)    | 28..34  | 0:28..34  | public
+AccessFlag(static)    | 35..41  | 0:35..41  | static
+Eof                   | 41..41  | 0:41..41  |

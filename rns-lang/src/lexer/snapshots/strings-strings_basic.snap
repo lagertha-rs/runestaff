@@ -1,5 +1,5 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
@@ -7,12 +7,12 @@ expression: formatted
 "with\tescape\nchars"
 ""
 ----- TOKENS -----
-KIND                                  | SPAN    | TEXT
-----                                  | ----    | ----
-StringLiteral("hello world")          | 0..13   | "hello world"
-Newline                               | 13..14  | \n
-StringLiteral("with\tescape\nchars")  | 14..35  | "with\tescape\nchars"
-Newline                               | 35..36  | \n
-StringLiteral("")                     | 36..38  | ""
-Newline                               | 38..39  | \n
-Eof                                   | 39..39  |
+KIND                                  | SPAN    | LSP       | TEXT
+----                                  | ----    | ---       | ----
+StringLiteral("hello world")          | 0..13   | 0:0..13   | "hello world"
+Newline                               | 13..14  | 0:13..14  | \n
+StringLiteral("with\tescape\nchars")  | 14..35  | 1:0..21   | "with\tescape\nchars"
+Newline                               | 35..36  | 1:21..22  | \n
+StringLiteral("")                     | 36..38  | 2:0..2    | ""
+Newline                               | 38..39  | 2:2..3    | \n
+Eof                                   | 39..39  | 3:0..0    |

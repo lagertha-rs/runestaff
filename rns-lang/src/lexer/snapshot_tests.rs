@@ -11,8 +11,8 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
     let mut tw = TabWriter::new(vec![]);
 
     // Header
-    writeln!(tw, "KIND\t| SPAN\t| TEXT").unwrap();
-    writeln!(tw, "----\t| ----\t| ----").unwrap();
+    writeln!(tw, "KIND\t| SPAN\t| LSP\t| TEXT").unwrap();
+    writeln!(tw, "----\t| ----\t| ---\t| ----").unwrap();
 
     for token in tokens {
         let kind_str = match &token {
@@ -31,15 +31,22 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
             RnsToken::Typed(spanned) => format!("Typed({:?})", spanned.value),
         };
 
-        let span_str = format!("{}..{}", token.span().byte_start, token.span().byte_end);
-        let text = &source[token.span().byte_start..token.span().byte_end];
+        let span = token.span();
+        let span_str = format!("{}..{}", span.byte_start, span.byte_end);
+        let lsp_str = format!("{}:{}..{}", span.line, span.col_start, span.col_end);
+        let text = &source[span.byte_start..span.byte_end];
         // Escape newlines and other control characters for display
         let text_display = text
             .replace('\n', "\\n")
             .replace('\r', "\\r")
             .replace('\t', "\\t");
 
-        writeln!(tw, "{}\t| {}\t| {}", kind_str, span_str, text_display).unwrap();
+        writeln!(
+            tw,
+            "{}\t| {}\t| {}\t| {}",
+            kind_str, span_str, lsp_str, text_display
+        )
+        .unwrap();
     }
 
     tw.flush().unwrap();
@@ -92,6 +99,49 @@ fn success_cases(
         "Lexer should succeed for success test cases, but got diagnostics: {:?}",
         diagnostics
     );
+
+    // Cross-validate: text extracted via byte offsets must match text extracted via line/col
+    let lines: Vec<&str> = source.split('\n').collect();
+    for token in &tokens {
+        let span = token.span();
+        let byte_text = &source[span.byte_start..span.byte_end];
+
+        // For tokens that don't span multiple lines, verify line/col points to the same text
+        if !byte_text.contains('\n') && span.byte_start != span.byte_end {
+            assert!(
+                span.line < lines.len(),
+                "Token {:?} has line {} but source only has {} lines",
+                token,
+                span.line,
+                lines.len()
+            );
+            let line_content = lines[span.line];
+            let line_chars: Vec<char> = line_content.chars().collect();
+            assert!(
+                span.col_start <= span.col_end && span.col_end <= line_chars.len(),
+                "Token {:?} has col_start={}, col_end={} but line {} has {} chars: {:?}",
+                token,
+                span.col_start,
+                span.col_end,
+                span.line,
+                line_chars.len(),
+                line_content
+            );
+            let col_text: String = line_chars[span.col_start..span.col_end].iter().collect();
+            assert_eq!(
+                byte_text,
+                col_text,
+                "Byte span {}..{} gives {:?} but line {}:col {}..{} gives {:?}",
+                span.byte_start,
+                span.byte_end,
+                byte_text,
+                span.line,
+                span.col_start,
+                span.col_end,
+                col_text
+            );
+        }
+    }
 
     let formatted = format_tokens(&tokens, &source);
 

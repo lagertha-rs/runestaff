@@ -35,12 +35,13 @@ impl<'a> RnsLexer<'a> {
 
     fn next_char(&mut self) -> Option<char> {
         if let Some((idx, c)) = self.data.next() {
+            self.global_pos = idx + c.len_utf8();
             if c == '\n' {
                 self.line += 1;
                 self.line_pos = 0;
+            } else {
+                self.line_pos += 1;
             }
-            self.global_pos = idx + c.len_utf8();
-            self.line_pos += 1;
             Some(c)
         } else {
             None
@@ -381,9 +382,9 @@ impl<'a> RnsLexer<'a> {
                 RnsToken::Newline(Span {
                     byte_start,
                     byte_end: self.global_pos,
-                    line: self.line - 1, // TODO: is this correct?
+                    line: self.line - 1,
                     col_start,
-                    col_end: self.line_pos,
+                    col_end: col_start + 1,
                 })
             }
             _ => {

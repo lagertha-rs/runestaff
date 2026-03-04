@@ -1,11 +1,11 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 .code
 ----- TOKENS -----
-KIND     | SPAN  | TEXT
-----     | ----  | ----
-DotCode  | 0..5  | .code
-Eof      | 5..5  |
+KIND     | SPAN  | LSP     | TEXT
+----     | ----  | ---     | ----
+DotCode  | 0..5  | 0:0..5  | .code
+Eof      | 5..5  | 0:5..5  |

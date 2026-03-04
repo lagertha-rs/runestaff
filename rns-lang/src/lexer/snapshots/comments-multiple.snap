@@ -1,13 +1,13 @@
 ---
-source: rns/src/lexer/tests.rs
+source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 ; first comment
 ; second comment
 ----- TOKENS -----
-KIND     | SPAN    | TEXT
-----     | ----    | ----
-Newline  | 15..16  | \n
-Newline  | 32..33  | \n
-Eof      | 33..33  |
+KIND     | SPAN    | LSP       | TEXT
+----     | ----    | ---       | ----
+Newline  | 15..16  | 0:15..16  | \n
+Newline  | 32..33  | 1:16..17  | \n
+Eof      | 33..33  | 2:0..0    |
