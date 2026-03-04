@@ -401,18 +401,35 @@ impl<'a> RnsLexer<'a> {
         Ok(token)
     }
 
-    pub fn tokenize(&mut self) -> Result<Vec<RnsToken>, Diagnostic> {
-        let mut tokens = Vec::new();
-
-        loop {
-            let token = self.next_token()?;
-            if let RnsToken::Eof(_) = token {
-                tokens.push(token);
+    fn skip_to_end_of_line(&mut self) {
+        while let Some(c) = self.peek_char() {
+            if c == '\n' {
                 break;
             }
-            tokens.push(token);
+            self.next_char();
+        }
+    }
+
+    pub fn tokenize(&mut self) -> (Vec<RnsToken>, Vec<Diagnostic>) {
+        let mut tokens = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        loop {
+            match self.next_token() {
+                Ok(token) => {
+                    let is_eof = matches!(token, RnsToken::Eof(_));
+                    tokens.push(token);
+                    if is_eof {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    diagnostics.push(e.into());
+                    self.skip_to_end_of_line();
+                }
+            }
         }
 
-        Ok(tokens)
+        (tokens, diagnostics)
     }
 }

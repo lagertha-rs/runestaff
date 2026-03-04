@@ -11,28 +11,31 @@ struct RnsLanguageServer {
 impl RnsLanguageServer {
     async fn analyze_and_publish(&self, uri: Uri, text: String) {
         let mut lexer = RnsLexer::new(&text);
-        let tokens = lexer.tokenize();
-
-        if let Err(err) = tokens {
-            let span = err.primary_location;
-            let diagnostic = Diagnostic {
-                range: Range {
-                    start: Position {
-                        line: span.line as u32,
-                        character: span.col_start as u32,
+        let (tokens, errors) = lexer.tokenize();
+        if !errors.is_empty() {
+            let mut diagnostics = Vec::with_capacity(errors.len());
+            for err in errors {
+                let span = err.primary_location;
+                let diagnostic = Diagnostic {
+                    range: Range {
+                        start: Position {
+                            line: span.line as u32,
+                            character: span.col_start as u32,
+                        },
+                        end: Position {
+                            line: span.line as u32,
+                            character: span.col_end as u32,
+                        },
                     },
-                    end: Position {
-                        line: span.line as u32,
-                        character: span.col_end as u32,
-                    },
-                },
-                severity: Some(DiagnosticSeverity::ERROR),
-                message: err.message,
-                ..Default::default()
-            };
+                    severity: Some(DiagnosticSeverity::ERROR),
+                    message: err.message,
+                    ..Default::default()
+                };
+                diagnostics.push(diagnostic);
+            }
 
             self.client
-                .publish_diagnostics(uri, vec![diagnostic], None)
+                .publish_diagnostics(uri, diagnostics, None)
                 .await;
         }
     }

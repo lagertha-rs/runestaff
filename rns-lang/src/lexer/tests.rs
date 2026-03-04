@@ -30,6 +30,7 @@ mod snapshot_tests {
                 RnsToken::Eof(_) => "Eof".to_string(),
                 RnsToken::AccessFlag(spanned) => format!("AccessFlag({})", spanned.value),
                 RnsToken::DotAnnotation(_) => "DotAnnotation".to_string(),
+                RnsToken::Typed(spanned) => format!("Typed({:?})", spanned.value),
             };
 
             let span_str = format!("{}..{}", token.span().byte_start, token.span().byte_end);
@@ -87,9 +88,12 @@ mod snapshot_tests {
     ) {
         let source = std::fs::read_to_string(&path).expect("Unable to read file");
         let mut lexer = RnsLexer::new(&source);
-        let tokens = lexer
-            .tokenize()
-            .expect("Lexer should succeed for success test cases");
+        let (tokens, diagnostics) = lexer.tokenize();
+        assert!(
+            diagnostics.is_empty(),
+            "Lexer should succeed for success test cases, but got diagnostics: {:?}",
+            diagnostics
+        );
 
         let formatted = format_tokens(&tokens, &source);
 

@@ -65,12 +65,19 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
 
     let mut lexer = RnsLexer::new(&contents);
 
-    let tokens = match lexer.tokenize() {
-        Ok(tokens) => tokens,
-        Err(err) => {
-            err.print(&filename, &contents);
+    let tokens = {
+        let (tokens, diagnostics) = lexer.tokenize();
+        let mut has_error = false;
+        for diag in diagnostics {
+            if diag.tier == DiagnosticTier::SyntaxError {
+                has_error = true
+            }
+            diag.print(&filename, &contents);
+        }
+        if has_error {
             std::process::exit(1);
         }
+        tokens
     };
 
     let rns_module = match RnsParser::parse(tokens) {
