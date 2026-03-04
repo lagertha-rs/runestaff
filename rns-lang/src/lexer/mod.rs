@@ -7,6 +7,8 @@ use std::str::{CharIndices, FromStr};
 
 mod error;
 #[cfg(test)]
+mod snapshot_tests;
+#[cfg(test)]
 mod tests;
 
 pub struct RnsLexer<'a> {
