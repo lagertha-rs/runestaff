@@ -89,7 +89,11 @@ impl<'a> RnsLexer<'a> {
         self.extend_to_delimiter(String::new())
     }
 
-    fn read_string(&mut self, byte_start: usize, col_start: usize) -> Result<String, LexerError> {
+    fn read_string(
+        &mut self,
+        byte_start: usize,
+        col_start: usize,
+    ) -> Result<Spanned<String>, LexerError> {
         let mut result = String::new();
 
         self.next_char(); // consume opening quote
@@ -98,7 +102,16 @@ impl<'a> RnsLexer<'a> {
             match c {
                 '"' => {
                     self.next_char(); // consume closing quote
-                    return Ok(result);
+                    return Ok(Spanned::new(
+                        result,
+                        Span {
+                            byte_start,
+                            byte_end: self.global_pos,
+                            line: self.line,
+                            col_start,
+                            col_end: self.line_pos,
+                        },
+                    ));
                 }
                 '\n' | '\r' => {
                     return Err(LexerError::UnterminatedString(Span {
@@ -170,8 +183,11 @@ impl<'a> RnsLexer<'a> {
         }))
     }
 
-    fn read_number(&mut self, byte_start: usize, col_start: usize) -> Result<RnsToken, LexerError> {
+    fn read_number(&mut self) -> Result<RnsToken, LexerError> {
         // TODO: implement all number formats and types, right now only integers are supported
+        let byte_start = self.global_pos;
+        let col_start = self.line_pos;
+
         let number_str = self.read_to_delimiter();
         i32::from_str(&number_str)
             .map(|n| {
@@ -200,11 +216,10 @@ impl<'a> RnsLexer<'a> {
             })
     }
 
-    fn handle_directive(
-        &mut self,
-        byte_start: usize,
-        col_pos: usize,
-    ) -> Result<RnsToken, LexerError> {
+    fn handle_directive(&mut self) -> Result<RnsToken, LexerError> {
+        let byte_start = self.global_pos;
+        let col_start = self.line_pos;
+
         self.next_char(); // consume '.'
 
         let directive = self.read_to_delimiter();
@@ -229,8 +244,8 @@ impl<'a> RnsLexer<'a> {
                 byte_start,
                 byte_end: byte_start + 1,
                 line: self.line,
-                col_start: col_pos,
-                col_end: col_pos + 1,
+                col_start,
+                col_end: col_start + 1,
             }));
         }
 
@@ -238,7 +253,7 @@ impl<'a> RnsLexer<'a> {
             byte_start,
             byte_end: self.global_pos,
             line: self.line,
-            col_start: col_pos,
+            col_start,
             col_end: self.line_pos,
         };
         RnsToken::from_directive(&directive, span)
@@ -256,11 +271,10 @@ impl<'a> RnsLexer<'a> {
         }
     }
 
-    fn handle_type_hint(
-        &mut self,
-        byte_start: usize,
-        col_start: usize,
-    ) -> Result<RnsToken, LexerError> {
+    fn handle_type_hint(&mut self) -> Result<RnsToken, LexerError> {
+        let byte_start = self.global_pos;
+        let col_start = self.line_pos;
+
         self.next_char(); // consume '@'
 
         let type_hint_str = self.read_to_delimiter();
@@ -330,39 +344,21 @@ impl<'a> RnsLexer<'a> {
                 byte_start,
                 byte_end: byte_start,
                 line: self.line,
-                col_start: self.line_pos,
-                col_end: self.line_pos,
+                col_start,
+                col_end: col_start,
             }));
         };
 
         let token = match ch {
-            '.' => self.handle_directive(byte_start, col_start)?,
-            '0'..='9' | '-' => self.read_number(byte_start, col_start)?,
-            '"' => RnsToken::StringLiteral(Spanned::new(
-                self.read_string(byte_start, col_start)?,
-                Span {
-                    byte_start,
-                    byte_end: self.global_pos,
-                    line: self.line,
-                    col_start,
-                    col_end: self.line_pos,
-                },
-            )),
+            '.' => self.handle_directive()?,
+            '0'..='9' | '-' => self.read_number()?,
+            '"' => RnsToken::StringLiteral(self.read_string(byte_start, col_start)?),
             '#' => {
                 self.next_char();
                 if let Some(next) = self.peek_char()
                     && next == '"'
                 {
-                    RnsToken::Identifier(Spanned::new(
-                        self.read_string(byte_start, col_start)?,
-                        Span {
-                            byte_start,
-                            byte_end: self.global_pos,
-                            line: self.line,
-                            col_start,
-                            col_end: self.line_pos,
-                        },
-                    ))
+                    RnsToken::Identifier(self.read_string(byte_start, col_start)?)
                 } else {
                     RnsToken::Identifier(Spanned::new(
                         self.extend_to_delimiter(String::new()),
@@ -376,7 +372,7 @@ impl<'a> RnsLexer<'a> {
                     ))
                 }
             }
-            '@' => self.handle_type_hint(byte_start, col_start)?,
+            '@' => self.handle_type_hint()?,
             '\n' => {
                 self.next_char();
                 RnsToken::Newline(Span {
