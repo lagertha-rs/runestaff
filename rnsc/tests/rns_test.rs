@@ -84,7 +84,7 @@ fn to_snapshot_name(path: &Path, flag: Option<&str>) -> String {
 }
 
 fn run_assemble_command(path: &Path, flag: Option<&str>, output_path: &Path) -> Output {
-    let mut assemble_cmd = cargo_bin_cmd!("rns");
+    let mut assemble_cmd = cargo_bin_cmd!("rns-asm");
     assemble_cmd
         .arg("asm")
         .arg(path)
@@ -109,7 +109,7 @@ fn process_assembly_result(output: &Output, class_file: &TempClassFile) -> (Stri
         let hash = get_hash(class_file.path());
 
         let disassembled = {
-            let mut cmd = cargo_bin_cmd!("rns");
+            let mut cmd = cargo_bin_cmd!("rns-asm");
             cmd.arg("dis").arg(class_file.path());
             let dis_output = cmd.output().expect("Failed to execute disassemble");
             String::from_utf8(dis_output.stdout).expect("Failed to read disassemble output")
