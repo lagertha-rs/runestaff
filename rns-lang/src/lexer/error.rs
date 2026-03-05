@@ -3,7 +3,7 @@ use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
 
 //TODO: same error code for all lexer, try to categorize later if needed
-const LEXER_ERROR_CODE: &str = "E001";
+const SYNTAX_HELP_URL: &str = "https://rune.lagertha-vm.com/syntax/";
 const IDENTIFIER_HELP_URL: &str =
     "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
 const INTEGER_HELP_URL: &str =
@@ -13,9 +13,7 @@ const STRING_HELP_URL: &str =
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum LexerError {
-    UnexpectedChar(Span, char, Option<String>),
     UnknownDirective(Span, String),
-    UnexpectedEof(Span),
     UnterminatedString(Span),
     InvalidEscape(Span, char),
     InvalidNumber(Span, String),
@@ -30,9 +28,7 @@ pub(super) enum LexerError {
 impl LexerError {
     fn asm_msg(&self) -> String {
         match self {
-            LexerError::UnexpectedChar(_, _, _) => "unexpected character".to_string(),
             LexerError::UnknownDirective(_, _) => "unknown directive".to_string(),
-            LexerError::UnexpectedEof(_) => "unexpected end of file".to_string(),
             LexerError::UnterminatedString(_) => "unterminated string literal".to_string(),
             LexerError::InvalidEscape(_, _) => "invalid escape sequence".to_string(),
             LexerError::InvalidNumber(_, _) => "invalid integer".to_string(),
@@ -45,12 +41,6 @@ impl LexerError {
     fn note(&self) -> Option<String> {
         let note = match self {
             LexerError::UnexpectedHintOperand { .. } => format!("note msg"),
-            LexerError::UnexpectedEof(_) => format!(
-                "Expected one of the directives: {}",
-                RnsToken::list_directives()
-            ),
-            LexerError::UnexpectedChar(_, _, context) => return context.clone(),
-
             LexerError::UnterminatedString(_) => {
                 "String literal is not terminated before the end of the line or file.".to_string()
             }
@@ -107,12 +97,6 @@ impl LexerError {
                     ),
                 ]
             }
-            LexerError::UnexpectedChar(_, c, _) => {
-                vec![DiagnosticLabel::at(
-                    self.primary_location().as_range(),
-                    format!("found '{}' here", c.escape_default()),
-                )]
-            }
             LexerError::UnknownDirective(_, name) => {
                 let mut closest = None;
                 let mut min_dist = usize::MAX;
@@ -132,10 +116,6 @@ impl LexerError {
                 };
                 vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
             }
-            LexerError::UnexpectedEof(_) => vec![DiagnosticLabel::at(
-                self.primary_location().as_range(),
-                "unexpected end of file".to_string(),
-            )],
             LexerError::UnterminatedString(_) => {
                 vec![DiagnosticLabel::at(
                     self.primary_location().as_range(),
@@ -164,9 +144,7 @@ impl LexerError {
 
     fn primary_location(&self) -> Span {
         match self {
-            LexerError::UnexpectedChar(span, _, _)
-            | LexerError::UnknownDirective(span, _)
-            | LexerError::UnexpectedEof(span)
+            LexerError::UnknownDirective(span, _)
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
             | LexerError::InvalidNumber(span, _) => *span,

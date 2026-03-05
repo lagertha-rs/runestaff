@@ -244,29 +244,17 @@ impl<'a> RnsLexer<'a> {
 
         let directive = self.read_to_delimiter();
         if directive.is_empty() {
-            if let Some(ch) = self.peek_char() {
-                return Err(LexerError::UnexpectedChar(
-                    Span {
-                        byte_start: self.byte_pos,
-                        byte_end: self.byte_pos + ch.len_utf8(),
-                        line: self.line,
-                        col_start: self.col_pos,
-                        col_end: self.col_pos + 1,
-                    },
-                    ch,
-                    Some(format!(
-                        "Expected one of the directives: {}",
-                        RnsToken::list_directives()
-                    )),
-                ));
-            }
-            return Err(LexerError::UnexpectedEof(Span {
-                byte_start,
-                byte_end: byte_start + 1,
-                line: self.line,
-                col_start,
-                col_end: col_start + 1,
-            }));
+            // TODO: test '.' with and without trailing whitespace
+            return Ok(RnsToken::Identifier(Spanned::new(
+                ".".to_string(),
+                Span {
+                    byte_start,
+                    byte_end: self.byte_pos,
+                    line: self.line,
+                    col_start,
+                    col_end: self.col_pos,
+                },
+            )));
         }
 
         let span = Span {
@@ -298,6 +286,19 @@ impl<'a> RnsLexer<'a> {
         self.next_char(); // consume '@'
 
         let type_hint_str = self.read_to_delimiter();
+        if type_hint_str.is_empty() {
+            // TODO: test '@'
+            return Ok(RnsToken::Identifier(Spanned::new(
+                "@".to_string(),
+                Span {
+                    byte_start,
+                    byte_end: self.byte_pos,
+                    line: self.line,
+                    col_start,
+                    col_end: self.col_pos,
+                },
+            )));
+        }
         let type_hint_pos = Span {
             byte_start,
             byte_end: self.byte_pos,

@@ -55,66 +55,6 @@ fn assert_primary_lsp(diagnostic: &Diagnostic, line: usize, col_start: usize, co
 }
 
 // =============================================================================
-// Unexpected Character errors
-// =============================================================================
-// NOTE: UnexpectedChar is ONLY produced when a dot (directive start) is
-// followed by a delimiter character — i.e., the directive name is empty
-// but there's still input remaining. Characters like $, %, ^ etc. are
-// NOT errors — the lexer treats them as identifiers.
-mod unexpected_char {
-    use super::*;
-
-    #[test]
-    fn dot_followed_by_newline() {
-        // ".\n" — dot then newline: directive name is empty, peek sees '\n'
-        let diag = expect_one_diagnostic(".\n");
-        assert_syntax_error(&diag, "unexpected character");
-        // The unexpected char is the '\n' at byte 1
-        assert_primary_span(&diag, 1, 2);
-        assert_primary_lsp(&diag, 0, 1, 2);
-    }
-
-    #[test]
-    fn dot_followed_by_space() {
-        // ". " — dot then space: directive name is empty, peek sees ' '
-        let diag = expect_one_diagnostic(". ");
-        assert_syntax_error(&diag, "unexpected character");
-        assert_primary_span(&diag, 1, 2);
-        assert_primary_lsp(&diag, 0, 1, 2);
-    }
-
-    #[test]
-    fn dot_followed_by_tab() {
-        let diag = expect_one_diagnostic(".\t");
-        assert_syntax_error(&diag, "unexpected character");
-        assert_primary_span(&diag, 1, 2);
-    }
-
-    #[test]
-    fn note_lists_valid_directives() {
-        let diag = expect_one_diagnostic(".\n");
-        assert!(
-            diag.note.as_ref().unwrap().contains(".class"),
-            "note should list valid directives, got: {:?}",
-            diag.note
-        );
-    }
-
-    #[test]
-    fn dot_space_on_second_line() {
-        let input = ".class\n. ";
-        let (tokens, diagnostics) = tokenize(input);
-        assert_eq!(diagnostics.len(), 1);
-        assert_syntax_error(&diagnostics[0], "unexpected character");
-        // The unexpected char (' ') is at byte 8, line 1, col 1
-        assert_primary_span(&diagnostics[0], 8, 9);
-        assert_primary_lsp(&diagnostics[0], 1, 1, 2);
-        // .class should still be in tokens
-        assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
-    }
-}
-
-// =============================================================================
 // Unknown Directive errors
 // =============================================================================
 mod unknown_directive {
@@ -168,34 +108,6 @@ mod unknown_directive {
         assert_primary_span(&diagnostics[0], 7, 11);
         assert_primary_lsp(&diagnostics[0], 1, 0, 4);
         // .class should still be in tokens
-        assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
-    }
-}
-
-// =============================================================================
-// Unexpected EOF errors
-// =============================================================================
-mod unexpected_eof {
-    use super::*;
-
-    #[test]
-    fn dot_at_eof() {
-        // Just "." with nothing after — directive is empty, peek returns None => UnexpectedEof
-        let diag = expect_one_diagnostic(".");
-        assert_syntax_error(&diag, "unexpected end of file");
-        assert_primary_span(&diag, 0, 1);
-        assert_primary_lsp(&diag, 0, 0, 1);
-    }
-
-    #[test]
-    fn dot_at_eof_after_valid_tokens() {
-        let input = ".class\n.";
-        let (tokens, diagnostics) = tokenize(input);
-        assert_eq!(diagnostics.len(), 1);
-        assert_syntax_error(&diagnostics[0], "unexpected end of file");
-        // The dot is at byte 7
-        assert_primary_span(&diagnostics[0], 7, 8);
-        assert_primary_lsp(&diagnostics[0], 1, 0, 1);
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
     }
 }
