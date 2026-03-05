@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -7,7 +7,7 @@ not generated
 ----- INPUT -----
 dot_dot_super ..super
 ----- STDERR -----
-[E001] Error: unknown directive
+Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_dot_super.rns:1:15 ]
    │
  1 │ dot_dot_super ..super

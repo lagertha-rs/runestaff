@@ -17,7 +17,7 @@ fn expect_one_diagnostic(input: &str) -> Diagnostic {
         1,
         "expected exactly 1 diagnostic, got {}: {:?}",
         diagnostics.len(),
-        diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>()
+        diagnostics.iter().map(|d| &d.asm_msg).collect::<Vec<_>>()
     );
     diagnostics.into_iter().next().unwrap()
 }
@@ -25,11 +25,11 @@ fn expect_one_diagnostic(input: &str) -> Diagnostic {
 /// Helper: assert diagnostic has the expected message substring and is a SyntaxError.
 fn assert_syntax_error(diagnostic: &Diagnostic, expected_message: &str) {
     assert_eq!(
-        diagnostic.message, expected_message,
+        diagnostic.asm_msg, expected_message,
         "diagnostic message mismatch"
     );
     assert_eq!(diagnostic.tier, DiagnosticTier::SyntaxError);
-    assert_eq!(diagnostic.code, "E001");
+    assert_eq!(diagnostic.code, None);
 }
 
 /// Helper: assert the diagnostic's primary location spans the expected byte range.
@@ -317,7 +317,7 @@ mod invalid_escape {
         assert!(
             diagnostics.is_empty(),
             "valid escapes should not produce errors: {:?}",
-            diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>()
+            diagnostics.iter().map(|d| &d.asm_msg).collect::<Vec<_>>()
         );
     }
 }
@@ -399,7 +399,7 @@ mod invalid_number {
                 diagnostics.is_empty(),
                 "input '{}' should not produce errors: {:?}",
                 input,
-                diagnostics.iter().map(|d| &d.message).collect::<Vec<_>>()
+                diagnostics.iter().map(|d| &d.asm_msg).collect::<Vec<_>>()
             );
         }
     }

@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
     . whaaat?
 .end
 ----- STDERR -----
-[E001] Error: unexpected character
+Error: unexpected character
    ╭─[ test_data/integration/error/lexer/directives/dot_space.rns:2:6 ]
    │
  2 │     . whaaat?

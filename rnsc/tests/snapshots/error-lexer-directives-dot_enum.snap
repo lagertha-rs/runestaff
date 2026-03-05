@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +10,7 @@ not generated
 
 .enum ;??
 ----- STDERR -----
-[E001] Error: unknown directive
+Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_enum.rns:4:1 ]
    │
  4 │ .enum ;??

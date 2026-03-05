@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -8,7 +8,7 @@ not generated
 .class public Test
 .code "\123"
 ----- STDERR -----
-[E001] Error: invalid escape sequence
+Error: invalid escape sequence
    ╭─[ test_data/integration/error/lexer/strings/unsupported_octal_escape.rns:2:9 ]
    │
  2 │ .code "\123"

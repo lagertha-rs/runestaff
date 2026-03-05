@@ -93,13 +93,19 @@ impl JvmWarning {
             }
         }
     }
+
+    fn lsp_msg(&self) -> String {
+        // TODO: stub
+        self.message()
+    }
 }
 
 impl From<JvmWarning> for Diagnostic {
     fn from(value: JvmWarning) -> Self {
         Diagnostic {
-            message: value.message(),
-            code: value.code(),
+            asm_msg: value.message(),
+            lsp_msg: value.lsp_msg(),
+            code: Some(value.code()),
             primary_location: value.primary_location(),
             note: Some(value.note()),
             help: value.help(),

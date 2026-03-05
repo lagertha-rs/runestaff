@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -8,7 +8,7 @@ not generated
 .abstract static HelloWorl
 ggg
 ----- STDERR -----
-[E001] Error: unknown directive
+Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_abstract.rns:1:1 ]
    │
  1 │ .abstract static HelloWorl

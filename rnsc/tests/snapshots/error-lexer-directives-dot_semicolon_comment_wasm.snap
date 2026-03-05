@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +10,7 @@ not generated
     .;not_comment ;this is also a comment
 .end
 ----- STDERR -----
-[E001] Error: unknown directive
+Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_semicolon_comment.rns:3:5 ]
    │
  3 │     .;not_comment ;this is also a comment

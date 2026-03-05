@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 "String with backslash escape followed by newline \
 .end
 ----- STDERR -----
-[E001] Error: unterminated string literal
+Error: unterminated string literal
    ╭─[ test_data/integration/error/lexer/strings/unterminated_string_after_escape_with_newline.rns:2:1 ]
    │
  2 │ "String with backslash escape followed by newline \

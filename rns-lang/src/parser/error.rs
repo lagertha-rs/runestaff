@@ -47,7 +47,7 @@ pub(super) enum IdentifierContext {
 }
 
 impl ParserError {
-    fn get_message(&self) -> String {
+    fn asm_msg(&self) -> String {
         match self {
             ParserError::ClassDirectiveExpected(_, token) => format!(
                 "unexpected {} before class definition",
@@ -114,7 +114,7 @@ impl ParserError {
         }
     }
 
-    fn get_labels(&self) -> Vec<DiagnosticLabel> {
+    fn labels(&self) -> Vec<DiagnosticLabel> {
         match self {
             ParserError::TrailingTokens(tokens, context) => {
                 let msg = match context {
@@ -142,10 +142,7 @@ impl ParserError {
                     }
                     _ => "not allowed here".to_string(),
                 };
-                vec![DiagnosticLabel::at(
-                    self.get_primary_location().as_range(),
-                    msg,
-                )]
+                vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
             }
             ParserError::ClassDirectiveExpected(_, token) => {
                 let msg = match token {
@@ -171,10 +168,7 @@ impl ParserError {
                         token.as_string_token_type()
                     ),
                 };
-                vec![DiagnosticLabel::at(
-                    self.get_primary_location().as_range(),
-                    msg,
-                )]
+                vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
             }
             ParserError::IdentifierExpected(_, token, context) => {
                 let msg = match context {
@@ -208,19 +202,16 @@ impl ParserError {
                         "expected a field descriptor".to_string()
                     }
                 };
-                vec![DiagnosticLabel::at(
-                    self.get_primary_location().as_range(),
-                    msg,
-                )]
+                vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
             }
             ParserError::UnexpectedCodeDirectiveArg(_, token) => {
                 vec![DiagnosticLabel::at(
-                    self.get_primary_location().as_range(),
+                    self.primary_location().as_range(),
                     format!("'{}' is not a valid argument for '.code'", token),
                 )]
             }
             ParserError::NonNegativeIntegerExpected(_, token, _) => vec![DiagnosticLabel::at(
-                self.get_primary_location().as_range(),
+                self.primary_location().as_range(),
                 format!("expected a non-negative integer, found '{}'", token),
             )],
             ParserError::UnknownInstruction(_, name) => {
@@ -239,22 +230,19 @@ impl ParserError {
                 } else {
                     "unknown instruction".to_string()
                 };
-                vec![DiagnosticLabel::at(
-                    self.get_primary_location().as_range(),
-                    msg,
-                )]
+                vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
             }
             ParserError::Internal(_) => vec![],
             ParserError::EmptyFile(_) => {
                 vec![DiagnosticLabel::at(
-                    self.get_primary_location().as_range(),
+                    self.primary_location().as_range(),
                     "the file is empty or contains only comments",
                 )]
             }
         }
     }
 
-    fn get_note(&self) -> Option<String> {
+    fn note(&self) -> Option<String> {
         match self {
             ParserError::ClassDirectiveExpected(_, token) => match token {
                 _ if token.is_access_flag() => Some(
@@ -395,7 +383,7 @@ impl ParserError {
         }
     }
 
-    fn get_primary_location(&self) -> Span {
+    fn primary_location(&self) -> Span {
         match self {
             ParserError::ClassDirectiveExpected(span, _)
             | ParserError::EmptyFile(span)
@@ -413,18 +401,24 @@ impl ParserError {
             ParserError::Internal(_) => Span::default(),
         }
     }
+
+    fn lsp_message(&self) -> String {
+        // TODO: stub
+        self.asm_msg()
+    }
 }
 
 impl From<ParserError> for Diagnostic {
     fn from(value: ParserError) -> Self {
         Diagnostic {
-            message: value.get_message(),
-            code: "PARSER-001",
-            primary_location: value.get_primary_location(),
-            note: value.get_note(),
+            asm_msg: value.asm_msg(),
+            lsp_msg: value.lsp_message(),
+            code: Some("PARSER-001"),
+            primary_location: value.primary_location(),
+            note: value.note(),
             help: None,
             tier: DiagnosticTier::SyntaxError,
-            labels: value.get_labels(),
+            labels: value.labels(),
         }
     }
 }

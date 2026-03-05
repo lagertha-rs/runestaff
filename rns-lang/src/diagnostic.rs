@@ -38,8 +38,9 @@ impl DiagnosticLabel {
 
 #[derive(Debug)]
 pub struct Diagnostic {
-    pub message: String,
-    pub code: &'static str,
+    pub asm_msg: String,
+    pub lsp_msg: String,
+    pub code: Option<&'static str>,
     pub primary_location: Span,
     pub note: Option<String>,
     pub help: Option<String>,
@@ -52,8 +53,11 @@ impl Diagnostic {
         let range = self.primary_location.as_range();
         let filename_owned = filename.to_string();
         let mut report = Report::build(self.tier.into(), (filename_owned.clone(), range.clone()))
-            .with_code(self.code)
-            .with_message(self.message);
+            .with_message(self.asm_msg);
+
+        if let Some(code) = self.code {
+            report = report.with_code(code);
+        }
 
         if let Some(note) = self.note {
             report = report.with_note(note);

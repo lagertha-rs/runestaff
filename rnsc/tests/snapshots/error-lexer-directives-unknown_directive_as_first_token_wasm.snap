@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -8,7 +8,7 @@ not generated
     .unknown_directive HelloWorld
 .end
 ----- STDERR -----
-[E001] Error: unknown directive
+Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/unknown_directive_as_first_token.rns:1:5 ]
    │
  1 │     .unknown_directive HelloWorld

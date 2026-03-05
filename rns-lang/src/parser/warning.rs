@@ -21,7 +21,7 @@ impl ParserWarning {
             ParserWarning::ClassDuplicateFlag { .. } => "W002",
         }
     }
-    fn message(&self) -> String {
+    fn asm_msg(&self) -> String {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
             ParserWarning::ClassDuplicateFlag { flag, .. } => {
@@ -82,13 +82,19 @@ impl ParserWarning {
             }
         }
     }
+
+    fn lsp_msg(&self) -> String {
+        //TODO: stub
+        self.asm_msg()
+    }
 }
 
 impl From<ParserWarning> for Diagnostic {
     fn from(value: ParserWarning) -> Self {
         Diagnostic {
-            message: value.message(),
-            code: value.code(),
+            asm_msg: value.asm_msg(),
+            lsp_msg: value.lsp_msg(),
+            code: Some(value.code()),
             primary_location: value.primary_location(),
             note: value.note(),
             help: None,

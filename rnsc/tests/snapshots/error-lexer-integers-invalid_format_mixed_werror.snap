@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -7,7 +7,7 @@ not generated
 ----- INPUT -----
 .code 12a34
 ----- STDERR -----
-[E001] Error: invalid integer
+Error: invalid integer
    ╭─[ test_data/integration/error/lexer/integers/invalid_format_mixed.rns:1:7 ]
    │
  1 │ .code 12a34

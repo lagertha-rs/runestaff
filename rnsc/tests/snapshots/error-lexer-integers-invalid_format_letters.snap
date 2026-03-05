@@ -1,5 +1,5 @@
 ---
-source: rns/tests/rns_test.rs
+source: rns-asm/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -8,7 +8,7 @@ not generated
 .class public Test
 .code 123abc
 ----- STDERR -----
-[E001] Error: invalid integer
+Error: invalid integer
    ╭─[ test_data/integration/error/lexer/integers/invalid_format_letters.rns:2:7 ]
    │
  2 │ .code 123abc
