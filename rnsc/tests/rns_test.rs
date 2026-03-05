@@ -44,7 +44,7 @@ fn get_hash(path: &Path) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-fn to_snapshot_name(path: &Path, flag: Option<&str>) -> String {
+fn to_snapshot_name(path: &Path) -> String {
     let marker = Path::new("test_data/integration");
     let components = path.components().collect::<Vec<_>>();
     let marker_parts = marker.components().collect::<Vec<_>>();
@@ -70,29 +70,17 @@ fn to_snapshot_name(path: &Path, flag: Option<&str>) -> String {
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default();
 
-    let flag_suffix = flag
-        .map(|f| format!("_{}", f.trim_start_matches('-').to_lowercase()))
-        .unwrap_or_default();
-
     let base_name = format!("{}--{}", parent, stem);
-    let full_name = if flag_suffix.is_empty() {
-        base_name
-    } else {
-        format!("{}{}", base_name, flag_suffix)
-    };
-    full_name.replace("/", "-").replace("--", "-")
+    base_name.replace("/", "-").replace("--", "-")
 }
 
-fn run_assemble_command(path: &Path, flag: Option<&str>, output_path: &Path) -> Output {
+fn run_assemble_command(path: &Path, output_path: &Path) -> Output {
     let mut assemble_cmd = cargo_bin_cmd!("rns-asm");
     assemble_cmd
         .arg("asm")
         .arg(path)
         .arg("--output")
         .arg(output_path);
-    if let Some(f) = flag {
-        assemble_cmd.arg(f);
-    }
     assemble_cmd.output().expect("Failed to assemble")
 }
 
@@ -166,20 +154,15 @@ fn create_snapshot_content(
 struct TempClassFile(PathBuf);
 
 impl TempClassFile {
-    fn new(source_path: &Path, flag: Option<&str>) -> Self {
+    fn new(source_path: &Path) -> Self {
         let temp_dir = std::env::temp_dir();
         let stem = source_path
             .file_stem()
             .unwrap_or_default()
             .to_string_lossy();
-        let flag_suffix = flag
-            .map(|f| format!("_{}", f.trim_start_matches('-')))
-            .unwrap_or_default();
         let class_file = temp_dir.join(format!(
-            "test_output_{}{}_{}_{}.class",
+            "test_output_{}_{}.class",
             stem,
-            flag_suffix,
-            std::process::id(),
             rand::random::<u16>()
         ));
         fs::remove_file(&class_file).ok();
@@ -198,19 +181,14 @@ impl Drop for TempClassFile {
 }
 
 #[rstest]
-#[case("", None)]
-#[case("--wasm", Some("--wasm"))]
-#[case("--werror", Some("--werror"))]
 fn test_integration(
-    #[case] _flag: &str,
-    #[case] flag: Option<&str>,
     #[base_dir = "test_data/integration/"]
     #[files("**/*.rns")]
     path: PathBuf,
 ) {
-    let class_file = TempClassFile::new(&path, flag);
+    let class_file = TempClassFile::new(&path);
 
-    let assemble_output = run_assemble_command(&path, flag, class_file.path());
+    let assemble_output = run_assemble_command(&path, class_file.path());
 
     let stdout = String::from_utf8_lossy(&assemble_output.stdout);
     let stderr = String::from_utf8_lossy(&assemble_output.stderr);
@@ -229,7 +207,7 @@ fn test_integration(
             prepend_module_to_snapshot => false,
         },
         {
-            insta::assert_snapshot!(to_snapshot_name(&path, flag), &snapshot_content);
+            insta::assert_snapshot!(to_snapshot_name(&path), &snapshot_content);
         }
     );
 }

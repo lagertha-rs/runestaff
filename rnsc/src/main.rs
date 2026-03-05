@@ -20,12 +20,6 @@ enum Command {
         file: PathBuf,
         #[arg(short, long)]
         output: Option<PathBuf>,
-        #[arg(long)]
-        #[allow(non_snake_case)]
-        Wasm: bool,
-        #[arg(long)]
-        #[allow(non_snake_case)]
-        Werror: bool,
     },
     Dis {
         file: PathBuf,
@@ -36,16 +30,11 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Command::Asm {
-            file,
-            output,
-            Wasm,
-            Werror,
-        }) => assemble(&file, output.as_ref(), Wasm, Werror),
+        Some(Command::Asm { file, output }) => assemble(&file, output.as_ref()),
         Some(Command::Dis { file }) => disassemble(&file),
         None => {
             if let Some(file) = cli.file {
-                assemble(&file, None, false, false);
+                assemble(&file, None);
             } else {
                 eprintln!(
                     "Usage: rns-asm <file.rns> or rns-asm asm <file.rns> or rns-asm dis <file.class>"
@@ -56,7 +45,7 @@ fn main() {
     }
 }
 
-fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error: bool) {
+fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
     let filename = path.to_string_lossy().to_string();
     let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
         eprintln!("Error reading file {}: {}", filename, err);
@@ -94,11 +83,8 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, warn_asm: bool, warn_error
 
     let mut has_error = false;
     for diag in diagnostics {
-        match (diag.tier, warn_asm, warn_error) {
-            (DiagnosticTier::SyntaxError, _, _) => has_error = true,
-            (DiagnosticTier::JvmSpecWarn, true, _) => has_error = true,
-            (DiagnosticTier::AssemblerWarn, _, true) => has_error = true,
-            _ => {}
+        if diag.tier == DiagnosticTier::SyntaxError {
+            has_error = true;
         }
         diag.print(&filename, &contents);
     }
