@@ -1,5 +1,6 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, ERROR_DOCS_BASE_URL};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::{RnsFlag, Span};
+use crate::ERROR_DOCS_BASE_URL;
 
 #[derive(Debug)]
 pub(super) enum JvmWarning {
@@ -16,7 +17,7 @@ impl JvmWarning {
     fn code(&self) -> &'static str {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. }
-            | JvmWarning::InterfaceMutuallyExclusive { .. } => "JVMS001",
+            | JvmWarning::InterfaceMutuallyExclusive { .. } => "JVMS-001",
         }
     }
     fn message(&self) -> String {

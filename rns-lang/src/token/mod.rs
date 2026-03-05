@@ -1,6 +1,5 @@
 pub(crate) use crate::token::span::{Span, Spanned};
 use crate::token::type_hint::TypeHint;
-use itertools::Itertools;
 use std::fmt::Display;
 
 pub(crate) mod span;
@@ -21,6 +20,7 @@ pub enum RnsFlag {
 }
 
 //TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
+// Since the source code is lives the whole time of the parsing we can use &str, but it will require some lifetime annotations
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum RnsToken {
     // directives
@@ -40,6 +40,15 @@ pub enum RnsToken {
     Newline(Span),
     Eof(Span),
 }
+
+const DIRECTIVES_STR: [&str; 6] = [
+    ".class",
+    ".super",
+    ".method",
+    ".end",
+    ".code",
+    ".annotation",
+];
 
 impl TryFrom<&str> for RnsFlag {
     type Error = ();
@@ -96,22 +105,18 @@ impl RnsFlag {
 }
 
 impl RnsToken {
-    const DEFAULT_SPAN: Span = Span {
-        byte_start: 0,
-        byte_end: 0,
-        line: 0,
-        col_start: 0,
-        col_end: 0,
-    };
-
-    pub const DIRECTIVES: &[Self] = &[
-        RnsToken::DotClass(RnsToken::DEFAULT_SPAN),
-        RnsToken::DotSuper(RnsToken::DEFAULT_SPAN),
-        RnsToken::DotMethod(RnsToken::DEFAULT_SPAN),
-        RnsToken::DotEnd(RnsToken::DEFAULT_SPAN),
-        RnsToken::DotCode(RnsToken::DEFAULT_SPAN),
-        RnsToken::DotAnnotation(RnsToken::DEFAULT_SPAN),
-    ];
+    pub fn closest_directive(dir: &str) -> Option<&'static str> {
+        let mut closest = None;
+        let mut min_dist = usize::MAX;
+        for directive in DIRECTIVES_STR {
+            let dist = crate::utils::levenshtein_distance(directive, dir);
+            if dist < min_dist && dist <= 2 {
+                min_dist = dist;
+                closest = Some(directive);
+            }
+        }
+        closest
+    }
 
     // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
     pub fn is_directive(&self) -> bool {
@@ -177,10 +182,6 @@ impl RnsToken {
             RnsToken::Integer(spanned) => spanned.span,
             RnsToken::Typed(spanned) => spanned.span,
         }
-    }
-
-    pub fn list_directives() -> String {
-        Self::DIRECTIVES.iter().map(ToString::to_string).join(", ")
     }
 
     pub fn as_string_token_type(&self) -> String {

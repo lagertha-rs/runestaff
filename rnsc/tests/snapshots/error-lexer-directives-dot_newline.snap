@@ -8,14 +8,14 @@ not generated
 .
 .end
 ----- STDERR -----
-Error: unexpected character
-   ╭─[ test_data/integration/error/lexer/directives/dot_newline.rns:1:2 ]
+[PARSER-001] Error: unexpected identifier before class definition
+   ╭─[ test_data/integration/error/lexer/directives/dot_newline.rns:1:1 ]
    │
  1 │ .
-   │  ┬  
-   │  ╰── found '\n' here
+   │ ┬  
+   │ ╰── this identifier must appear inside a class definition
    │ 
-   │ Note: Expected one of the directives: .class, .super, .method, .end, .code, .annotation
+   │ Note: Found identifier '.' before any class was defined. Did you forget to start the class? Try: '.class .'
 ───╯
 ----- HASH -----
 not generated

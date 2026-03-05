@@ -9,14 +9,15 @@ not generated
     .;comment after semicolon
 .end
 ----- STDERR -----
-Error: unknown directive
+[E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_semicolon.rns:2:5 ]
    │
  2 │     .;comment after semicolon
    │     ────┬────  
-   │         ╰────── unknown directive
+   │         ╰────── '.;comment' is not a recognized directive
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-002
 ───╯
 ----- HASH -----
 not generated

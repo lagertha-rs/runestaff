@@ -8,14 +8,17 @@ not generated
 .method
 ..class
 ----- STDERR -----
-Error: unknown directive
+[E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_dot_class.rns:2:1 ]
    │
  2 │ ..class
    │ ───┬───  
-   │    ╰───── did you mean '.class' ?
+   │    ╰───── '..class' is not a recognized directive
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+   │ Help: Did you mean '.class'?
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-002
 ───╯
 ----- HASH -----
 not generated

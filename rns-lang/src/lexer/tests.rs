@@ -29,7 +29,11 @@ fn assert_syntax_error(diagnostic: &Diagnostic, expected_message: &str) {
         "diagnostic message mismatch"
     );
     assert_eq!(diagnostic.tier, DiagnosticTier::SyntaxError);
-    assert_eq!(diagnostic.code, None);
+}
+
+/// Helper: assert diagnostic has the expected error code.
+fn assert_error_code(diagnostic: &Diagnostic, expected_code: Option<&str>) {
+    assert_eq!(diagnostic.code, expected_code, "error code mismatch");
 }
 
 /// Helper: assert the diagnostic's primary location spans the expected byte range.
@@ -64,14 +68,15 @@ mod unknown_directive {
     fn misspelled_directive() {
         let diag = expect_one_diagnostic(".clazz");
         assert_syntax_error(&diag, "unknown directive");
+        assert_error_code(&diag, Some("E-002"));
         assert_primary_span(&diag, 0, 6);
         assert_primary_lsp(&diag, 0, 0, 6);
-        // Should have a "did you mean" suggestion for .class
-        let label_msg = &diag.labels[0].message;
+        // Should have a "did you mean" suggestion in the help field
+        let help_msg = diag.help.as_ref().expect("expected help with suggestion");
         assert!(
-            label_msg.contains("did you mean"),
-            "expected 'did you mean' suggestion, got: {}",
-            label_msg
+            help_msg.contains("Did you mean"),
+            "expected 'Did you mean' suggestion, got: {}",
+            help_msg
         );
     }
 
@@ -79,10 +84,15 @@ mod unknown_directive {
     fn completely_unknown_directive() {
         let diag = expect_one_diagnostic(".foobar");
         assert_syntax_error(&diag, "unknown directive");
+        assert_error_code(&diag, Some("E-002"));
         assert_primary_span(&diag, 0, 7);
-        // No close match, so label should say "unknown directive"
+        // Label should mention it's not a recognized directive
         let label_msg = &diag.labels[0].message;
-        assert_eq!(label_msg, "unknown directive");
+        assert!(
+            label_msg.contains("not a recognized directive"),
+            "expected 'not a recognized directive' in label, got: {}",
+            label_msg
+        );
     }
 
     #[test]
@@ -90,11 +100,13 @@ mod unknown_directive {
         // ".metod" is 1 edit away from ".method"
         let diag = expect_one_diagnostic(".metod");
         assert_syntax_error(&diag, "unknown directive");
-        let label_msg = &diag.labels[0].message;
+        assert_error_code(&diag, Some("E-002"));
+        // Suggestion should be in the help field
+        let help_msg = diag.help.as_ref().expect("expected help with suggestion");
         assert!(
-            label_msg.contains(".method"),
+            help_msg.contains(".method"),
             "expected suggestion for .method, got: {}",
-            label_msg
+            help_msg
         );
     }
 
@@ -104,6 +116,7 @@ mod unknown_directive {
         let (tokens, diagnostics) = tokenize(input);
         assert_eq!(diagnostics.len(), 1);
         assert_syntax_error(&diagnostics[0], "unknown directive");
+        assert_error_code(&diagnostics[0], Some("E-002"));
         // .foo starts at byte 7, line 1
         assert_primary_span(&diagnostics[0], 7, 11);
         assert_primary_lsp(&diagnostics[0], 1, 0, 4);
@@ -134,11 +147,9 @@ mod unterminated_string {
         assert_eq!(diagnostics.len(), 1);
         assert_syntax_error(&diagnostics[0], "unterminated string literal");
         // After recovery, "world" on the next line should be tokenized as an identifier
-        assert!(
-            tokens
-                .iter()
-                .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "world\""))
-        );
+        assert!(tokens
+            .iter()
+            .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "world\"")));
     }
 
     #[test]
@@ -391,11 +402,9 @@ mod error_recovery {
         assert_eq!(diagnostics.len(), 2);
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::AccessFlag(_))));
-        assert!(
-            tokens
-                .iter()
-                .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "MyClass"))
-        );
+        assert!(tokens
+            .iter()
+            .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "MyClass")));
     }
 
     #[test]

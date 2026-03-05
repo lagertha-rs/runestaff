@@ -1,6 +1,7 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 const SYNTAX_HELP_URL: &str = "https://rune.lagertha-vm.com/syntax/";
@@ -26,6 +27,13 @@ pub(super) enum LexerError {
 }
 
 impl LexerError {
+    fn code(&self) -> Option<&'static str> {
+        match self {
+            LexerError::UnknownDirective(_, _) => Some("E-002"),
+            _ => None,
+        }
+    }
+
     fn asm_msg(&self) -> String {
         match self {
             LexerError::UnknownDirective(_, _) => "unknown directive".to_string(),
@@ -39,27 +47,31 @@ impl LexerError {
     }
 
     fn note(&self) -> Option<String> {
-        let note = match self {
-            LexerError::UnexpectedHintOperand { .. } => format!("note msg"),
-            LexerError::UnterminatedString(_) => {
-                "String literal is not terminated before the end of the line or file.".to_string()
-            }
-            LexerError::InvalidEscape(_, c) => {
-                format!("The character '\\{}' is not a valid escape sequence.", c)
-            }
-            LexerError::UnknownDirective(_, _) => {
-                format!("Valid directives are {}", RnsToken::list_directives())
-            }
+        match self {
+            LexerError::UnexpectedHintOperand { .. } => Some(format!("note msg")),
+            LexerError::UnterminatedString(_) => Some(
+                "String literal is not terminated before the end of the line or file.".to_string(),
+            ),
+            LexerError::InvalidEscape(_, c) => Some(format!(
+                "The character '\\{}' is not a valid escape sequence.",
+                c
+            )),
+            LexerError::UnknownDirective(_, _) => self.code().map(|code| {
+                format!(
+                    "For more details see:\n{}{}",
+                    ERROR_DOCS_BASE_URL,
+                    code.to_ascii_lowercase()
+                )
+            }),
             LexerError::InvalidNumber(_, value) => {
                 if value.starts_with("0x") || value.starts_with("0X") {
-                    "Hexadecimal numbers are not supported yet, but are planned for the future."
-                        .to_string()
+                    Some("Hexadecimal numbers are not supported yet, but are planned for the future."
+                        .to_string())
                 } else {
-                    "Integers must be between -2147483648 and 2147483647".to_string()
+                    Some("Integers must be between -2147483648 and 2147483647".to_string())
                 }
             }
-        };
-        Some(note)
+        }
     }
 
     // TODO: do better
@@ -98,23 +110,10 @@ impl LexerError {
                 ]
             }
             LexerError::UnknownDirective(_, name) => {
-                let mut closest = None;
-                let mut min_dist = usize::MAX;
-                for directive in RnsToken::DIRECTIVES {
-                    let d_str = directive.to_string();
-                    let dist = crate::utils::levenshtein_distance(name, &d_str);
-                    if dist < min_dist && dist <= 2 {
-                        min_dist = dist;
-                        closest = Some(d_str);
-                    }
-                }
-
-                let msg = if let Some(suggestion) = closest {
-                    format!("did you mean '{}' ?", suggestion)
-                } else {
-                    "unknown directive".to_string()
-                };
-                vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
+                vec![DiagnosticLabel::at(
+                    self.primary_location().as_range(),
+                    format!("'{name}' is not a recognized directive"),
+                )]
             }
             LexerError::UnterminatedString(_) => {
                 vec![DiagnosticLabel::at(
@@ -142,6 +141,16 @@ impl LexerError {
         }
     }
 
+    fn help(&self) -> Option<String> {
+        match self {
+            LexerError::UnknownDirective(_, name) => {
+                let closest = RnsToken::closest_directive(name);
+                closest.map(|closest| format!("Did you mean '{}'?", closest))
+            }
+            _ => None,
+        }
+    }
+
     fn primary_location(&self) -> Span {
         match self {
             LexerError::UnknownDirective(span, _)
@@ -163,10 +172,10 @@ impl From<LexerError> for Diagnostic {
         Diagnostic {
             asm_msg: value.asm_msg(),
             lsp_msg: value.lsp_msg(),
-            code: None,
+            code: value.code(),
             primary_location: value.primary_location(),
             note: value.note(),
-            help: None,
+            help: value.help(),
             tier: DiagnosticTier::SyntaxError,
             labels: value.labels(),
         }

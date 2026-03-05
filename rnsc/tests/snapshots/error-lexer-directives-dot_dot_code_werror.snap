@@ -7,14 +7,17 @@ not generated
 ----- INPUT -----
 .method      ..code
 ----- STDERR -----
-Error: unknown directive
+[E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_dot_code.rns:1:14 ]
    │
  1 │ .method      ..code
    │              ───┬──  
-   │                 ╰──── did you mean '.code' ?
+   │                 ╰──── '..code' is not a recognized directive
    │ 
-   │ Note: Valid directives are .class, .super, .method, .end, .code, .annotation
+   │ Help: Did you mean '.code'?
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-002
 ───╯
 ----- HASH -----
 not generated
