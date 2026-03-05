@@ -1,6 +1,6 @@
+use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::{RnsFlag, Span};
-use crate::ERROR_DOCS_BASE_URL;
 
 #[derive(Debug)]
 pub(super) enum JvmWarning {

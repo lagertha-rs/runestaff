@@ -1,7 +1,7 @@
+use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
-use crate::ERROR_DOCS_BASE_URL;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 const SYNTAX_HELP_URL: &str = "https://rune.lagertha-vm.com/syntax/";

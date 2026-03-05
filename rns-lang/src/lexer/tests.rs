@@ -126,9 +126,11 @@ mod unterminated_string {
         assert_eq!(diagnostics.len(), 1);
         assert_syntax_error(&diagnostics[0], "unterminated string literal");
         // After recovery, "world" on the next line should be tokenized as an identifier
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "world\"")));
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "world\""))
+        );
     }
 
     #[test]
@@ -362,9 +364,11 @@ mod error_recovery {
         assert_eq!(diagnostics.len(), 2);
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::AccessFlag(_))));
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "MyClass")));
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(t, RnsToken::Identifier(s) if s.value == "MyClass"))
+        );
     }
 
     #[test]
