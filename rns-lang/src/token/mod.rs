@@ -105,6 +105,7 @@ impl RnsFlag {
 }
 
 impl RnsToken {
+    // TODO: make it for all keywords, not only directives
     pub fn closest_directive(dir: &str) -> Option<&'static str> {
         let mut closest = None;
         let mut min_dist = usize::MAX;

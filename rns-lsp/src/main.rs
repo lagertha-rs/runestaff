@@ -28,7 +28,7 @@ impl RnsLanguageServer {
                         },
                     },
                     severity: Some(DiagnosticSeverity::ERROR),
-                    message: err.asm_msg,
+                    message: err.lsp_msg,
                     ..Default::default()
                 };
                 diagnostics.push(diagnostic);

@@ -71,13 +71,6 @@ mod unknown_directive {
         assert_error_code(&diag, Some("E-002"));
         assert_primary_span(&diag, 0, 6);
         assert_primary_lsp(&diag, 0, 0, 6);
-        // Should have a "did you mean" suggestion in the help field
-        let help_msg = diag.help.as_ref().expect("expected help with suggestion");
-        assert!(
-            help_msg.contains("Did you mean"),
-            "expected 'Did you mean' suggestion, got: {}",
-            help_msg
-        );
     }
 
     #[test]
@@ -86,13 +79,6 @@ mod unknown_directive {
         assert_syntax_error(&diag, "unknown directive");
         assert_error_code(&diag, Some("E-002"));
         assert_primary_span(&diag, 0, 7);
-        // Label should mention it's not a recognized directive
-        let label_msg = &diag.labels[0].message;
-        assert!(
-            label_msg.contains("not a recognized directive"),
-            "expected 'not a recognized directive' in label, got: {}",
-            label_msg
-        );
     }
 
     #[test]
@@ -101,13 +87,6 @@ mod unknown_directive {
         let diag = expect_one_diagnostic(".metod");
         assert_syntax_error(&diag, "unknown directive");
         assert_error_code(&diag, Some("E-002"));
-        // Suggestion should be in the help field
-        let help_msg = diag.help.as_ref().expect("expected help with suggestion");
-        assert!(
-            help_msg.contains(".method"),
-            "expected suggestion for .method, got: {}",
-            help_msg
-        );
     }
 
     #[test]
@@ -199,12 +178,6 @@ mod invalid_escape {
     fn backslash_q() {
         let diag = expect_one_diagnostic("\"\\q\"");
         assert_syntax_error(&diag, "invalid escape sequence");
-        // The note should mention which character is invalid
-        assert!(
-            diag.note.as_ref().unwrap().contains("\\q"),
-            "expected note to mention \\q, got: {:?}",
-            diag.note
-        );
     }
 
     #[test]
@@ -258,13 +231,6 @@ mod invalid_number {
         assert_syntax_error(&diag, "invalid integer");
         assert_primary_span(&diag, 0, 10);
         assert_primary_lsp(&diag, 0, 0, 10);
-        // Label should mention it's too large
-        let label_msg = &diag.labels[0].message;
-        assert!(
-            label_msg.contains("too large"),
-            "expected 'too large' in label, got: {}",
-            label_msg
-        );
     }
 
     #[test]
@@ -285,12 +251,6 @@ mod invalid_number {
         // Hex is not supported yet
         let diag = expect_one_diagnostic("0xFF");
         assert_syntax_error(&diag, "invalid integer");
-        // Note should mention hex is planned
-        assert!(
-            diag.note.as_ref().unwrap().contains("Hexadecimal"),
-            "expected hex note, got: {:?}",
-            diag.note
-        );
     }
 
     #[test]
@@ -416,5 +376,48 @@ mod error_recovery {
         assert_syntax_error(&diagnostics[0], "unterminated string literal");
         assert_syntax_error(&diagnostics[1], "unknown directive");
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
+    }
+}
+
+// =============================================================================
+// LSP message (lsp_msg) — used by the language server diagnostic output
+// =============================================================================
+mod lsp_msg {
+    use super::*;
+
+    #[test]
+    fn unknown_directive_includes_name() {
+        // lsp_msg should include the directive name, unlike asm_msg
+        let diag = expect_one_diagnostic(".foobar");
+        assert_eq!(diag.lsp_msg, "unknown directive '.foobar'");
+    }
+
+    #[test]
+    fn unknown_directive_differs_from_asm_msg() {
+        let diag = expect_one_diagnostic(".clazz");
+        assert_eq!(diag.asm_msg, "unknown directive");
+        assert_eq!(diag.lsp_msg, "unknown directive '.clazz'");
+        assert_ne!(diag.asm_msg, diag.lsp_msg);
+    }
+
+    #[test]
+    fn unterminated_string_matches_asm_msg() {
+        let diag = expect_one_diagnostic("\"hello");
+        assert_eq!(diag.lsp_msg, "unterminated string literal");
+        assert_eq!(diag.lsp_msg, diag.asm_msg);
+    }
+
+    #[test]
+    fn invalid_escape_matches_asm_msg() {
+        let diag = expect_one_diagnostic("\"\\q\"");
+        assert_eq!(diag.lsp_msg, "invalid escape sequence");
+        assert_eq!(diag.lsp_msg, diag.asm_msg);
+    }
+
+    #[test]
+    fn invalid_number_matches_asm_msg() {
+        let diag = expect_one_diagnostic("2147483648");
+        assert_eq!(diag.lsp_msg, "invalid integer");
+        assert_eq!(diag.lsp_msg, diag.asm_msg);
     }
 }

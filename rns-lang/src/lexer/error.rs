@@ -162,8 +162,12 @@ impl LexerError {
     }
 
     fn lsp_msg(&self) -> String {
-        // TODO: stub
-        self.asm_msg()
+        match self {
+            LexerError::UnknownDirective(_, name) => {
+                format!("unknown directive '{name}'")
+            }
+            _ => self.asm_msg(),
+        }
     }
 }
 
