@@ -1,0 +1,23 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class public Test
+"String with backslash escape followed by newline \	
+.end
+----- STDERR -----
+[E-004] Error: invalid escape sequence
+   ╭─[ test_data/integration/error/lexer/strings/escaped_tab.rns:2:52 ]
+   │
+ 2 │ "String with backslash escape followed by newline \
+   │                                                    ┬  
+   │                                                    ╰── '\\t' is not a valid escape sequence
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-004
+───╯
+----- HASH -----
+not generated

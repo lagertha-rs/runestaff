@@ -24,6 +24,7 @@ impl LexerError {
         match self {
             LexerError::UnknownDirective(_, _) => Some("E-002"),
             LexerError::InvalidInteger(_, _) => Some("E-003"),
+            LexerError::InvalidEscape(_, c) => Some("E-004"),
             _ => None,
         }
     }
@@ -46,19 +47,15 @@ impl LexerError {
             LexerError::UnterminatedString(_) => Some(
                 "String literal is not terminated before the end of the line or file.".to_string(),
             ),
-            LexerError::InvalidEscape(_, c) => Some(format!(
-                "The character '\\{}' is not a valid escape sequence.",
-                c
-            )),
-            LexerError::UnknownDirective(_, _) | LexerError::InvalidInteger(_, _) => {
-                self.code().map(|code| {
-                    format!(
-                        "For more details see:\n{}{}",
-                        ERROR_DOCS_BASE_URL,
-                        code.to_ascii_lowercase()
-                    )
-                })
-            }
+            LexerError::UnknownDirective(_, _)
+            | LexerError::InvalidInteger(_, _)
+            | LexerError::InvalidEscape(_, _) => self.code().map(|code| {
+                format!(
+                    "For more details see:\n{}{}",
+                    ERROR_DOCS_BASE_URL,
+                    code.to_ascii_lowercase()
+                )
+            }),
         }
     }
 
@@ -109,9 +106,13 @@ impl LexerError {
                     "this string literal is not terminated".to_string(),
                 )]
             }
+            LexerError::InvalidEscape(_, c) if *c == '\n' => vec![DiagnosticLabel::at(
+                self.primary_location().as_range(),
+                "newline characters cannot be escaped".to_string(),
+            )],
             LexerError::InvalidEscape(_, c) => vec![DiagnosticLabel::at(
                 self.primary_location().as_range(),
-                format!("invalid escape sequence '\\{}'", c),
+                format!("'\\{}' is not a valid escape sequence", c.escape_default()),
             )],
             LexerError::InvalidInteger(_, value) => {
                 let msg = if value.parse::<i128>().is_ok() {
@@ -144,6 +145,9 @@ impl LexerError {
                     Some("Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.".to_string())
                 }
             }
+            LexerError::InvalidEscape(_, c) if *c == '\n' => Some(
+                "Multiple lines string literals are not supported yet, but are planned for the future.".to_string(),
+            ),
             _ => None,
         }
     }

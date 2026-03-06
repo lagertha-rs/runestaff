@@ -112,6 +112,16 @@ impl<'a> RnsLexer<'a> {
         }
     }
 
+    fn span_for_one_char(&self, byte_start: usize, col_start: usize) -> Span {
+        Span {
+            byte_start,
+            byte_end: byte_start + 1,
+            line: self.line,
+            col_start,
+            col_end: col_start + 1,
+        }
+    }
+
     fn read_string(
         &mut self,
         byte_start: usize,
@@ -127,23 +137,13 @@ impl<'a> RnsLexer<'a> {
                     self.next_char(); // consume closing quote
                     return Ok(Spanned::new(
                         result,
-                        Span {
-                            byte_start,
-                            byte_end: self.byte_pos,
-                            line: self.line,
-                            col_start,
-                            col_end: self.col_pos,
-                        },
+                        self.span_for_current_position(byte_start, col_start),
                     ));
                 }
                 '\n' | '\r' => {
-                    return Err(LexerError::UnterminatedString(Span {
-                        byte_start,
-                        byte_end: byte_start + 1, // TODO: why I put + 1 here? should be cur pos?
-                        line: self.line,
-                        col_start,
-                        col_end: col_start + 1,
-                    }));
+                    return Err(LexerError::UnterminatedString(
+                        self.span_for_one_char(byte_start, col_start),
+                    ));
                 }
                 '\\' => {
                     self.next_char(); // consume '\'
@@ -157,15 +157,6 @@ impl<'a> RnsLexer<'a> {
                             'f' => result.push('\x0C'), // form feed
                             '"' => result.push('"'),
                             '\\' => result.push('\\'),
-                            '\n' | '\r' => {
-                                return Err(LexerError::UnterminatedString(Span {
-                                    byte_start,
-                                    byte_end: byte_start + 1, // TODO: why I put + 1 here? should be cur pos?
-                                    line: self.line,
-                                    col_start,
-                                    col_end: col_start + 1,
-                                }));
-                            }
                             _ => {
                                 return Err(LexerError::InvalidEscape(
                                     Span {
