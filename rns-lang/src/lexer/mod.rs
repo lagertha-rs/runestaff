@@ -156,10 +156,10 @@ impl<'a> RnsLexer<'a> {
                             _ => {
                                 return Err(LexerError::InvalidEscape(
                                     Span {
-                                        byte_start: self.byte_pos,
+                                        byte_start: self.byte_pos - 1,
                                         byte_end: self.byte_pos + next_char.len_utf8(),
                                         line: self.line,
-                                        col_start: self.col_pos,
+                                        col_start: self.col_pos - 1,
                                         col_end: self.col_pos + 1,
                                     },
                                     next_char,
