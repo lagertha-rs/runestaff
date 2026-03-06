@@ -2,8 +2,7 @@ use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
 use crate::token::type_hint::{TypeHint, TypeHintKind};
 use crate::token::{RnsToken, Span, Spanned};
-use std::iter::Peekable;
-use std::str::{CharIndices, FromStr};
+use std::str::FromStr;
 
 mod error;
 #[cfg(test)]
@@ -12,7 +11,7 @@ mod snapshot_tests;
 mod tests;
 
 pub struct RnsLexer<'a> {
-    data: Peekable<CharIndices<'a>>,
+    source: &'a str,
     byte_pos: usize,
     col_pos: usize,
     line: usize,
@@ -22,7 +21,7 @@ impl<'a> RnsLexer<'a> {
     // TODO: do I really need an instance?
     pub fn new(source: &'a str) -> Self {
         Self {
-            data: source.char_indices().peekable(),
+            source,
             byte_pos: 0,
             col_pos: 0,
             line: 0,
@@ -30,12 +29,16 @@ impl<'a> RnsLexer<'a> {
     }
 
     fn peek_char(&mut self) -> Option<char> {
-        self.data.peek().map(|&(_, c)| c)
+        self.source[self.byte_pos..].chars().next()
+    }
+
+    fn peek_char_at(&mut self, offset: usize) -> Option<char> {
+        self.source[self.byte_pos..].chars().nth(offset)
     }
 
     fn next_char(&mut self) -> Option<char> {
-        if let Some((idx, c)) = self.data.next() {
-            self.byte_pos = idx + c.len_utf8();
+        if let Some(c) = self.peek_char() {
+            self.byte_pos += c.len_utf8();
             if c == '\n' {
                 self.line += 1;
                 self.col_pos = 0;
@@ -205,35 +208,15 @@ impl<'a> RnsLexer<'a> {
 
     fn read_number(&mut self) -> Result<RnsToken, LexerError> {
         // TODO: implement all number formats and types, right now only integers are supported
+        // TODO: consider supporting underscore/hex/binary literals in the future
         let byte_start = self.byte_pos;
         let col_start = self.col_pos;
 
         let number_str = self.read_to_delimiter();
+        let position = self.span_for_current_position(byte_start, col_start);
         i32::from_str(&number_str)
-            .map(|n| {
-                RnsToken::Integer(Spanned::new(
-                    n,
-                    Span {
-                        byte_start,
-                        byte_end: self.byte_pos,
-                        line: self.line,
-                        col_start,
-                        col_end: self.col_pos,
-                    },
-                ))
-            })
-            .map_err(|_| {
-                LexerError::InvalidNumber(
-                    Span {
-                        byte_start,
-                        byte_end: self.byte_pos,
-                        line: self.line,
-                        col_start,
-                        col_end: self.col_pos,
-                    },
-                    number_str,
-                )
-            })
+            .map(|n| RnsToken::Integer(Spanned::new(n, position)))
+            .map_err(|_| LexerError::InvalidInteger(position, number_str))
     }
 
     fn handle_directive(&mut self) -> Result<RnsToken, LexerError> {
@@ -366,7 +349,20 @@ impl<'a> RnsLexer<'a> {
 
         let token = match ch {
             '.' => self.handle_directive()?,
-            '0'..='9' | '-' => self.read_number()?,
+            '0'..='9' => self.read_number()?,
+            '-' => {
+                // TODO: test minus only
+                let is_digit_after = self.peek_char_at(1).is_some_and(|c| c.is_ascii_digit());
+                if is_digit_after {
+                    self.read_number()?
+                } else {
+                    let str = self.read_to_delimiter();
+                    RnsToken::from_identifier(
+                        str,
+                        self.span_for_current_position(byte_start, col_start),
+                    )
+                }
+            }
             '"' => RnsToken::StringLiteral(self.read_string(byte_start, col_start)?),
             '#' => {
                 self.next_char();

@@ -7,14 +7,17 @@ not generated
 ----- INPUT -----
 .code 0x123
 ----- STDERR -----
-Error: invalid integer
+[E-003] Error: invalid integer
    ╭─[ test_data/integration/error/lexer/integers/hex_prefix.rns:1:7 ]
    │
  1 │ .code 0x123
    │       ──┬──  
    │         ╰──── '0x123' contains invalid characters
    │ 
-   │ Note: Hexadecimal numbers are not supported yet, but are planned for the future.
+   │ Help: Hexadecimal numbers are not supported yet, but are planned for the future.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
 ───╯
 ----- HASH -----
 not generated

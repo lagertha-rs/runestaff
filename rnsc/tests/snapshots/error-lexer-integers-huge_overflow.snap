@@ -7,14 +7,17 @@ not generated
 ----- INPUT -----
 .code 10000000000000000000000000000000000000000
 ----- STDERR -----
-Error: invalid integer
+[E-003] Error: invalid integer
    ╭─[ test_data/integration/error/lexer/integers/huge_overflow.rns:1:7 ]
    │
  1 │ .code 10000000000000000000000000000000000000000
    │       ────────────────────┬────────────────────  
    │                           ╰────────────────────── '10000000000000000000000000000000000000000' is not a valid integer
    │ 
-   │ Note: Integers must be between -2147483648 and 2147483647
+   │ Help: Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
 ───╯
 ----- HASH -----
 not generated

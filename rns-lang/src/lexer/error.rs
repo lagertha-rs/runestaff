@@ -1,23 +1,16 @@
-use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
 
 //TODO: same error code for all lexer, try to categorize later if needed
-const SYNTAX_HELP_URL: &str = "https://rune.lagertha-vm.com/syntax/";
-const IDENTIFIER_HELP_URL: &str =
-    "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
-const INTEGER_HELP_URL: &str =
-    "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
-const STRING_HELP_URL: &str =
-    "https://rune.lagertha-vm.com/syntax/keywords-and-operands/#identifiers";
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum LexerError {
     UnknownDirective(Span, String),
     UnterminatedString(Span),
     InvalidEscape(Span, char),
-    InvalidNumber(Span, String),
+    InvalidInteger(Span, String),
     UnexpectedHintOperand {
         hint_position: Span,
         operand_token: RnsToken,
@@ -30,6 +23,7 @@ impl LexerError {
     fn code(&self) -> Option<&'static str> {
         match self {
             LexerError::UnknownDirective(_, _) => Some("E-002"),
+            LexerError::InvalidInteger(_, _) => Some("E-003"),
             _ => None,
         }
     }
@@ -39,7 +33,7 @@ impl LexerError {
             LexerError::UnknownDirective(_, _) => "unknown directive".to_string(),
             LexerError::UnterminatedString(_) => "unterminated string literal".to_string(),
             LexerError::InvalidEscape(_, _) => "invalid escape sequence".to_string(),
-            LexerError::InvalidNumber(_, _) => "invalid integer".to_string(),
+            LexerError::InvalidInteger(_, _) => "invalid integer".to_string(),
             LexerError::UnexpectedHintOperand { hint_kind, .. } => {
                 format!("unexpected operand for '{}' type hint", hint_kind)
             }
@@ -56,20 +50,14 @@ impl LexerError {
                 "The character '\\{}' is not a valid escape sequence.",
                 c
             )),
-            LexerError::UnknownDirective(_, _) => self.code().map(|code| {
-                format!(
-                    "For more details see:\n{}{}",
-                    ERROR_DOCS_BASE_URL,
-                    code.to_ascii_lowercase()
-                )
-            }),
-            LexerError::InvalidNumber(_, value) => {
-                if value.starts_with("0x") || value.starts_with("0X") {
-                    Some("Hexadecimal numbers are not supported yet, but are planned for the future."
-                        .to_string())
-                } else {
-                    Some("Integers must be between -2147483648 and 2147483647".to_string())
-                }
+            LexerError::UnknownDirective(_, _) | LexerError::InvalidInteger(_, _) => {
+                self.code().map(|code| {
+                    format!(
+                        "For more details see:\n{}{}",
+                        ERROR_DOCS_BASE_URL,
+                        code.to_ascii_lowercase()
+                    )
+                })
             }
         }
     }
@@ -125,8 +113,9 @@ impl LexerError {
                 self.primary_location().as_range(),
                 format!("invalid escape sequence '\\{}'", c),
             )],
-            LexerError::InvalidNumber(_, value) => {
+            LexerError::InvalidInteger(_, value) => {
                 let msg = if value.parse::<i128>().is_ok() {
+                    // TODO: suggest long when we support it
                     format!(
                         "integer '{}' is too large for a 32-bit signed integer",
                         value
@@ -147,6 +136,14 @@ impl LexerError {
                 let closest = RnsToken::closest_directive(name);
                 closest.map(|closest| format!("Did you mean '{}'?", closest))
             }
+            LexerError::InvalidInteger(_, value) => {
+                if value.starts_with("0x") || value.starts_with("0X") {
+                    Some("Hexadecimal numbers are not supported yet, but are planned for the future."
+                        .to_string())
+                } else {
+                    Some("Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.".to_string())
+                }
+            }
             _ => None,
         }
     }
@@ -156,7 +153,7 @@ impl LexerError {
             LexerError::UnknownDirective(span, _)
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
-            | LexerError::InvalidNumber(span, _) => *span,
+            | LexerError::InvalidInteger(span, _) => *span,
             LexerError::UnexpectedHintOperand { hint_position, .. } => *hint_position,
         }
     }
@@ -166,6 +163,7 @@ impl LexerError {
             LexerError::UnknownDirective(_, name) => {
                 format!("unknown directive '{name}'")
             }
+            LexerError::InvalidInteger(_, _) => "invalid 32-bit signed integer".to_string(),
             _ => self.asm_msg(),
         }
     }

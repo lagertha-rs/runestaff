@@ -8,14 +8,17 @@ not generated
 .class public Test
 .code -5xyz
 ----- STDERR -----
-Error: invalid integer
+[E-003] Error: invalid integer
    ╭─[ test_data/integration/error/lexer/integers/invalid_negative_format.rns:2:7 ]
    │
  2 │ .code -5xyz
    │       ──┬──  
    │         ╰──── '-5xyz' contains invalid characters
    │ 
-   │ Note: Integers must be between -2147483648 and 2147483647
+   │ Help: Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
 ───╯
 ----- HASH -----
 not generated

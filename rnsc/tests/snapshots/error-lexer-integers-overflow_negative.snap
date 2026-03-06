@@ -7,14 +7,17 @@ not generated
 ----- INPUT -----
 .code -99999999999999999999
 ----- STDERR -----
-Error: invalid integer
+[E-003] Error: invalid integer
    ╭─[ test_data/integration/error/lexer/integers/overflow_negative.rns:1:7 ]
    │
  1 │ .code -99999999999999999999
    │       ──────────┬──────────  
    │                 ╰──────────── integer '-99999999999999999999' is too large for a 32-bit signed integer
    │ 
-   │ Note: Integers must be between -2147483648 and 2147483647
+   │ Help: Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
 ───╯
 ----- HASH -----
 not generated

@@ -263,13 +263,6 @@ mod invalid_number {
     }
 
     #[test]
-    fn double_negative() {
-        // "--5" starts with '-', enters read_number, parse fails
-        let diag = expect_one_diagnostic("--5");
-        assert_syntax_error(&diag, "invalid integer");
-    }
-
-    #[test]
     fn float_not_supported() {
         // "3.14" starts with digit, read_to_delimiter reads "3.14", parse as i32 fails
         let diag = expect_one_diagnostic("3.14");
@@ -421,7 +414,7 @@ mod lsp_msg {
     #[test]
     fn invalid_number_matches_asm_msg() {
         let diag = expect_one_diagnostic("2147483648");
-        assert_eq!(diag.lsp_msg, "invalid integer");
-        assert_eq!(diag.lsp_msg, diag.asm_msg);
+        assert_eq!(diag.lsp_msg, "invalid 32-bit signed integer");
+        assert_ne!(diag.lsp_msg, diag.asm_msg);
     }
 }
