@@ -150,16 +150,18 @@ mod unterminated_string {
 
     #[test]
     fn string_with_backslash_before_newline() {
-        // "\<newline>" — backslash followed by literal newline
+        // "\<newline>" — backslash followed by literal newline is an invalid escape,
+        // not an unterminated string (the user is likely trying line continuation)
         let diag = expect_one_diagnostic("\"\\\n");
-        assert_syntax_error(&diag, "unterminated string literal");
+        assert_syntax_error(&diag, "invalid escape sequence");
     }
 
     #[test]
     fn string_with_backslash_before_carriage_return() {
-        // "\<CR>" — backslash followed by carriage return
+        // "\<CR>" — backslash followed by carriage return is an invalid escape,
+        // not an unterminated string (the user is likely trying line continuation)
         let diag = expect_one_diagnostic("\"\\\r");
-        assert_syntax_error(&diag, "unterminated string literal");
+        assert_syntax_error(&diag, "invalid escape sequence");
     }
 
     #[test]
