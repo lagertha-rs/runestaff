@@ -140,11 +140,7 @@ impl<'a> RnsLexer<'a> {
                         self.span_for_current_position(byte_start, col_start),
                     ));
                 }
-                '\n' | '\r' => {
-                    return Err(LexerError::UnterminatedString(
-                        self.span_for_one_char(byte_start, col_start),
-                    ));
-                }
+                '\n' | '\r' => break,
                 '\\' => {
                     self.next_char(); // consume '\'
                     if let Some(next_char) = self.peek_char() {
@@ -163,8 +159,8 @@ impl<'a> RnsLexer<'a> {
                                         byte_start: self.byte_pos,
                                         byte_end: self.byte_pos + next_char.len_utf8(),
                                         line: self.line,
-                                        col_start,
-                                        col_end: col_start + 1,
+                                        col_start: self.col_pos,
+                                        col_end: self.col_pos + 1,
                                     },
                                     next_char,
                                 ));
@@ -172,13 +168,7 @@ impl<'a> RnsLexer<'a> {
                         }
                         self.next_char(); // consume escaped character
                     } else {
-                        return Err(LexerError::UnterminatedString(Span {
-                            byte_start,
-                            byte_end: byte_start + 1, // TODO: why I put + 1 here? should be cur pos?
-                            line: self.line,
-                            col_start,
-                            col_end: col_start + 1,
-                        }));
+                        break;
                     }
                 }
                 _ => {
@@ -188,13 +178,10 @@ impl<'a> RnsLexer<'a> {
             }
         }
 
-        Err(LexerError::UnterminatedString(Span {
-            byte_start,
-            byte_end: byte_start + 1, // TODO: why I put + 1 here? should be cur pos?
-            line: self.line,
-            col_start,
-            col_end: col_start + 1,
-        }))
+        // point to the opening quote for better error highlighting
+        Err(LexerError::UnterminatedString(
+            self.span_for_one_char(byte_start, col_start),
+        ))
     }
 
     fn read_number(&mut self) -> Result<RnsToken, LexerError> {
