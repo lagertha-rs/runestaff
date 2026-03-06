@@ -204,29 +204,19 @@ impl<'a> RnsLexer<'a> {
         self.next_char(); // consume '.'
 
         let directive = self.read_to_delimiter();
+        let directive_span = self.span_for_current_position(byte_start, col_start);
         if directive.is_empty() {
             // TODO: test '.' with and without trailing whitespace
             return Ok(RnsToken::Identifier(Spanned::new(
                 ".".to_string(),
-                Span {
-                    byte_start,
-                    byte_end: self.byte_pos,
-                    line: self.line,
-                    col_start,
-                    col_end: self.col_pos,
-                },
+                directive_span,
             )));
         }
 
-        let span = Span {
-            byte_start,
-            byte_end: self.byte_pos,
-            line: self.line,
-            col_start,
-            col_end: self.col_pos,
-        };
-        RnsToken::from_directive(&directive, span)
-            .ok_or(LexerError::UnknownDirective(span, format!(".{directive}")))
+        RnsToken::from_directive(&directive, directive_span).ok_or(LexerError::UnknownDirective(
+            directive_span,
+            format!(".{directive}"),
+        ))
     }
 
     fn expect_identifier(
