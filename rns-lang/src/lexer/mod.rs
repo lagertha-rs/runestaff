@@ -10,7 +10,11 @@ mod snapshot_tests;
 #[cfg(test)]
 mod tests;
 
-pub struct RnsLexer<'a> {
+pub fn tokenize(source: &str) -> (Vec<RnsToken>, Vec<Diagnostic>) {
+    RnsLexer::new(source).tokenize()
+}
+
+struct RnsLexer<'a> {
     source: &'a str,
     byte_pos: usize,
     col_pos: usize,
@@ -18,8 +22,7 @@ pub struct RnsLexer<'a> {
 }
 
 impl<'a> RnsLexer<'a> {
-    // TODO: do I really need an instance?
-    pub fn new(source: &'a str) -> Self {
+    fn new(source: &'a str) -> Self {
         Self {
             source,
             byte_pos: 0,
@@ -51,7 +54,7 @@ impl<'a> RnsLexer<'a> {
         }
     }
 
-    pub fn skip_whitespaces_and_comments(&mut self) {
+    fn skip_whitespaces_and_comments(&mut self) {
         while let Some(c) = self.peek_char() {
             match c {
                 ' ' | '\t' | '\r' => {
@@ -310,7 +313,7 @@ impl<'a> RnsLexer<'a> {
         }
     }
 
-    pub fn tokenize(&mut self) -> (Vec<RnsToken>, Vec<Diagnostic>) {
+    fn tokenize(&mut self) -> (Vec<RnsToken>, Vec<Diagnostic>) {
         let mut tokens = Vec::new();
         let mut diagnostics = Vec::new();
 

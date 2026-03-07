@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use rns::diagnostic::DiagnosticTier;
-use rns::lexer::RnsLexer;
+use rns::lexer;
 use rns::parser::RnsParser;
 use std::path::PathBuf;
 
@@ -52,10 +52,8 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
         std::process::exit(1);
     });
 
-    let mut lexer = RnsLexer::new(&contents);
-
     let tokens = {
-        let (tokens, diagnostics) = lexer.tokenize();
+        let (tokens, diagnostics) = lexer::tokenize(&contents);
         let mut has_error = false;
         for diag in diagnostics {
             if diag.tier == DiagnosticTier::SyntaxError {

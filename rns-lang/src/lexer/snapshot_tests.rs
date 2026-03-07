@@ -92,8 +92,7 @@ fn success_cases(
     path: PathBuf,
 ) {
     let source = std::fs::read_to_string(&path).expect("Unable to read file");
-    let mut lexer = RnsLexer::new(&source);
-    let (tokens, diagnostics) = lexer.tokenize();
+    let (tokens, diagnostics) = super::tokenize(&source);
     assert!(
         diagnostics.is_empty(),
         "Lexer should succeed for success test cases, but got diagnostics: {:?}",
