@@ -277,7 +277,7 @@ impl<'a> RnsLexer<'a> {
                     RnsToken::Identifier(self.read_string(byte_start, col_start)?)
                 } else {
                     RnsToken::Identifier(Spanned::new(
-                        self.extend_to_delimiter(String::new()),
+                        self.extend_to_delimiter("#".to_string()),
                         self.span_for_current_position(byte_start, col_start),
                     ))
                 }

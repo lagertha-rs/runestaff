@@ -471,6 +471,308 @@ mod error_recovery {
 }
 
 // =============================================================================
+// Help messages — conditional help text based on error context
+// =============================================================================
+mod help {
+    use super::*;
+
+    // -- UnknownDirective --
+
+    #[test]
+    fn unknown_directive_with_close_match_suggests() {
+        let diag = expect_one_diagnostic(".clazz");
+        assert_eq!(diag.help, Some("Did you mean '.class'?".to_string()));
+    }
+
+    #[test]
+    fn unknown_directive_with_no_close_match() {
+        let diag = expect_one_diagnostic(".zzzzzzz");
+        assert_eq!(diag.help, None);
+    }
+
+    #[test]
+    fn unknown_directive_super_typo() {
+        let diag = expect_one_diagnostic(".supr");
+        assert_eq!(diag.help, Some("Did you mean '.super'?".to_string()));
+    }
+
+    // -- UnknownTypeHint --
+
+    #[test]
+    fn unknown_type_hint_with_close_match_suggests() {
+        let diag = expect_one_diagnostic("@dubble");
+        assert_eq!(diag.help, Some("Did you mean '@double'?".to_string()));
+    }
+
+    #[test]
+    fn unknown_type_hint_with_no_close_match() {
+        let diag = expect_one_diagnostic("@zzzzzzz");
+        assert_eq!(diag.help, None);
+    }
+
+    #[test]
+    fn unknown_type_hint_case_sensitive_suggests() {
+        // "@Utf8" is 1 edit from "utf8"
+        let diag = expect_one_diagnostic("@Utf8");
+        assert_eq!(diag.help, Some("Did you mean '@utf8'?".to_string()));
+    }
+
+    // -- InvalidInteger --
+
+    #[test]
+    fn integer_overflow_help() {
+        let diag = expect_one_diagnostic("2147483648");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn hex_prefix_help() {
+        let diag = expect_one_diagnostic("0xFF");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Hexadecimal numbers are not supported yet, but are planned for the future."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn hex_prefix_uppercase_help() {
+        let diag = expect_one_diagnostic("0XFF");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Hexadecimal numbers are not supported yet, but are planned for the future."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn invalid_chars_in_number_help() {
+        let diag = expect_one_diagnostic("123abc");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Integers can only contain digits and an optional leading minus sign.".to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn float_help() {
+        let diag = expect_one_diagnostic("3.14");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Integers can only contain digits and an optional leading minus sign.".to_string()
+            )
+        );
+    }
+
+    // -- InvalidEscape --
+
+    #[test]
+    fn escape_newline_help() {
+        let diag = expect_one_diagnostic("\"\\\n");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Multiline string literals are not supported yet, but are planned for the future."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn escape_carriage_return_help() {
+        let diag = expect_one_diagnostic("\"\\\r");
+        assert_eq!(
+            diag.help,
+            Some(
+                "Multiline string literals are not supported yet, but are planned for the future."
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn escape_regular_char_no_help() {
+        let diag = expect_one_diagnostic("\"\\q\"");
+        assert_eq!(diag.help, None);
+    }
+
+    // -- UnterminatedString --
+
+    #[test]
+    fn unterminated_string_help() {
+        let diag = expect_one_diagnostic("\"hello");
+        assert_eq!(
+            diag.help,
+            Some("Close the string with a '\"' on the same line.".to_string())
+        );
+    }
+}
+
+// =============================================================================
+// Labels — error-specific label text
+// =============================================================================
+mod labels {
+    use super::*;
+
+    fn first_label_msg(diag: &Diagnostic) -> &str {
+        &diag.labels[0].message
+    }
+
+    // -- UnknownDirective --
+
+    #[test]
+    fn unknown_directive_label() {
+        let diag = expect_one_diagnostic(".foobar");
+        assert_eq!(
+            first_label_msg(&diag),
+            "'.foobar' is not a recognized directive"
+        );
+    }
+
+    // -- UnknownTypeHint --
+
+    #[test]
+    fn unknown_type_hint_label() {
+        let diag = expect_one_diagnostic("@foobar");
+        assert_eq!(
+            first_label_msg(&diag),
+            "'@foobar' is not a recognized type hint"
+        );
+    }
+
+    // -- UnterminatedString --
+
+    #[test]
+    fn unterminated_string_label() {
+        let diag = expect_one_diagnostic("\"hello");
+        assert_eq!(
+            first_label_msg(&diag),
+            "this string literal is not terminated"
+        );
+    }
+
+    // -- InvalidEscape --
+
+    #[test]
+    fn invalid_escape_regular_char_label() {
+        let diag = expect_one_diagnostic("\"\\q\"");
+        assert_eq!(
+            first_label_msg(&diag),
+            "'\\q' is not a valid escape sequence"
+        );
+    }
+
+    #[test]
+    fn invalid_escape_newline_label() {
+        let diag = expect_one_diagnostic("\"\\\n");
+        assert_eq!(
+            first_label_msg(&diag),
+            "newline characters cannot be escaped"
+        );
+    }
+
+    #[test]
+    fn invalid_escape_carriage_return_label() {
+        let diag = expect_one_diagnostic("\"\\\r");
+        assert_eq!(
+            first_label_msg(&diag),
+            "carriage return characters cannot be escaped"
+        );
+    }
+
+    // -- InvalidInteger --
+
+    #[test]
+    fn integer_overflow_label() {
+        let diag = expect_one_diagnostic("2147483648");
+        assert_eq!(
+            first_label_msg(&diag),
+            "integer '2147483648' is too large for a 32-bit signed integer"
+        );
+    }
+
+    #[test]
+    fn integer_invalid_chars_label() {
+        let diag = expect_one_diagnostic("123abc");
+        assert_eq!(
+            first_label_msg(&diag),
+            "'123abc' contains invalid characters"
+        );
+    }
+
+    #[test]
+    fn integer_float_label() {
+        let diag = expect_one_diagnostic("3.14");
+        assert_eq!(first_label_msg(&diag), "'3.14' contains invalid characters");
+    }
+}
+
+// =============================================================================
+// Note — docs link per error code
+// =============================================================================
+mod note {
+    use super::*;
+
+    #[test]
+    fn unterminated_string_note() {
+        let diag = expect_one_diagnostic("\"hello");
+        assert_eq!(
+            diag.note,
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-001".to_string())
+        );
+    }
+
+    #[test]
+    fn unknown_directive_note() {
+        let diag = expect_one_diagnostic(".foobar");
+        assert_eq!(
+            diag.note,
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-002".to_string())
+        );
+    }
+
+    #[test]
+    fn invalid_integer_note() {
+        let diag = expect_one_diagnostic("2147483648");
+        assert_eq!(
+            diag.note,
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-003".to_string())
+        );
+    }
+
+    #[test]
+    fn invalid_escape_note() {
+        let diag = expect_one_diagnostic("\"\\q\"");
+        assert_eq!(
+            diag.note,
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-004".to_string())
+        );
+    }
+
+    #[test]
+    fn unknown_type_hint_note() {
+        let diag = expect_one_diagnostic("@foobar");
+        assert_eq!(
+            diag.note,
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-005".to_string())
+        );
+    }
+}
+
+// =============================================================================
 // LSP message (lsp_msg) — used by the language server diagnostic output
 // =============================================================================
 mod lsp_msg {
