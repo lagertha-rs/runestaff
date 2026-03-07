@@ -1,0 +1,12 @@
+---
+source: rns/src/lexer/snapshot_tests.rs
+expression: formatted
+---
+----- SOURCE -----
+@utf8
+----- TOKENS -----
+KIND            | SPAN  | LSP     | TEXT
+----            | ----  | ---     | ----
+TypeHint(utf8)  | 0..5  | 0:0..5  | @utf8
+Newline         | 5..6  | 0:5..6  | \n
+Eof             | 6..6  | 1:0..0  |

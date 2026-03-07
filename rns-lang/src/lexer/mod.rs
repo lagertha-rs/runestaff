@@ -1,6 +1,6 @@
 use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
-use crate::token::type_hint::{TypeHint, TypeHintKind};
+use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span, Spanned};
 use std::str::FromStr;
 
@@ -203,106 +203,41 @@ impl<'a> RnsLexer<'a> {
 
         self.next_char(); // consume '.'
 
-        let directive = self.read_to_delimiter();
+        let directive_name = self.read_to_delimiter();
         let directive_span = self.span_for_current_position(byte_start, col_start);
-        if directive.is_empty() {
-            // TODO: test '.' with and without trailing whitespace
+        if directive_name.is_empty() {
             return Ok(RnsToken::Identifier(Spanned::new(
                 ".".to_string(),
                 directive_span,
             )));
         }
 
-        RnsToken::from_directive(&directive, directive_span).ok_or(LexerError::UnknownDirective(
-            directive_span,
-            format!(".{directive}"),
-        ))
+        RnsToken::from_directive(&directive_name, directive_span).ok_or(
+            LexerError::UnknownDirective(directive_span, format!(".{directive_name}")),
+        )
     }
 
-    fn expect_identifier(
-        &mut self,
-        on_err: impl FnOnce(RnsToken) -> LexerError,
-    ) -> Result<Spanned<String>, Diagnostic> {
-        let next_token = self.next_token()?;
-        match next_token {
-            RnsToken::Identifier(spanned) => Ok(spanned),
-            other => Err(on_err(other).into()),
-        }
-    }
-
-    fn handle_type_hint(&mut self) -> Result<RnsToken, Diagnostic> {
+    fn handle_type_hint(&mut self) -> Result<RnsToken, LexerError> {
         let byte_start = self.byte_pos;
         let col_start = self.col_pos;
 
         self.next_char(); // consume '@'
 
         let type_hint_str = self.read_to_delimiter();
+        let type_hint_span = self.span_for_current_position(byte_start, col_start);
         if type_hint_str.is_empty() {
-            // TODO: test '@'
             return Ok(RnsToken::Identifier(Spanned::new(
                 "@".to_string(),
-                Span {
-                    byte_start,
-                    byte_end: self.byte_pos,
-                    line: self.line,
-                    col_start,
-                    col_end: self.col_pos,
-                },
+                type_hint_span,
             )));
         }
-        let type_hint_pos = Span {
-            byte_start,
-            byte_end: self.byte_pos,
-            line: self.line,
-            col_start,
-            col_end: self.col_pos,
-        };
-        let type_hint_kind = TypeHintKind::from_str(&type_hint_str).unwrap();
 
-        self.skip_whitespaces_and_comments();
-
-        let type_hint =
-            match type_hint_kind {
-                TypeHintKind::Utf8 => TypeHint::Utf8(self.expect_identifier(|t| {
-                    LexerError::UnexpectedHintOperand {
-                        hint_position: type_hint_pos,
-                        operand_token: t,
-                        hint_kind: type_hint_kind,
-                        operand_order_nbr: 0,
-                    }
-                })?),
-                TypeHintKind::Integer => todo!(),
-                TypeHintKind::String => todo!(),
-                TypeHintKind::Class => todo!(),
-                TypeHintKind::Methodref => {
-                    let class = self.expect_identifier(|t| LexerError::UnexpectedHintOperand {
-                        hint_position: type_hint_pos,
-                        operand_token: t,
-                        hint_kind: type_hint_kind.clone(),
-                        operand_order_nbr: 0,
-                    })?;
-                    self.skip_whitespaces_and_comments();
-                    let method_name =
-                        self.expect_identifier(|t| LexerError::UnexpectedHintOperand {
-                            hint_position: type_hint_pos,
-                            operand_token: t,
-                            hint_kind: type_hint_kind.clone(),
-                            operand_order_nbr: 1,
-                        })?;
-                    self.skip_whitespaces_and_comments();
-                    let method_desc =
-                        self.expect_identifier(|t| LexerError::UnexpectedHintOperand {
-                            hint_position: type_hint_pos,
-                            operand_token: t,
-                            hint_kind: type_hint_kind,
-                            operand_order_nbr: 2,
-                        })?;
-                    TypeHint::Methodref(class, method_name, method_desc)
-                }
-                _ => unimplemented!(),
-            };
-
-        Ok(RnsToken::Typed(Spanned::new(type_hint, type_hint_pos)))
+        TypeHintKind::from_str(&type_hint_str)
+            .map(|kind| RnsToken::TypeHint(Spanned::new(kind, type_hint_span)))
+            .ok_or(LexerError::UnknownTypeHint(
+                type_hint_span,
+                format!("@{type_hint_str}"),
+            ))
     }
 
     fn next_token(&mut self) -> Result<RnsToken, Diagnostic> {
@@ -319,7 +254,6 @@ impl<'a> RnsLexer<'a> {
             '.' => self.handle_directive()?,
             '0'..='9' => self.read_number()?,
             '-' => {
-                // TODO: test minus only
                 let is_digit_after = self.peek_char_at(1).is_some_and(|c| c.is_ascii_digit());
                 if is_digit_after {
                     self.read_number()?
@@ -391,7 +325,7 @@ impl<'a> RnsLexer<'a> {
                     }
                 }
                 Err(e) => {
-                    diagnostics.push(e.into());
+                    diagnostics.push(e);
                     self.skip_to_end_of_line();
                 }
             }

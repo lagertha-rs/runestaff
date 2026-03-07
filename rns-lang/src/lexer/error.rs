@@ -1,6 +1,5 @@
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
 
 //TODO: same error code for all lexer, try to categorize later if needed
@@ -9,14 +8,9 @@ use crate::token::{RnsToken, Span};
 pub(super) enum LexerError {
     UnknownDirective(Span, String),
     UnterminatedString(Span),
+    UnknownTypeHint(Span, String),
     InvalidEscape(Span, char),
     InvalidInteger(Span, String),
-    UnexpectedHintOperand {
-        hint_position: Span,
-        operand_token: RnsToken,
-        hint_kind: TypeHintKind,
-        operand_order_nbr: usize, // TODO: confusing name, it is like position (first, second, etc)
-    },
 }
 
 impl LexerError {
@@ -24,7 +18,8 @@ impl LexerError {
         match self {
             LexerError::UnknownDirective(_, _) => Some("E-002"),
             LexerError::InvalidInteger(_, _) => Some("E-003"),
-            LexerError::InvalidEscape(_, c) => Some("E-004"),
+            LexerError::InvalidEscape(_, _) => Some("E-004"),
+            LexerError::UnknownTypeHint(_, _) => Some("E-005"),
             _ => None,
         }
     }
@@ -35,20 +30,18 @@ impl LexerError {
             LexerError::UnterminatedString(_) => "unterminated string literal".to_string(),
             LexerError::InvalidEscape(_, _) => "invalid escape sequence".to_string(),
             LexerError::InvalidInteger(_, _) => "invalid integer".to_string(),
-            LexerError::UnexpectedHintOperand { hint_kind, .. } => {
-                format!("unexpected operand for '{}' type hint", hint_kind)
-            }
+            LexerError::UnknownTypeHint(_, _) => "unknown type hint".to_string(),
         }
     }
 
     fn note(&self) -> Option<String> {
         match self {
-            LexerError::UnexpectedHintOperand { .. } => Some(format!("note msg")),
             LexerError::UnterminatedString(_) => Some(
                 "String literal is not terminated before the end of the line or file.".to_string(),
             ),
             LexerError::UnknownDirective(_, _)
             | LexerError::InvalidInteger(_, _)
+            | LexerError::UnknownTypeHint(_, _)
             | LexerError::InvalidEscape(_, _) => self.code().map(|code| {
                 format!(
                     "For more details see:\n{}{}",
@@ -59,40 +52,13 @@ impl LexerError {
         }
     }
 
-    // TODO: do better
-    fn conjugate_ordinal(n: usize) -> &'static str {
-        match n {
-            0 => "first",
-            1 => "second",
-            2 => "third",
-            _ => "nth",
-        }
-    }
-
     fn labels(&self) -> Vec<DiagnosticLabel> {
         match self {
-            LexerError::UnexpectedHintOperand {
-                hint_position,
-                operand_token,
-                hint_kind,
-                operand_order_nbr: operand_nbr,
-            } => {
-                let ordinal = Self::conjugate_ordinal(*operand_nbr);
-                vec![
-                    DiagnosticLabel::context(
-                        hint_position.as_range(),
-                        format!(
-                            "the '{}' {} operand is expected to be {}",
-                            hint_kind,
-                            ordinal,
-                            hint_kind.expected_argument_types()[*operand_nbr]
-                        ),
-                    ),
-                    DiagnosticLabel::at(
-                        operand_token.span().as_range(),
-                        format!("but {} found instead", operand_token.as_string_token_type()),
-                    ),
-                ]
+            LexerError::UnknownTypeHint(_, name) => {
+                vec![DiagnosticLabel::at(
+                    self.primary_location().as_range(),
+                    format!("'{name}' is not a recognized type hint"),
+                )]
             }
             LexerError::UnknownDirective(_, name) => {
                 vec![DiagnosticLabel::at(
@@ -133,6 +99,7 @@ impl LexerError {
 
     fn help(&self) -> Option<String> {
         match self {
+            // TODO: add suggestions for type hints
             LexerError::UnknownDirective(_, name) => {
                 let closest = RnsToken::closest_directive(name);
                 closest.map(|closest| format!("Did you mean '{}'?", closest))
@@ -157,8 +124,8 @@ impl LexerError {
             LexerError::UnknownDirective(span, _)
             | LexerError::UnterminatedString(span)
             | LexerError::InvalidEscape(span, _)
+            | LexerError::UnknownTypeHint(span, _)
             | LexerError::InvalidInteger(span, _) => *span,
-            LexerError::UnexpectedHintOperand { hint_position, .. } => *hint_position,
         }
     }
 
@@ -166,6 +133,10 @@ impl LexerError {
         match self {
             LexerError::UnknownDirective(_, name) => {
                 format!("unknown directive '{name}'")
+            }
+            LexerError::UnterminatedString(_) => "unterminated string literal".to_string(),
+            LexerError::UnknownTypeHint(_, name) => {
+                format!("unknown type hint '{name}'")
             }
             LexerError::InvalidInteger(_, _) => "invalid 32-bit signed integer".to_string(),
             _ => self.asm_msg(),

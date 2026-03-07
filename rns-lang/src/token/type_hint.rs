@@ -30,7 +30,19 @@ impl TypeHintKind {
             "string" => Some(Self::String),
             "class" => Some(Self::Class),
             "methodref" => Some(Self::Methodref),
-            _ => unimplemented!(),
+            "fieldref" => Some(Self::Fieldref),
+            "interfaceMethodref" => Some(Self::InterfaceMethodref),
+            "float" => Some(Self::Float),
+            "long" => Some(Self::Long),
+            "double" => Some(Self::Double),
+            "nameAndType" => Some(Self::NameAndType),
+            "methodHandle" => Some(Self::MethodHandle),
+            "methodType" => Some(Self::MethodType),
+            "dynamic" => Some(Self::Dynamic),
+            "invokeDynamic" => Some(Self::InvokeDynamic),
+            "module" => Some(Self::Module),
+            "package" => Some(Self::Package),
+            _ => None,
         }
     }
 
@@ -66,7 +78,18 @@ impl Display for TypeHintKind {
             Self::String => "string",
             Self::Class => "class",
             Self::Methodref => "methodref",
-            _ => unimplemented!(),
+            Self::Fieldref => "fieldref",
+            Self::InterfaceMethodref => "interfaceMethodref",
+            Self::Float => "float",
+            Self::Long => "long",
+            Self::Double => "double",
+            Self::NameAndType => "nameAndType",
+            Self::MethodHandle => "methodHandle",
+            Self::MethodType => "methodType",
+            Self::Dynamic => "dynamic",
+            Self::InvokeDynamic => "invokeDynamic",
+            Self::Module => "module",
+            Self::Package => "package",
         };
         write!(f, "{s}")
     }

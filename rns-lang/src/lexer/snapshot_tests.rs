@@ -28,7 +28,7 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
             RnsToken::Eof(_) => "Eof".to_string(),
             RnsToken::AccessFlag(spanned) => format!("AccessFlag({})", spanned.value),
             RnsToken::DotAnnotation(_) => "DotAnnotation".to_string(),
-            RnsToken::Typed(spanned) => format!("Typed({:?})", spanned.value),
+            RnsToken::TypeHint(spanned) => format!("TypeHint({})", spanned.value),
         };
 
         let span = token.span();

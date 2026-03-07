@@ -1,0 +1,17 @@
+@utf8
+@int
+@string
+@class
+@methodref
+@fieldref
+@interfaceMethodref
+@float
+@long
+@double
+@nameAndType
+@methodHandle
+@methodType
+@dynamic
+@invokeDynamic
+@module
+@package

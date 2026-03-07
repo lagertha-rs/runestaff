@@ -10,10 +10,10 @@ not generated
 .end
 ----- STDERR -----
 [E-004] Error: invalid escape sequence
-   ╭─[ test_data/integration/error/lexer/strings/escaped_new_line.rns:2:52 ]
+   ╭─[ test_data/integration/error/lexer/strings/escaped_new_line.rns:2:51 ]
    │
  2 │ "String with backslash escape followed by newline \
-   │                                                    ┬  
+   │                                                   ─┬  
    │                                                    ╰── newline characters cannot be escaped
    │ 
    │ Help: Multiple lines string literals are not supported yet, but are planned for the future.

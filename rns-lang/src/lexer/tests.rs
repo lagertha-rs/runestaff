@@ -105,6 +105,98 @@ mod unknown_directive {
 }
 
 // =============================================================================
+// Unknown TypeHint errors
+// =============================================================================
+mod unknown_type_hint {
+    use super::*;
+
+    #[test]
+    fn completely_unknown_type_hint() {
+        let diag = expect_one_diagnostic("@foobar");
+        assert_syntax_error(&diag, "unknown type hint");
+        assert_error_code(&diag, Some("E-005"));
+        assert_primary_span(&diag, 0, 7);
+        assert_primary_lsp(&diag, 0, 0, 7);
+    }
+
+    #[test]
+    fn misspelled_type_hint() {
+        let diag = expect_one_diagnostic("@unt8");
+        assert_syntax_error(&diag, "unknown type hint");
+        assert_error_code(&diag, Some("E-005"));
+        assert_primary_span(&diag, 0, 5);
+    }
+
+    #[test]
+    fn case_sensitive_uppercase() {
+        // TypeHint matching is case-sensitive: @Utf8 is not @utf8
+        let diag = expect_one_diagnostic("@Utf8");
+        assert_syntax_error(&diag, "unknown type hint");
+        assert_error_code(&diag, Some("E-005"));
+    }
+
+    #[test]
+    fn case_sensitive_all_caps() {
+        let diag = expect_one_diagnostic("@UTF8");
+        assert_syntax_error(&diag, "unknown type hint");
+        assert_error_code(&diag, Some("E-005"));
+    }
+
+    #[test]
+    fn case_sensitive_string() {
+        let diag = expect_one_diagnostic("@String");
+        assert_syntax_error(&diag, "unknown type hint");
+        assert_error_code(&diag, Some("E-005"));
+    }
+
+    #[test]
+    fn unknown_type_hint_on_second_line() {
+        let input = "@utf8\n@foobar";
+        let (tokens, diagnostics) = tokenize(input);
+        assert_eq!(diagnostics.len(), 1);
+        assert_syntax_error(&diagnostics[0], "unknown type hint");
+        assert_error_code(&diagnostics[0], Some("E-005"));
+        // @foobar starts at byte 6, line 1
+        assert_primary_span(&diagnostics[0], 6, 13);
+        assert_primary_lsp(&diagnostics[0], 1, 0, 7);
+        // @utf8 should still be in tokens
+        assert!(tokens.iter().any(|t| matches!(t, RnsToken::TypeHint(_))));
+    }
+
+    #[test]
+    fn multiple_unknown_type_hints() {
+        let input = "@foo\n@bar\n@utf8";
+        let (tokens, diagnostics) = tokenize(input);
+        assert_eq!(diagnostics.len(), 2);
+        assert_syntax_error(&diagnostics[0], "unknown type hint");
+        assert_syntax_error(&diagnostics[1], "unknown type hint");
+        // @utf8 on the third line should still be tokenized
+        assert!(tokens.iter().any(|t| matches!(t, RnsToken::TypeHint(_))));
+    }
+
+    #[test]
+    fn error_skips_rest_of_line() {
+        // "@foobar @utf8" on the same line — @utf8 should be skipped
+        let input = "@foobar @utf8";
+        let (tokens, diagnostics) = tokenize(input);
+        assert_eq!(diagnostics.len(), 1);
+        assert!(
+            !tokens.iter().any(|t| matches!(t, RnsToken::TypeHint(_))),
+            "tokens after error on same line should be skipped"
+        );
+    }
+
+    #[test]
+    fn error_recovery_with_valid_next_line() {
+        let input = "@foobar\n.class";
+        let (tokens, diagnostics) = tokenize(input);
+        assert_eq!(diagnostics.len(), 1);
+        assert_syntax_error(&diagnostics[0], "unknown type hint");
+        assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
+    }
+}
+
+// =============================================================================
 // Unterminated String errors
 // =============================================================================
 mod unterminated_string {
@@ -418,5 +510,19 @@ mod lsp_msg {
         let diag = expect_one_diagnostic("2147483648");
         assert_eq!(diag.lsp_msg, "invalid 32-bit signed integer");
         assert_ne!(diag.lsp_msg, diag.asm_msg);
+    }
+
+    #[test]
+    fn unknown_type_hint_includes_name() {
+        let diag = expect_one_diagnostic("@foobar");
+        assert_eq!(diag.lsp_msg, "unknown type hint '@foobar'");
+    }
+
+    #[test]
+    fn unknown_type_hint_differs_from_asm_msg() {
+        let diag = expect_one_diagnostic("@bazqux");
+        assert_eq!(diag.asm_msg, "unknown type hint");
+        assert_eq!(diag.lsp_msg, "unknown type hint '@bazqux'");
+        assert_ne!(diag.asm_msg, diag.lsp_msg);
     }
 }
