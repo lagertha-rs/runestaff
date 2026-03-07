@@ -10,4 +10,3 @@ KIND                    | SPAN    | LSP       | TEXT
 Identifier("<clinit>")  | 0..8    | 0:0..8    | <clinit>
 Identifier("()V")       | 9..12   | 0:9..12   | ()V
 Newline                 | 12..13  | 0:12..13  | \n
-Eof                     | 13..13  | 1:0..0    |

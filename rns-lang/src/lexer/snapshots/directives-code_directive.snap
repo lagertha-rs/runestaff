@@ -8,4 +8,3 @@ expression: formatted
 KIND     | SPAN  | LSP     | TEXT
 ----     | ----  | ---     | ----
 DotCode  | 0..5  | 0:0..5  | .code
-Eof      | 5..5  | 0:5..5  |

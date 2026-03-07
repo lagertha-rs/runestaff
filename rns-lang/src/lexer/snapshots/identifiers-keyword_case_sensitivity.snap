@@ -13,4 +13,3 @@ Identifier("Static")  | 14..20  | 0:14..20  | Static
 Identifier("STATIC")  | 21..27  | 0:21..27  | STATIC
 AccessFlag(public)    | 28..34  | 0:28..34  | public
 AccessFlag(static)    | 35..41  | 0:35..41  | static
-Eof                   | 41..41  | 0:41..41  |

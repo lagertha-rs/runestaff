@@ -9,4 +9,3 @@ KIND                                          | SPAN    | LSP       | TEXT
 ----                                          | ----    | ---       | ----
 Identifier("identifier;followed_by_comment")  | 0..30   | 0:0..30   | identifier;followed_by_comment
 Newline                                       | 30..31  | 0:30..31  | \n
-Eof                                           | 31..31  | 1:0..0    |

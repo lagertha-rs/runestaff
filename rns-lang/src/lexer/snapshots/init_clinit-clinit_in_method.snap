@@ -12,4 +12,3 @@ AccessFlag(static)      | 8..14   | 0:8..14   | static
 Identifier("<clinit>")  | 15..23  | 0:15..23  | <clinit>
 Identifier("()V")       | 24..27  | 0:24..27  | ()V
 Newline                 | 27..28  | 0:27..28  | \n
-Eof                     | 28..28  | 1:0..0    |

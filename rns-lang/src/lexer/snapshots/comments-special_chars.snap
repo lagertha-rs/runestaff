@@ -8,4 +8,3 @@ expression: formatted
 KIND     | SPAN    | LSP       | TEXT
 ----     | ----    | ---       | ----
 Newline  | 39..40  | 0:39..40  | \n
-Eof      | 40..40  | 1:0..0    |

@@ -10,7 +10,7 @@ struct RnsLanguageServer {
 
 impl RnsLanguageServer {
     async fn analyze_and_publish(&self, uri: Uri, text: String) {
-        let (tokens, errors) = lexer::tokenize(&text);
+        let (tokens, errors, _eof_span) = lexer::tokenize(&text);
         let mut diagnostics = Vec::with_capacity(errors.len());
         for err in errors {
             let span = err.primary_location;

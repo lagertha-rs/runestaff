@@ -6,7 +6,8 @@ use crate::token::RnsToken;
 
 /// Helper: tokenize input and return (tokens, diagnostics).
 fn tokenize(input: &str) -> (Vec<RnsToken>, Vec<Diagnostic>) {
-    lexer::tokenize(input)
+    let (tokens, diagnostics, _eof_span) = lexer::tokenize(input);
+    (tokens, diagnostics)
 }
 
 /// Helper: tokenize and assert exactly one diagnostic was produced. Returns it.
@@ -428,14 +429,15 @@ mod error_recovery {
     }
 
     #[test]
-    fn always_ends_with_eof() {
-        // Even with errors, token stream should always end with Eof
+    fn eof_not_in_token_vec() {
+        // Eof is returned separately, not in the token vector
         let input = ".foobar .bazqux .xyz";
-        let (tokens, _) = tokenize(input);
+        let (tokens, _, eof_span) = lexer::tokenize(input);
         assert!(
-            matches!(tokens.last(), Some(RnsToken::Eof(_))),
-            "token stream should always end with Eof"
+            !tokens.iter().any(|t| matches!(t, RnsToken::Eof(_))),
+            "Eof should not appear in the token vector"
         );
+        assert_eq!(eof_span.byte_start, input.len());
     }
 
     #[test]

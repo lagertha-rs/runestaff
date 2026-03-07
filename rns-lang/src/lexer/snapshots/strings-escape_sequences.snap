@@ -17,4 +17,3 @@ Newline                         | 26..27  | 1:11..12  | \n
 StringLiteral("quote\"inside")  | 27..42  | 2:0..15   | "quote\"inside"
 Newline                         | 42..43  | 2:15..16  | \n
 StringLiteral("backslash\\")    | 43..56  | 3:0..13   | "backslash\\"
-Eof                             | 56..56  | 3:13..13  |

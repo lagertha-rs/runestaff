@@ -10,4 +10,3 @@ KIND                     | SPAN    | LSP       | TEXT
 StringLiteral("first")   | 0..7    | 0:0..7    | "first"
 StringLiteral("second")  | 8..16   | 0:8..16   | "second"
 StringLiteral("third")   | 17..24  | 0:17..24  | "third"
-Eof                      | 24..24  | 0:24..24  |

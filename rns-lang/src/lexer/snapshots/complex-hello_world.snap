@@ -98,4 +98,3 @@ Identifier("end")                     | 455..458  | 20:9..12   | end
 Newline                               | 458..459  | 20:12..13  | \n
 DotEnd                                | 459..463  | 21:0..4    | .end
 Identifier("method")                  | 464..470  | 21:5..11   | method
-Eof                                   | 470..470  | 21:11..11  |

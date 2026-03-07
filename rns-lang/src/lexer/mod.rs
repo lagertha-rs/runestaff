@@ -10,7 +10,7 @@ mod snapshot_tests;
 #[cfg(test)]
 mod tests;
 
-pub fn tokenize(source: &str) -> (Vec<RnsToken>, Vec<Diagnostic>) {
+pub fn tokenize(source: &str) -> (Vec<RnsToken>, Vec<Diagnostic>, Span) {
     RnsLexer::new(source).tokenize()
 }
 
@@ -313,19 +313,18 @@ impl<'a> RnsLexer<'a> {
         }
     }
 
-    fn tokenize(&mut self) -> (Vec<RnsToken>, Vec<Diagnostic>) {
+    fn tokenize(&mut self) -> (Vec<RnsToken>, Vec<Diagnostic>, Span) {
         let mut tokens = Vec::new();
         let mut diagnostics = Vec::new();
 
         loop {
             match self.next_token() {
                 Ok(token) => {
-                    let is_eof = matches!(token, RnsToken::Eof(_));
+                    if let RnsToken::Eof(eof_span) = token {
+                        return (tokens, diagnostics, eof_span);
+                    }
                     // TODO: can I skip multiple newlines in a row? do I need to keep them all?
                     tokens.push(token);
-                    if is_eof {
-                        break;
-                    }
                 }
                 Err(e) => {
                     diagnostics.push(e);
@@ -333,7 +332,5 @@ impl<'a> RnsLexer<'a> {
                 }
             }
         }
-
-        (tokens, diagnostics)
     }
 }

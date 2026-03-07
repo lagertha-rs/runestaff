@@ -28,4 +28,3 @@ Identifier("MyClass")   | 60..67  | 4:11..18  | MyClass
 Identifier("myMethod")  | 68..76  | 4:19..27  | myMethod
 Identifier("()V")       | 77..80  | 4:28..31  | ()V
 Newline                 | 80..81  | 4:31..32  | \n
-Eof                     | 81..81  | 5:0..0    |

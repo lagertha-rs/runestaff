@@ -25,7 +25,7 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
             RnsToken::DotMethod(_) => "DotMethod".to_string(),
             RnsToken::DotSuper(_) => "DotSuper".to_string(),
             RnsToken::Newline(_) => "Newline".to_string(),
-            RnsToken::Eof(_) => "Eof".to_string(),
+            RnsToken::Eof(_) => unreachable!("Eof token should not be in the token list"),
             RnsToken::AccessFlag(spanned) => format!("AccessFlag({})", spanned.value),
             RnsToken::DotAnnotation(_) => "DotAnnotation".to_string(),
             RnsToken::TypeHint(spanned) => format!("TypeHint({})", spanned.value),
@@ -92,7 +92,7 @@ fn success_cases(
     path: PathBuf,
 ) {
     let source = std::fs::read_to_string(&path).expect("Unable to read file");
-    let (tokens, diagnostics) = super::tokenize(&source);
+    let (tokens, diagnostics, _eof_span) = super::tokenize(&source);
     assert!(
         diagnostics.is_empty(),
         "Lexer should succeed for success test cases, but got diagnostics: {:?}",

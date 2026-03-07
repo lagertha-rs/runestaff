@@ -5,8 +5,7 @@ expression: formatted
 ----- SOURCE -----
 "string" identifier
 ----- TOKENS -----
-KIND                      | SPAN    | LSP       | TEXT
-----                      | ----    | ---       | ----
-StringLiteral("string")   | 0..8    | 0:0..8    | "string"
-Identifier("identifier")  | 9..19   | 0:9..19   | identifier
-Eof                       | 19..19  | 0:19..19  |
+KIND                      | SPAN   | LSP      | TEXT
+----                      | ----   | ---      | ----
+StringLiteral("string")   | 0..8   | 0:0..8   | "string"
+Identifier("identifier")  | 9..19  | 0:9..19  | identifier

@@ -9,4 +9,3 @@ KIND                        | SPAN    | LSP       | TEXT
 ----                        | ----    | ---       | ----
 Identifier("publicStatic")  | 0..12   | 0:0..12   | publicStatic
 Identifier("staticPublic")  | 13..25  | 0:13..25  | staticPublic
-Eof                         | 25..25  | 0:25..25  |

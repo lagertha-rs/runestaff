@@ -9,4 +9,3 @@ KIND             | SPAN  | LSP     | TEXT
 ----             | ----  | ---     | ----
 Identifier("-")  | 0..1  | 0:0..1  | -
 Newline          | 1..2  | 0:1..2  | \n
-Eof              | 2..2  | 1:0..0  |

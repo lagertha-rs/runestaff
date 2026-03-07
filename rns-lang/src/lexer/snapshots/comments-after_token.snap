@@ -9,4 +9,3 @@ KIND      | SPAN    | LSP       | TEXT
 ----      | ----    | ---       | ----
 DotClass  | 0..6    | 0:0..6    | .class
 Newline   | 26..27  | 0:26..27  | \n
-Eof       | 27..27  | 1:0..0    |

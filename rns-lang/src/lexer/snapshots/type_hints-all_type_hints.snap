@@ -57,4 +57,3 @@ TypeHint(module)              | 151..158  | 15:0..7    | @module
 Newline                       | 158..159  | 15:7..8    | \n
 TypeHint(package)             | 159..167  | 16:0..8    | @package
 Newline                       | 167..168  | 16:8..9    | \n
-Eof                           | 168..168  | 17:0..0    |

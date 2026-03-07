@@ -9,4 +9,3 @@ KIND               | SPAN  | LSP     | TEXT
 ----               | ----  | ---     | ----
 StringLiteral("")  | 0..2  | 0:0..2  | ""
 Newline            | 2..3  | 0:2..3  | \n
-Eof                | 3..3  | 1:0..0  |

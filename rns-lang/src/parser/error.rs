@@ -15,8 +15,6 @@ pub(super) enum ParserError {
     UnknownInstruction(Span, String),
 
     EmptyFile(Span),
-    //TODO: add a specific handling
-    Internal(String),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -110,7 +108,6 @@ impl ParserError {
                 format!("unknown instruction '{}'", name)
             }
             ParserError::EmptyFile(_) => "file contains no class definition".to_string(),
-            ParserError::Internal(msg) => format!("Internal parser error: {}", msg),
         }
     }
 
@@ -222,7 +219,6 @@ impl ParserError {
                 };
                 vec![DiagnosticLabel::at(self.primary_location().as_range(), msg)]
             }
-            ParserError::Internal(_) => vec![],
             ParserError::EmptyFile(_) => {
                 vec![DiagnosticLabel::at(
                     self.primary_location().as_range(),
@@ -369,7 +365,6 @@ impl ParserError {
                 "Check the Java Virtual Machine specification for a list of valid opcodes.".to_string(),
             ),
             ParserError::EmptyFile(_) => Some("A Java assembly file must start with a '.class' directive.".to_string()),
-            ParserError::Internal(_) => None,
         }
     }
 
@@ -388,7 +383,6 @@ impl ParserError {
                 col_start: tokens[0].span().col_start,
                 col_end: tokens.last().map(|v| v.span().col_end).unwrap_or(0),
             },
-            ParserError::Internal(_) => Span::default(),
         }
     }
 

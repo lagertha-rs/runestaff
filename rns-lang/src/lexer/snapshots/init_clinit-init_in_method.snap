@@ -12,4 +12,3 @@ AccessFlag(public)    | 8..14   | 0:8..14   | public
 Identifier("<init>")  | 15..21  | 0:15..21  | <init>
 Identifier("()V")     | 22..25  | 0:22..25  | ()V
 Newline               | 25..26  | 0:25..26  | \n
-Eof                   | 26..26  | 1:0..0    |

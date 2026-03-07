@@ -15,4 +15,3 @@ StringLiteral("with\tescape\nchars")  | 14..35  | 1:0..21   | "with\tescape\ncha
 Newline                               | 35..36  | 1:21..22  | \n
 StringLiteral("")                     | 36..38  | 2:0..2    | ""
 Newline                               | 38..39  | 2:2..3    | \n
-Eof                                   | 39..39  | 3:0..0    |

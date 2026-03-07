@@ -9,4 +9,3 @@ KIND                    | SPAN  | LSP     | TEXT
 ----                    | ----  | ---     | ----
 Identifier("<clinit>")  | 0..8  | 0:0..8  | <clinit>
 Newline                 | 8..9  | 0:8..9  | \n
-Eof                     | 9..9  | 1:0..0  |

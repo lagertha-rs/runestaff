@@ -5,8 +5,7 @@ expression: formatted
 ----- SOURCE -----
 .super #".super"
 ----- TOKENS -----
-KIND                  | SPAN    | LSP       | TEXT
-----                  | ----    | ---       | ----
-DotSuper              | 0..6    | 0:0..6    | .super
-Identifier(".super")  | 7..16   | 0:7..16   | #".super"
-Eof                   | 16..16  | 0:16..16  |
+KIND                  | SPAN   | LSP      | TEXT
+----                  | ----   | ---      | ----
+DotSuper              | 0..6   | 0:0..6   | .super
+Identifier(".super")  | 7..16  | 0:7..16  | #".super"

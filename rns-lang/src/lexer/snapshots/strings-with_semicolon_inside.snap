@@ -9,4 +9,3 @@ KIND                                             | SPAN    | LSP       | TEXT
 ----                                             | ----    | ---       | ----
 StringLiteral("string with ; semicolon inside")  | 0..32   | 0:0..32   | "string with ; semicolon inside"
 Newline                                          | 32..33  | 0:32..33  | \n
-Eof                                              | 33..33  | 1:0..0    |
