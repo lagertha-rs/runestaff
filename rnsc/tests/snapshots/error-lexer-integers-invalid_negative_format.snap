@@ -15,7 +15,7 @@ not generated
    │       ──┬──  
    │         ╰──── '-5xyz' contains invalid characters
    │ 
-   │ Help: Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.
+   │ Help: Integers can only contain digits and an optional leading minus sign.
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-003

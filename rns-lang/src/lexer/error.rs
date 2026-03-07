@@ -1,6 +1,7 @@
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::{RnsToken, Span};
+use crate::suggestion;
+use crate::token::Span;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 
@@ -14,13 +15,13 @@ pub(super) enum LexerError {
 }
 
 impl LexerError {
-    fn code(&self) -> Option<&'static str> {
+    fn code(&self) -> &'static str {
         match self {
-            LexerError::UnknownDirective(_, _) => Some("E-002"),
-            LexerError::InvalidInteger(_, _) => Some("E-003"),
-            LexerError::InvalidEscape(_, _) => Some("E-004"),
-            LexerError::UnknownTypeHint(_, _) => Some("E-005"),
-            _ => None,
+            LexerError::UnterminatedString(_) => "E-001",
+            LexerError::UnknownDirective(_, _) => "E-002",
+            LexerError::InvalidInteger(_, _) => "E-003",
+            LexerError::InvalidEscape(_, _) => "E-004",
+            LexerError::UnknownTypeHint(_, _) => "E-005",
         }
     }
 
@@ -34,22 +35,12 @@ impl LexerError {
         }
     }
 
-    fn note(&self) -> Option<String> {
-        match self {
-            LexerError::UnterminatedString(_) => Some(
-                "String literal is not terminated before the end of the line or file.".to_string(),
-            ),
-            LexerError::UnknownDirective(_, _)
-            | LexerError::InvalidInteger(_, _)
-            | LexerError::UnknownTypeHint(_, _)
-            | LexerError::InvalidEscape(_, _) => self.code().map(|code| {
-                format!(
-                    "For more details see:\n{}{}",
-                    ERROR_DOCS_BASE_URL,
-                    code.to_ascii_lowercase()
-                )
-            }),
-        }
+    fn note(&self) -> String {
+        format!(
+            "For more details see:\n{}{}",
+            ERROR_DOCS_BASE_URL,
+            self.code().to_ascii_lowercase()
+        )
     }
 
     fn labels(&self) -> Vec<DiagnosticLabel> {
@@ -76,6 +67,10 @@ impl LexerError {
                 self.primary_location().as_range(),
                 "newline characters cannot be escaped".to_string(),
             )],
+            LexerError::InvalidEscape(_, c) if *c == '\r' => vec![DiagnosticLabel::at(
+                self.primary_location().as_range(),
+                "carriage return characters cannot be escaped".to_string(),
+            )],
             LexerError::InvalidEscape(_, c) => vec![DiagnosticLabel::at(
                 self.primary_location().as_range(),
                 format!("'\\{}' is not a valid escape sequence", c.escape_default()),
@@ -99,23 +94,34 @@ impl LexerError {
 
     fn help(&self) -> Option<String> {
         match self {
-            // TODO: add suggestions for type hints
-            LexerError::UnknownDirective(_, name) => {
-                let closest = RnsToken::closest_directive(name);
-                closest.map(|closest| format!("Did you mean '{}'?", closest))
+            LexerError::UnknownDirective(_, name) => suggestion::closest_directive(name)
+                .map(|closest| format!("Did you mean '{}'?", closest)),
+            LexerError::UnknownTypeHint(_, name) => {
+                let bare = name.strip_prefix('@').unwrap_or(name);
+                suggestion::closest_type_hint(bare)
+                    .map(|closest| format!("Did you mean '@{}'?", closest))
             }
             LexerError::InvalidInteger(_, value) => {
                 if value.starts_with("0x") || value.starts_with("0X") {
                     Some("Hexadecimal numbers are not supported yet, but are planned for the future."
                         .to_string())
+                } else if value.chars().any(|c| !c.is_ascii_digit() && c != '-') {
+                    Some(
+                        "Integers can only contain digits and an optional leading minus sign."
+                            .to_string(),
+                    )
                 } else {
                     Some("Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer.".to_string())
                 }
             }
-            LexerError::InvalidEscape(_, c) if *c == '\n' => Some(
-                "Multiple lines string literals are not supported yet, but are planned for the future.".to_string(),
+            LexerError::InvalidEscape(_, c) if *c == '\n' || *c == '\r' => Some(
+                "Multiline string literals are not supported yet, but are planned for the future."
+                    .to_string(),
             ),
-            _ => None,
+            LexerError::InvalidEscape(_, _) => None,
+            LexerError::UnterminatedString(_) => {
+                Some("Close the string with a '\"' on the same line.".to_string())
+            }
         }
     }
 
@@ -149,9 +155,9 @@ impl From<LexerError> for Diagnostic {
         Diagnostic {
             asm_msg: value.asm_msg(),
             lsp_msg: value.lsp_msg(),
-            code: value.code(),
+            code: Some(value.code()),
             primary_location: value.primary_location(),
-            note: value.note(),
+            note: Some(value.note()),
             help: value.help(),
             tier: DiagnosticTier::SyntaxError,
             labels: value.labels(),

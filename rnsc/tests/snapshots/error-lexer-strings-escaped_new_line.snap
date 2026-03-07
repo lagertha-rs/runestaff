@@ -16,7 +16,7 @@ not generated
    │                                                   ─┬  
    │                                                    ╰── newline characters cannot be escaped
    │ 
-   │ Help: Multiple lines string literals are not supported yet, but are planned for the future.
+   │ Help: Multiline string literals are not supported yet, but are planned for the future.
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-004

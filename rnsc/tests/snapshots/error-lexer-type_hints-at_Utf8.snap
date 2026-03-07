@@ -1,0 +1,23 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+@Utf8
+----- STDERR -----
+[E-005] Error: unknown type hint
+   ╭─[ test_data/integration/error/lexer/type_hints/at_Utf8.rns:1:1 ]
+   │
+ 1 │ @Utf8
+   │ ──┬──  
+   │   ╰──── '@Utf8' is not a recognized type hint
+   │ 
+   │ Help: Did you mean '@utf8'?
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-005
+───╯
+----- HASH -----
+not generated

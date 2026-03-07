@@ -41,15 +41,6 @@ pub enum RnsToken {
     Eof(Span),
 }
 
-const DIRECTIVES_STR: [&str; 6] = [
-    ".class",
-    ".super",
-    ".method",
-    ".end",
-    ".code",
-    ".annotation",
-];
-
 impl TryFrom<&str> for RnsFlag {
     type Error = ();
 
@@ -105,20 +96,6 @@ impl RnsFlag {
 }
 
 impl RnsToken {
-    // TODO: make it for all keywords, not only directives
-    pub fn closest_directive(dir: &str) -> Option<&'static str> {
-        let mut closest = None;
-        let mut min_dist = usize::MAX;
-        for directive in DIRECTIVES_STR {
-            let dist = crate::utils::levenshtein_distance(directive, dir);
-            if dist < min_dist && dist <= 2 {
-                min_dist = dist;
-                closest = Some(directive);
-            }
-        }
-        closest
-    }
-
     // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
     pub fn is_directive(&self) -> bool {
         matches!(

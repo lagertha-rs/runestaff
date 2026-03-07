@@ -1,5 +1,5 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::instruction::INSTRUCTION_SPECS;
+use crate::suggestion;
 use crate::token::{RnsToken, Span};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -215,18 +215,8 @@ impl ParserError {
                 format!("expected a non-negative integer, found '{}'", token),
             )],
             ParserError::UnknownInstruction(_, name) => {
-                let mut closest = None;
-                let mut min_dist = usize::MAX;
-                for (mnemonic, _) in INSTRUCTION_SPECS.entries() {
-                    let dist = crate::utils::levenshtein_distance(name, mnemonic);
-                    if dist < min_dist && dist <= 2 {
-                        min_dist = dist;
-                        closest = Some(mnemonic);
-                    }
-                }
-
-                let msg = if let Some(suggestion) = closest {
-                    format!("did you mean '{}' ?", suggestion)
+                let msg = if let Some(s) = suggestion::closest_instruction(name) {
+                    format!("did you mean '{}' ?", s)
                 } else {
                     "unknown instruction".to_string()
                 };
