@@ -1,12 +1,28 @@
-use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum ParserError {
     EmptyFile(Span),
     UnexpectedTokenInClassBody(RnsToken),
     UnexpectedTokenBeforeClassDefinition(RnsToken),
+    IdentifierOrHintExpected(Span, RnsToken, IdentifierContext),
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(super) enum IdentifierContext {
+    ClassName,
+}
+
+impl Display for IdentifierContext {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IdentifierContext::ClassName => write!(f, "class name"),
+        }
+    }
 }
 
 impl ParserError {
@@ -16,6 +32,7 @@ impl ParserError {
             ParserError::EmptyFile(_) => "E-006",
             ParserError::UnexpectedTokenInClassBody(_) => "E-007",
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
+            ParserError::IdentifierOrHintExpected(_, _, _) => "E-009",
         }
     }
 
@@ -30,6 +47,9 @@ impl ParserError {
                     "unexpected {} before class definition",
                     unexpected.token_type()
                 )
+            }
+            ParserError::IdentifierOrHintExpected(_, token, ctx) => {
+                format!("can't resolve {} as {}", token.token_type(), ctx)
             }
         }
     }
@@ -61,6 +81,14 @@ impl ParserError {
                 );
                 vec![DiagnosticLabel::at(unexpected.span().as_range(), msg)]
             }
+            ParserError::IdentifierOrHintExpected(span, token, ctx) => {
+                let token_type = token.token_type();
+                let msg = format!(
+                    "attempted to set {} as {}, but it can't be resolved as either an identifier or a type hint",
+                    token_type, ctx
+                );
+                vec![DiagnosticLabel::at(span.as_range(), msg)]
+            }
         }
     }
 
@@ -83,12 +111,29 @@ impl ParserError {
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => {
                 Some("Make sure the file starts with a '.class' directive.".to_string())
             }
+            ParserError::IdentifierOrHintExpected(_, token, _ctx) => match token {
+                RnsToken::Integer(spanned) => Some(format!(
+                    "The constant pool requires each entry to have a specific kind.\n\
+                     The parser can't determine whether you intended an identifier or an integer from the bare token alone.\n\n\
+                     To treat it as an identifier (will resolve to the appropriate entry kind from context):\n\
+                     #\"{}\"\n\n\
+                     To explicitly store it as an {} constant pool entry:\n\
+                     {} {}",
+                    spanned.value,
+                    TypeHintKind::Integer,
+                    TypeHintKind::Integer,
+                    spanned.value
+                )),
+                _ => unimplemented!(),
+            },
         }
     }
 
     fn primary_location(&self) -> Span {
         match self {
-            ParserError::EmptyFile(span) => *span,
+            ParserError::EmptyFile(span) | ParserError::IdentifierOrHintExpected(span, _, _) => {
+                *span
+            }
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
         }

@@ -1,12 +1,13 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::parser::error::ParserError;
+use crate::parser::error::{IdentifierContext, ParserError};
 use crate::parser::error_deprecated::{
     IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
     TrailingTokensContextDeprecated,
 };
 use crate::parser::warning::ParserWarning;
-use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span};
+use crate::token::type_hint::{TypeHint, TypeHintKind};
+use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
@@ -26,7 +27,7 @@ struct RnsParser {
 
     diagnostic: Vec<Diagnostic>,
 
-    class_directive: ClassDirective,
+    class_directive: Option<ClassDirective>,
     super_directives: Vec<SuperDirective>,
 }
 
@@ -100,7 +101,44 @@ impl RnsParser {
         todo!()
     }
 
-    fn expect_next_identifier(
+    fn resolve_type_hint(_: Spanned<TypeHintKind>) -> Result<TypeHint, Diagnostic> {
+        unimplemented!()
+    }
+
+    fn expect_next_identifier_and<F>(
+        &mut self,
+        err_ctx: IdentifierContext,
+        map_fn: F,
+    ) -> Result<TypeHint, Diagnostic>
+    where
+        F: FnOnce(Spanned<String>) -> TypeHint,
+    {
+        let prev_token_span = self.last_span;
+        let token = self.next_token();
+        let token_span = token.span();
+
+        match token {
+            RnsToken::Identifier(spanned) => Ok(map_fn(spanned)),
+            RnsToken::DotClass(span)
+            | RnsToken::DotSuper(span)
+            | RnsToken::DotMethod(span)
+            | RnsToken::DotCode(span)
+            | RnsToken::DotEnd(span)
+            | RnsToken::DotAnnotation(span) => Ok(map_fn(Spanned::new(token.to_string(), span))),
+            RnsToken::AccessFlag(spanned) => Ok(map_fn(Spanned::new(
+                spanned.value.to_string(),
+                spanned.span,
+            ))),
+            RnsToken::TypeHint(spanned) => Self::resolve_type_hint(spanned),
+            RnsToken::Eof(_) | RnsToken::Newline(_) => {
+                Err(ParserError::IdentifierOrHintExpected(prev_token_span, token, err_ctx).into())
+            }
+            // TODO: avoid _ everywhere and make sure to handle all cases properly
+            _ => Err(ParserError::IdentifierOrHintExpected(token_span, token, err_ctx).into()),
+        }
+    }
+
+    fn expect_next_identifier_deprecated(
         &mut self,
         context: IdentifierContextDeprecated,
         prev_token_byte_end: usize,
@@ -414,7 +452,7 @@ impl RnsParser {
 
     fn parse_super_directive(&mut self) -> Result<(), ParserErrorDeprecated> {
         let dot_super = self.next_token(); // consume .super token
-        let (super_name, super_name_span) = self.expect_next_identifier(
+        let (super_name, super_name_span) = self.expect_next_identifier_deprecated(
             IdentifierContextDeprecated::SuperName,
             dot_super.span().byte_end,
             dot_super.span().col_end,
@@ -455,20 +493,21 @@ impl RnsParser {
         let directive_span = self.anchor_class_directive()?;
         let access_flags = self.parse_class_access_flags();
 
-        let (class_name, name_span) = self.expect_next_identifier(
-            IdentifierContextDeprecated::ClassName,
-            self.last_span.byte_end,
-            self.last_span.col_end,
-        )?;
+        match self.expect_next_identifier_and(IdentifierContext::ClassName, |s| TypeHint::Class(s))
+        {
+            Ok(class_name) => {
+                self.class_directive = Some(ClassDirective {
+                    directive_span,
+                    name: class_name,
+                    flags: access_flags,
+                });
+            }
+            Err(e) => {
+                self.diagnostic.push(e);
+            }
+        }
 
-        self.class_directive = ClassDirective {
-            directive_span,
-            name: class_name,
-            name_span,
-            flags: access_flags,
-        };
-
-        // TODO: test EOF right after class name and check for correct span in error
+        // TODO:
         self.expect_no_trailing_tokens(TrailingTokensContextDeprecated::Class)?;
 
         while let Some(token) = self.tokens.peek() {
@@ -563,7 +602,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         last_span: Span::default(),
         diagnostic: Vec::new(),
 
-        class_directive: ClassDirective::default(),
+        class_directive: None,
         super_directives: Vec::new(),
     };
 
@@ -571,9 +610,13 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         instance.diagnostic.push(e);
         return Err(instance.diagnostic);
     }
-    Ok(RnsModule {
-        class_dir: instance.class_directive,
-        super_directives: instance.super_directives,
-        diagnostics: instance.diagnostic,
-    })
+    if let Some(class_dir) = instance.class_directive.take() {
+        Ok(RnsModule {
+            class_dir,
+            super_directives: instance.super_directives,
+            diagnostics: instance.diagnostic,
+        })
+    } else {
+        Err(instance.diagnostic)
+    }
 }

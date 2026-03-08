@@ -1,9 +1,10 @@
 use crate::assembler::jvm_warning::JvmWarning;
 use crate::diagnostic::Diagnostic;
+use crate::token::type_hint::TypeHint;
 use crate::token::{RnsFlag, Span};
-use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{AttributeNameMap, ConstantPoolBuilder};
+use jclass::ClassFile;
 use std::collections::BTreeMap;
 
 mod jvm_warning;
@@ -14,11 +15,9 @@ pub struct RnsModule {
     pub diagnostics: Vec<Diagnostic>,
 }
 
-#[derive(Default)]
 pub struct ClassDirective {
     pub directive_span: Span,
-    pub name: String,
-    pub name_span: Span,
+    pub name: TypeHint,
     // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
     pub flags: BTreeMap<RnsFlag, Span>,
 }
@@ -88,7 +87,8 @@ impl RnsModule {
         let super_name = self.super_directives[0].name.clone().unwrap();
         let class_flags = self.build_class_flags();
 
-        let this_cp_id = cp_builder.add_class(&self.class_dir.name);
+        //let this_cp_id = cp_builder.add_class(&self.class_dir.name);
+        let this_cp_id = unimplemented!();
         let super_cp_id = cp_builder.add_class(&super_name);
 
         (

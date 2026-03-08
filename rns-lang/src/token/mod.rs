@@ -104,7 +104,7 @@ impl TryFrom<&str> for RnsFlag {
 }
 
 impl Display for RnsFlag {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             RnsFlag::Public => write!(f, "public"),
             RnsFlag::Static => write!(f, "static"),
