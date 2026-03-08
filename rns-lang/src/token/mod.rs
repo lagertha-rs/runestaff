@@ -1,6 +1,6 @@
 pub(crate) use crate::token::span::{Span, Spanned};
 use crate::token::type_hint::TypeHintKind;
-use std::fmt::Display;
+use std::fmt::{Display, Formatter};
 
 pub(crate) mod span;
 pub(crate) mod type_hint;
@@ -19,8 +19,35 @@ pub enum RnsFlag {
     Module,
 }
 
-//TODO: is it worth to use &str instead of String to avoid unnecessary cloning?
-// Since the source code is lives the whole time of the parsing we can use &str, but it will require some lifetime annotations
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum RnsTokenContext {
+    ClassDeclaration,
+    ClassBody,
+    MethodDeclaration,
+    MethodBody,
+    CodeBody,
+    Operand,
+    TopLevel,
+    Contextless,
+}
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub enum RnsTokenKind {
+    DotClass,
+    DotSuper,
+    DotMethod,
+    DotEnd,
+    DotCode,
+    DotAnnotation,
+    AccessFlag(RnsFlag),
+    TypeHint(TypeHintKind),
+    Identifier,
+    Integer,
+    StringLiteral,
+    Newline,
+    Eof,
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum RnsToken {
     // directives
@@ -39,6 +66,21 @@ pub enum RnsToken {
     StringLiteral(Spanned<String>),
     Newline(Span),
     Eof(Span),
+}
+
+impl Display for RnsTokenContext {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RnsTokenContext::ClassDeclaration => write!(f, "class declaration"),
+            RnsTokenContext::ClassBody => write!(f, "class body"),
+            RnsTokenContext::MethodDeclaration => write!(f, "method declaration"),
+            RnsTokenContext::MethodBody => write!(f, "method body"),
+            RnsTokenContext::CodeBody => write!(f, "code body"),
+            RnsTokenContext::Operand => write!(f, "operand"),
+            RnsTokenContext::TopLevel => write!(f, "file top level"),
+            RnsTokenContext::Contextless => write!(f, "everywhere"),
+        }
+    }
 }
 
 impl TryFrom<&str> for RnsFlag {
@@ -96,7 +138,32 @@ impl RnsFlag {
 }
 
 impl RnsToken {
-    // TODO: I don't want to search in DIRECTIVES, but this one should covered with tests to not miss any directive.
+    pub fn can_appear_in(&self) -> &[RnsTokenContext] {
+        match self {
+            RnsToken::DotClass(_) => &[RnsTokenContext::TopLevel],
+            RnsToken::DotSuper(_) => &[RnsTokenContext::ClassBody],
+            RnsToken::DotMethod(_) => &[RnsTokenContext::ClassBody],
+            RnsToken::DotEnd(_) => &[
+                RnsTokenContext::ClassBody,
+                RnsTokenContext::MethodBody,
+                RnsTokenContext::CodeBody,
+            ],
+            RnsToken::DotCode(_) => &[RnsTokenContext::MethodBody],
+            RnsToken::DotAnnotation(_) => {
+                &[RnsTokenContext::ClassBody, RnsTokenContext::MethodBody]
+            }
+            RnsToken::AccessFlag(_) => &[
+                RnsTokenContext::ClassDeclaration,
+                RnsTokenContext::MethodDeclaration,
+            ],
+            RnsToken::Newline(_) | RnsToken::Eof(_) => &[RnsTokenContext::Contextless],
+            RnsToken::TypeHint(_)
+            | RnsToken::Identifier(_)
+            | RnsToken::Integer(_)
+            | RnsToken::StringLiteral(_) => &[RnsTokenContext::Operand],
+        }
+    }
+
     pub fn is_directive(&self) -> bool {
         matches!(
             self,
@@ -107,6 +174,29 @@ impl RnsToken {
                 | RnsToken::DotCode(_)
                 | RnsToken::DotAnnotation(_)
         )
+    }
+
+    pub fn matches_kind(&self, kind: RnsTokenKind) -> bool {
+        match (self, kind) {
+            (RnsToken::DotClass(_), RnsTokenKind::DotClass)
+            | (RnsToken::DotSuper(_), RnsTokenKind::DotSuper)
+            | (RnsToken::DotMethod(_), RnsTokenKind::DotMethod)
+            | (RnsToken::DotEnd(_), RnsTokenKind::DotEnd)
+            | (RnsToken::DotCode(_), RnsTokenKind::DotCode)
+            | (RnsToken::DotAnnotation(_), RnsTokenKind::DotAnnotation) => true,
+            (RnsToken::AccessFlag(spanned), RnsTokenKind::AccessFlag(expected_flag)) => {
+                spanned.value == expected_flag
+            }
+            (RnsToken::TypeHint(spanned), RnsTokenKind::TypeHint(expected_hint)) => {
+                spanned.value == expected_hint
+            }
+            (RnsToken::Identifier(_), RnsTokenKind::Identifier) => true,
+            (RnsToken::Integer(_), RnsTokenKind::Integer) => true,
+            (RnsToken::StringLiteral(_), RnsTokenKind::StringLiteral) => true,
+            (RnsToken::Newline(_), RnsTokenKind::Newline) => true,
+            (RnsToken::Eof(_), RnsTokenKind::Eof) => true,
+            _ => false,
+        }
     }
 
     pub fn is_class_nested_directive(&self) -> bool {
@@ -162,21 +252,21 @@ impl RnsToken {
         }
     }
 
-    pub fn as_string_token_type(&self) -> String {
+    pub fn token_type(&self) -> &'static str {
         match self {
             RnsToken::DotClass(_)
             | RnsToken::DotSuper(_)
             | RnsToken::DotMethod(_)
             | RnsToken::DotEnd(_)
             | RnsToken::DotAnnotation(_)
-            | RnsToken::DotCode(_) => "directive".to_string(),
-            RnsToken::AccessFlag(_) => "keyword".to_string(), // TODO: keywords or access flags?
-            RnsToken::Identifier(_) => "identifier".to_string(),
-            RnsToken::StringLiteral(_) => "string literal".to_string(),
-            RnsToken::Integer(_) => "integer".to_string(),
-            RnsToken::Newline(_) => "newline".to_string(),
-            RnsToken::Eof(_) => "eof".to_string(),
-            RnsToken::TypeHint(_) => "type hint".to_string(),
+            | RnsToken::DotCode(_) => "directive",
+            RnsToken::AccessFlag(_) => "access flag",
+            RnsToken::Identifier(_) => "identifier",
+            RnsToken::StringLiteral(_) => "string literal",
+            RnsToken::Integer(_) => "integer",
+            RnsToken::Newline(_) => "newline",
+            RnsToken::Eof(_) => "eof",
+            RnsToken::TypeHint(_) => "type hint",
         }
     }
 }

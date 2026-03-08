@@ -11,14 +11,17 @@ not generated
 HelloWorld
 .class public HelloWorld
 ----- STDERR -----
-[PARSER-001] Error: unexpected identifier before class definition
+[E-008] Error: unexpected identifier before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/identifier.rns:4:1 ]
    │
  4 │ HelloWorld
    │ ─────┬────  
-   │      ╰────── this identifier must appear inside a class definition
+   │      ╰────── valid context for HelloWorld identifier is: 'operand'.
    │ 
-   │ Note: Found identifier 'HelloWorld' before any class was defined. Did you forget to start the class? Try: '.class HelloWorld'
+   │ Help: Make sure the file starts with a '.class' directive.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-008
 ───╯
 ----- HASH -----
 not generated

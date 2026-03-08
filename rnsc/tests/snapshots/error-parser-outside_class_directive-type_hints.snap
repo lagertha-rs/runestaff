@@ -5,16 +5,15 @@ expression: "&snapshot_content"
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
-
-.method public static main ([Ljava/lang/String;)V
-.class public HelloWorld
+@string "Hello, World!"
+@int 42 ; This one is not error, because after finding the first error, the parser will stop and try to find .class
 ----- STDERR -----
-[E-008] Error: unexpected directive before class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/dot_method.rns:2:1 ]
+[E-008] Error: unexpected type hint before class definition
+   ╭─[ test_data/integration/error/parser/outside_class_directive/type_hints.rns:1:1 ]
    │
- 2 │ .method public static main ([Ljava/lang/String;)V
+ 1 │ @string "Hello, World!"
    │ ───┬───  
-   │    ╰───── valid context for .method directive is: 'class body'.
+   │    ╰───── valid context for string type hint is: 'operand'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 

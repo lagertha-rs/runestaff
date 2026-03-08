@@ -67,14 +67,30 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
         (tokens, eof_span)
     };
 
-    let rns_module = match parser::parse(tokens, eof_span) {
-        Ok(module) => module,
-        Err(errors) => {
-            for err in errors {
-                err.print(&filename, &contents);
+    let rns_module = {
+        let mut module = match parser::parse(tokens, eof_span) {
+            Ok(module) => module,
+            Err(errors) => {
+                for err in errors {
+                    err.print(&filename, &contents);
+                }
+                std::process::exit(1);
             }
+        };
+
+        let mut has_error = false;
+        let diagnostics = std::mem::take(&mut module.diagnostics);
+        for diag in diagnostics {
+            if diag.tier == DiagnosticTier::SyntaxError {
+                has_error = true;
+            }
+            diag.print(&filename, &contents);
+        }
+        if has_error {
             std::process::exit(1);
         }
+
+        module
     };
 
     let (class, diagnostics) = rns_module.into_class_file();

@@ -10,14 +10,17 @@ not generated
 super
 .class public HelloWorld
 ----- STDERR -----
-[PARSER-001] Error: unexpected keyword before class definition
+[E-008] Error: unexpected access flag before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/super_keyword.rns:3:1 ]
    │
  3 │ super
    │ ──┬──  
-   │   ╰──── this keyword must appear inside a class definition
+   │   ╰──── valid contexts for super access flag are: 'class declaration', 'method declaration'.
    │ 
-   │ Note: Access flags must appear within a '.class' or '.method' directive.
+   │ Help: Make sure the file starts with a '.class' directive.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-008
 ───╯
 ----- HASH -----
 not generated

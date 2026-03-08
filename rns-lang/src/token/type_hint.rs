@@ -1,7 +1,7 @@
 use crate::token::span::Spanned;
 use std::fmt::Display;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum TypeHintKind {
     Utf8,
     Integer,

@@ -110,3 +110,9 @@ impl From<DiagnosticTier> for Color {
         }
     }
 }
+
+impl From<Diagnostic> for Vec<Diagnostic> {
+    fn from(value: Diagnostic) -> Self {
+        vec![value]
+    }
+}

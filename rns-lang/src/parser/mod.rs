@@ -1,15 +1,18 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::parser::error::{
-    IdentifierContext, NonNegativeIntegerContext, ParserError, TrailingTokensContext,
+use crate::parser::error::ParserError;
+use crate::parser::error_deprecated::{
+    IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
+    TrailingTokensContextDeprecated,
 };
 use crate::parser::warning::ParserWarning;
-use crate::token::{RnsFlag, RnsToken, Span};
+use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
 mod error;
+mod error_deprecated;
 #[cfg(test)]
 mod tests;
 mod warning;
@@ -93,63 +96,22 @@ impl RnsParser {
     }
 
     //TODO: add all flags, handle orders, and check for duplicates
-    fn parse_method_access_flags(&mut self) -> Result<u16, ParserError> {
+    fn parse_method_access_flags(&mut self) -> Result<u16, ParserErrorDeprecated> {
         todo!()
     }
 
     fn expect_next_identifier(
         &mut self,
-        context: IdentifierContext,
+        context: IdentifierContextDeprecated,
         prev_token_byte_end: usize,
         prev_token_col_end: usize,
-    ) -> Result<(String, Span), ParserError> {
+    ) -> Result<(String, Span), ParserErrorDeprecated> {
         let token = self.next_token();
         let token_span = token.span();
         match token {
             RnsToken::Identifier(spanned) => Ok((spanned.value, token_span)),
-            RnsToken::Eof(t) | RnsToken::Newline(t) => Err(ParserError::IdentifierExpected(
-                Span {
-                    byte_start: prev_token_byte_end,
-                    byte_end: prev_token_byte_end,
-                    line: t.line,
-                    col_start: prev_token_col_end,
-                    col_end: prev_token_col_end,
-                },
-                token,
-                context,
-            )),
-            _ => Err(ParserError::IdentifierExpected(
-                token.span(),
-                token,
-                context,
-            )),
-        }
-    }
-
-    fn expect_no_trailing_tokens(
-        &mut self,
-        context: TrailingTokensContext,
-    ) -> Result<(), ParserError> {
-        let trailing_tokens = self.next_until_newline();
-        if !trailing_tokens.is_empty() {
-            return Err(ParserError::TrailingTokens(trailing_tokens, context));
-        }
-        Ok(())
-    }
-
-    // TODO: this is wrong.. also need to review integer token.. it is i32
-    // TODO: why I need here prev token info? I can just use current token info for error
-    fn expect_next_non_negative_integer(
-        &mut self,
-        context: NonNegativeIntegerContext,
-        prev_token_byte_end: usize,
-        prev_token_col_end: usize,
-    ) -> Result<u32, ParserError> {
-        let token = self.next_token();
-        match token {
-            RnsToken::Integer(spanned) if spanned.value >= 0 => Ok(spanned.value as u32),
             RnsToken::Eof(t) | RnsToken::Newline(t) => {
-                Err(ParserError::NonNegativeIntegerExpected(
+                Err(ParserErrorDeprecated::IdentifierExpected(
                     Span {
                         byte_start: prev_token_byte_end,
                         byte_end: prev_token_byte_end,
@@ -161,7 +123,53 @@ impl RnsParser {
                     context,
                 ))
             }
-            _ => Err(ParserError::NonNegativeIntegerExpected(
+            _ => Err(ParserErrorDeprecated::IdentifierExpected(
+                token.span(),
+                token,
+                context,
+            )),
+        }
+    }
+
+    fn expect_no_trailing_tokens(
+        &mut self,
+        context: TrailingTokensContextDeprecated,
+    ) -> Result<(), ParserErrorDeprecated> {
+        let trailing_tokens = self.next_until_newline();
+        if !trailing_tokens.is_empty() {
+            return Err(ParserErrorDeprecated::TrailingTokens(
+                trailing_tokens,
+                context,
+            ));
+        }
+        Ok(())
+    }
+
+    // TODO: this is wrong.. also need to review integer token.. it is i32
+    // TODO: why I need here prev token info? I can just use current token info for error
+    fn expect_next_non_negative_integer(
+        &mut self,
+        context: NonNegativeIntegerContextDeprecated,
+        prev_token_byte_end: usize,
+        prev_token_col_end: usize,
+    ) -> Result<u32, ParserErrorDeprecated> {
+        let token = self.next_token();
+        match token {
+            RnsToken::Integer(spanned) if spanned.value >= 0 => Ok(spanned.value as u32),
+            RnsToken::Eof(t) | RnsToken::Newline(t) => {
+                Err(ParserErrorDeprecated::NonNegativeIntegerExpected(
+                    Span {
+                        byte_start: prev_token_byte_end,
+                        byte_end: prev_token_byte_end,
+                        line: t.line,
+                        col_start: prev_token_col_end,
+                        col_end: prev_token_col_end,
+                    },
+                    token,
+                    context,
+                ))
+            }
+            _ => Err(ParserErrorDeprecated::NonNegativeIntegerExpected(
                 token.span(),
                 token,
                 context,
@@ -404,10 +412,10 @@ impl RnsParser {
     }
      */
 
-    fn parse_super_directive(&mut self) -> Result<(), ParserError> {
+    fn parse_super_directive(&mut self) -> Result<(), ParserErrorDeprecated> {
         let dot_super = self.next_token(); // consume .super token
         let (super_name, super_name_span) = self.expect_next_identifier(
-            IdentifierContext::SuperName,
+            IdentifierContextDeprecated::SuperName,
             dot_super.span().byte_end,
             dot_super.span().col_end,
         )?;
@@ -416,26 +424,39 @@ impl RnsParser {
             directive_span: dot_super.span(),
             identifier_span: Some(super_name_span),
         });
-        self.expect_no_trailing_tokens(TrailingTokensContext::Super)
+        self.expect_no_trailing_tokens(TrailingTokensContextDeprecated::Super)
     }
 
-    fn parse_class(&mut self) -> Result<(), ParserError> {
+    fn anchor_class_directive(&mut self) -> Result<Span, Diagnostic> {
         self.skip_newlines();
-        let class_token = self.next_token();
-        if matches!(class_token, RnsToken::Eof(_)) {
-            return Err(ParserError::EmptyFile(class_token.span()));
+        let next_token = self.next_token();
+
+        if matches!(next_token, RnsToken::Eof(_)) {
+            return Err(ParserError::EmptyFile(next_token.span()).into());
         }
-        if !matches!(class_token, RnsToken::DotClass(_)) {
-            return Err(ParserError::ClassDirectiveExpected(
-                class_token.span(),
-                class_token,
-            ));
+
+        if matches!(next_token, RnsToken::DotClass(_)) {
+            return Ok(next_token.span());
         }
-        let directive_span = class_token.span();
+
+        // first token is not `.class` — try to recover
+        let error: Diagnostic =
+            ParserError::UnexpectedTokenBeforeClassDefinition(next_token).into();
+
+        if !self.anchor(&[RnsTokenKind::DotClass]) {
+            return Err(error);
+        }
+
+        self.diagnostic.push(error);
+        Ok(self.next_token().span())
+    }
+
+    fn parse_class(&mut self) -> Result<(), Diagnostic> {
+        let directive_span = self.anchor_class_directive()?;
         let access_flags = self.parse_class_access_flags();
 
         let (class_name, name_span) = self.expect_next_identifier(
-            IdentifierContext::ClassName,
+            IdentifierContextDeprecated::ClassName,
             self.last_span.byte_end,
             self.last_span.col_end,
         )?;
@@ -448,7 +469,7 @@ impl RnsParser {
         };
 
         // TODO: test EOF right after class name and check for correct span in error
-        self.expect_no_trailing_tokens(TrailingTokensContext::Class)?;
+        self.expect_no_trailing_tokens(TrailingTokensContextDeprecated::Class)?;
 
         while let Some(token) = self.tokens.peek() {
             match token {
@@ -472,13 +493,28 @@ impl RnsParser {
                 }
                 RnsToken::Eof(_) => break,
                 _ => {
-                    eprintln!("DEBUG: Unexpected token in class body: {:?}", token);
-                    todo!("Unexpected token in class body")
+                    let unexpected_error =
+                        ParserError::UnexpectedTokenInClassBody(self.next_token());
+                    if self.anchor(&[RnsTokenKind::DotMethod, RnsTokenKind::DotSuper]) {
+                        self.diagnostic.push(unexpected_error.into());
+                    } else {
+                        return Err(unexpected_error.into());
+                    }
                 }
             }
         }
 
         Ok(())
+    }
+
+    fn anchor(&mut self, recovery_token: &[RnsTokenKind]) -> bool {
+        while let Some(token) = self.tokens.peek() {
+            if recovery_token.iter().any(|kind| token.matches_kind(*kind)) {
+                return true;
+            }
+            self.next_token();
+        }
+        false
     }
 
     /*
@@ -524,20 +560,17 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
     let mut instance = RnsParser {
         tokens: tokens.into_iter().peekable(),
         eof_span,
-        last_span: Span {
-            byte_start: 0,
-            byte_end: 0,
-            line: 0,
-            col_start: 0,
-            col_end: 0,
-        },
+        last_span: Span::default(),
         diagnostic: Vec::new(),
 
         class_directive: ClassDirective::default(),
         super_directives: Vec::new(),
     };
 
-    instance.parse_class()?;
+    if let Err(e) = instance.parse_class() {
+        instance.diagnostic.push(e);
+        return Err(instance.diagnostic);
+    }
     Ok(RnsModule {
         class_dir: instance.class_directive,
         super_directives: instance.super_directives,

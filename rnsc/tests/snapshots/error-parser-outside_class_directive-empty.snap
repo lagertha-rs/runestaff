@@ -5,12 +5,12 @@ expression: "&snapshot_content"
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
-; only a comment, no class at all
+
 ----- STDERR -----
 [E-006] Error: file contains no class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/eof.rns:1:35 ]
+   ╭─[ test_data/integration/error/parser/outside_class_directive/empty.rns:1:1 ]
    │
- 1 │ ; only a comment, no class at all
+ 1 │ 
    │ │ 
    │ ╰─ expected a '.class' directive
    │ 

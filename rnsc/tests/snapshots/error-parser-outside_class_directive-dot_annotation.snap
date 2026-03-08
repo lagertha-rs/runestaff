@@ -7,17 +7,18 @@ not generated
 ----- INPUT -----
 .annotation actually can't be here
 .class public HelloWorld
-
-.end method
 ----- STDERR -----
-[PARSER-001] Error: unexpected directive before class definition
+[E-008] Error: unexpected directive before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/dot_annotation.rns:1:1 ]
    │
  1 │ .annotation actually can't be here
    │ ─────┬─────  
-   │      ╰─────── '.annotation' is only allowed inside a class or method definition
+   │      ╰─────── valid contexts for .annotation directive are: 'class body', 'method body'.
    │ 
-   │ Note: The '.annotation' directive is only valid inside a class or method definition.
+   │ Help: Make sure the file starts with a '.class' directive.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-008
 ───╯
 ----- HASH -----
 not generated
