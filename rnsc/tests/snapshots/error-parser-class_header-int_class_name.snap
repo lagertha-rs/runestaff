@@ -1,0 +1,30 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class 42
+----- STDERR -----
+[E-009] Error: unexpected integer where a class name is required
+   ╭─[ test_data/integration/error/parser/class_header/int_class_name.rns:1:8 ]
+   │
+ 1 │ .class 42
+   │        ─┬  
+   │         ╰── attempted to set integer as class name, but it can't be resolved as either an identifier or a type hint
+   │ 
+   │ Help: The constant pool requires each entry to have a specific kind.
+   │       The parser can't determine whether you intended an identifier or an integer from the bare token alone.
+   │       
+   │       To treat it as an identifier (will resolve to the appropriate entry kind from context):
+   │       #"42"
+   │       
+   │       To explicitly store it as an @integer constant pool entry:
+   │       @integer 42
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-009
+───╯
+----- HASH -----
+not generated

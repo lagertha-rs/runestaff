@@ -11,12 +11,25 @@ pub(super) enum ParserError {
     UnexpectedTokenInClassBody(RnsToken),
     // TODO: the messages are total shit
     UnexpectedTokenBeforeClassDefinition(RnsToken),
+    TrailingTokens(usize, Vec<RnsToken>, TrailingTokensContext),
     IdentifierOrHintExpected(Span, RnsToken, IdentifierContext),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum IdentifierContext {
     ClassName,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub(super) enum TrailingTokensContext {
+    Class,
+}
+impl Display for TrailingTokensContext {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TrailingTokensContext::Class => write!(f, "class definition"),
+        }
+    }
 }
 
 impl Display for IdentifierContext {
@@ -35,6 +48,9 @@ impl ParserError {
             ParserError::UnexpectedTokenInClassBody(_) => "E-007",
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
             ParserError::IdentifierOrHintExpected(_, _, _) => "E-009",
+            ParserError::TrailingTokens(_, _, ctx) => match ctx {
+                TrailingTokensContext::Class => "E-010",
+            },
         }
     }
 
@@ -57,6 +73,11 @@ impl ParserError {
                     ctx
                 )
             }
+            ParserError::TrailingTokens(_, _, ctx) => match ctx {
+                TrailingTokensContext::Class => {
+                    "unexpected trailing tokens after class definition".to_string()
+                }
+            },
         }
     }
 
@@ -95,6 +116,23 @@ impl ParserError {
                 );
                 vec![DiagnosticLabel::at(span.as_range(), msg)]
             }
+            ParserError::TrailingTokens(last_valid_end, tokens, ctx) => {
+                let msg = format!(
+                    "but found {} trailing token{}",
+                    tokens.len(),
+                    if tokens.len() == 1 { "" } else { "s" }
+                );
+                vec![
+                    DiagnosticLabel::context(
+                        *last_valid_end..*last_valid_end,
+                        format!("expected end of {} here", ctx),
+                    ),
+                    DiagnosticLabel::at(
+                        tokens[0].span().byte_start..tokens.last().unwrap().span().byte_end,
+                        msg,
+                    ),
+                ]
+            }
         }
     }
 
@@ -132,6 +170,16 @@ impl ParserError {
                 )),
                 _ => unimplemented!(),
             },
+            ParserError::TrailingTokens(_, tokens, _) => {
+                if tokens[0].is_directive() {
+                    Some(format!(
+                        "If you are trying to declare a new '{}' directive, try to put it on a new line.",
+                        tokens[0]
+                    ))
+                } else {
+                    Some("Remove the trailing tokens or move them to a valid context.".to_string())
+                }
+            }
         }
     }
 
@@ -140,6 +188,7 @@ impl ParserError {
             ParserError::EmptyFile(span) | ParserError::IdentifierOrHintExpected(span, _, _) => {
                 *span
             }
+            ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
         }

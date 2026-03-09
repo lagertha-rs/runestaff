@@ -1,6 +1,6 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::parser::error::{IdentifierContext, ParserError};
+use crate::parser::error::{IdentifierContext, ParserError, TrailingTokensContext};
 use crate::parser::error_deprecated::{
     IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
     TrailingTokensContextDeprecated,
@@ -170,7 +170,18 @@ impl RnsParser {
         }
     }
 
-    fn expect_no_trailing_tokens(
+    // Doesn't need to recover, just check for trailing tokens and report error if they exist
+    fn verify_trailing_tokens(&mut self, context: TrailingTokensContext) {
+        let end_of_previous_token = self.last_span.byte_end - 1; // -1 to point to the last character
+        let trailing_tokens = self.next_until_newline();
+        if !trailing_tokens.is_empty() {
+            self.diagnostic.push(
+                ParserError::TrailingTokens(end_of_previous_token, trailing_tokens, context).into(),
+            );
+        }
+    }
+
+    fn expect_no_trailing_tokens_deprecated(
         &mut self,
         context: TrailingTokensContextDeprecated,
     ) -> Result<(), ParserErrorDeprecated> {
@@ -463,7 +474,7 @@ impl RnsParser {
             directive_span: dot_super.span(),
             identifier_span: Some(super_name_span),
         });
-        self.expect_no_trailing_tokens(TrailingTokensContextDeprecated::Super)
+        self.expect_no_trailing_tokens_deprecated(TrailingTokensContextDeprecated::Super)
     }
 
     fn anchor_class_directive(&mut self) -> Result<Span, Diagnostic> {
@@ -507,8 +518,7 @@ impl RnsParser {
             }
         }
 
-        // TODO:
-        self.expect_no_trailing_tokens(TrailingTokensContextDeprecated::Class)?;
+        self.verify_trailing_tokens(TrailingTokensContext::Class);
 
         while let Some(token) = self.tokens.peek() {
             match token {

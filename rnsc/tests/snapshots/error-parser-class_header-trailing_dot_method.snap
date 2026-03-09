@@ -1,0 +1,27 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class Class .method kababoom
+.super java/lang/Object
+.end
+----- STDERR -----
+[E-010] Error: unexpected trailing tokens after class definition
+   ╭─[ test_data/integration/error/parser/class_header/trailing_dot_method.rns:1:14 ]
+   │
+ 1 │ .class Class .method kababoom
+   │            │ ────────┬───────  
+   │            ╰─────────────────── expected end of class definition here
+   │                      │         
+   │                      ╰───────── but found 2 trailing tokens
+   │ 
+   │ Help: If you are trying to declare a new '.method' directive, try to put it on a new line.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-010
+───╯
+----- HASH -----
+not generated
