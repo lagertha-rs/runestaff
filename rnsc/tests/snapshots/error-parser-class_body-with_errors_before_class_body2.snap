@@ -1,0 +1,43 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class 42
+unexpected
+----- STDERR -----
+[E-009] Error: unexpected integer where a class name is required
+   ╭─[ test_data/integration/error/parser/class_body/with_errors_before_class_body2.rns:1:8 ]
+   │
+ 1 │ .class 42
+   │        ─┬  
+   │         ╰── attempted to set integer as class name, but it can't be resolved as either an identifier or a type hint
+   │ 
+   │ Help: The constant pool requires each entry to have a specific kind.
+   │       The parser can't determine whether you intended an identifier or an integer from the bare token alone.
+   │       
+   │       To treat it as an identifier (will resolve to the appropriate entry kind from context):
+   │       #"42"
+   │       
+   │       To explicitly store it as an @integer constant pool entry:
+   │       @integer 42
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-009
+───╯
+[E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unexpected", span: Span { byte_start: 10, byte_end: 20, line: 1, col_start: 0, col_end: 10 } })'
+   ╭─[ test_data/integration/error/parser/class_body/with_errors_before_class_body2.rns:2:1 ]
+   │
+ 2 │ unexpected
+   │ ─────┬────  
+   │      ╰────── unexpected token
+   │ 
+   │ Help: Check the syntax of the class body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-007
+───╯
+----- HASH -----
+not generated

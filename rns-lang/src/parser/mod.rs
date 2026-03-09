@@ -105,6 +105,7 @@ impl RnsParser {
         unimplemented!()
     }
 
+    // TODO: find a better name
     fn expect_next_identifier_and<F>(
         &mut self,
         err_ctx: IdentifierContext,
@@ -493,8 +494,7 @@ impl RnsParser {
         let directive_span = self.anchor_class_directive()?;
         let access_flags = self.parse_class_access_flags();
 
-        match self.expect_next_identifier_and(IdentifierContext::ClassName, |s| TypeHint::Class(s))
-        {
+        match self.expect_next_identifier_and(IdentifierContext::ClassName, TypeHint::Class) {
             Ok(class_name) => {
                 self.class_directive = Some(ClassDirective {
                     directive_span,

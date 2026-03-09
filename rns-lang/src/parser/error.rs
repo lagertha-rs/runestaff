@@ -1,12 +1,13 @@
+use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span};
-use crate::ERROR_DOCS_BASE_URL;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum ParserError {
     EmptyFile(Span),
+    // TODO: the messages are total shit
     UnexpectedTokenInClassBody(RnsToken),
     // TODO: the messages are total shit
     UnexpectedTokenBeforeClassDefinition(RnsToken),

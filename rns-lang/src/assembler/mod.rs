@@ -2,9 +2,9 @@ use crate::assembler::jvm_warning::JvmWarning;
 use crate::diagnostic::Diagnostic;
 use crate::token::type_hint::TypeHint;
 use crate::token::{RnsFlag, Span};
+use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{AttributeNameMap, ConstantPoolBuilder};
-use jclass::ClassFile;
 use std::collections::BTreeMap;
 
 mod jvm_warning;
