@@ -8,6 +8,7 @@ use std::fmt::{Display, Formatter};
 pub(super) enum ParserError {
     EmptyFile(Span),
     UnexpectedTokenInClassBody(RnsToken),
+    // TODO: the messages are total shit
     UnexpectedTokenBeforeClassDefinition(RnsToken),
     IdentifierOrHintExpected(Span, RnsToken, IdentifierContext),
 }
@@ -49,7 +50,11 @@ impl ParserError {
                 )
             }
             ParserError::IdentifierOrHintExpected(_, token, ctx) => {
-                format!("can't resolve {} as {}", token.token_type(), ctx)
+                format!(
+                    "unexpected {} where a {} is required",
+                    token.token_type(),
+                    ctx
+                )
             }
         }
     }

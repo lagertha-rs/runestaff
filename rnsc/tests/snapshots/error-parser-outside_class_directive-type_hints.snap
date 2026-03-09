@@ -13,7 +13,7 @@ not generated
    │
  1 │ @string "Hello, World!"
    │ ───┬───  
-   │    ╰───── valid context for string type hint is: 'operand'.
+   │    ╰───── valid context for @string type hint is: 'operand'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 

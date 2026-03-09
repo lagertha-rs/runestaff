@@ -81,14 +81,20 @@ impl RnsModule {
         res
     }
 
+    fn add_type_hint_to_cp(cp_builder: &mut ConstantPoolBuilder, hint: TypeHint) -> u16 {
+        match hint {
+            TypeHint::Class(class_name) => cp_builder.add_class(&class_name.value),
+            _ => unimplemented!(),
+        }
+    }
+
     // TODO: need to test that I build exactly same CP as javac
     pub fn into_class_file(mut self) -> (ClassFile, Vec<Diagnostic>) {
         let mut cp_builder = ConstantPoolBuilder::new();
         let super_name = self.super_directives[0].name.clone().unwrap();
         let class_flags = self.build_class_flags();
 
-        //let this_cp_id = cp_builder.add_class(&self.class_dir.name);
-        let this_cp_id = unimplemented!();
+        let this_cp_id = Self::add_type_hint_to_cp(&mut cp_builder, self.class_dir.name);
         let super_cp_id = cp_builder.add_class(&super_name);
 
         (

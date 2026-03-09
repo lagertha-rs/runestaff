@@ -3,7 +3,7 @@ use crate::token::type_hint::TypeHintKind;
 use std::fmt::{Display, Formatter};
 
 pub(crate) mod span;
-pub(crate) mod type_hint;
+pub mod type_hint;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 pub enum RnsFlag {

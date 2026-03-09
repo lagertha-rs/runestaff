@@ -8,9 +8,9 @@ expression: formatted
 ----- TOKENS -----
 KIND                 | SPAN    | LSP       | TEXT
 ----                 | ----    | ---       | ----
-TypeHint(utf8)       | 0..5    | 0:0..5    | @utf8
+TypeHint(@utf8)      | 0..5    | 0:0..5    | @utf8
 Identifier("hello")  | 6..11   | 0:6..11   | hello
 Newline              | 37..38  | 0:37..38  | \n
-TypeHint(integer)    | 38..42  | 1:0..4    | @int
+TypeHint(@integer)   | 38..42  | 1:0..4    | @int
 Integer(42)          | 43..45  | 1:5..7    | 42
 Newline              | 75..76  | 1:37..38  | \n
