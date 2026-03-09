@@ -49,7 +49,7 @@ impl JvmWarning {
     fn help(&self) -> Option<String> {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. } => {
-                Some("Add the 'abstract' access flag to the class declaration.".to_string())
+                Some("Add the 'abstract' access flag to the class definition.".to_string())
             }
             JvmWarning::InterfaceMutuallyExclusive {
                 exclusive_flags, ..

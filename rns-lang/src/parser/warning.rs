@@ -25,7 +25,7 @@ impl ParserWarning {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
             ParserWarning::ClassDuplicateFlag { flag, .. } => {
-                format!("duplicate access flag '{}' in class declaration", flag)
+                format!("duplicate access flag '{}' in class definition", flag)
             }
         }
     }

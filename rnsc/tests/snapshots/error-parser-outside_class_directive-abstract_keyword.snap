@@ -15,7 +15,7 @@ abstract
    │
  3 │ abstract
    │ ────┬───  
-   │     ╰───── valid contexts for abstract access flag are: 'class declaration', 'method declaration'.
+   │     ╰───── valid contexts for abstract access flag are: 'class definition', 'method definition'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 

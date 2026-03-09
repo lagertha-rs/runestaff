@@ -21,9 +21,9 @@ pub enum RnsFlag {
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum RnsTokenContext {
-    ClassDeclaration,
+    ClassDefinition,
     ClassBody,
-    MethodDeclaration,
+    MethodDefinition,
     MethodBody,
     CodeBody,
     Operand,
@@ -71,9 +71,9 @@ pub enum RnsToken {
 impl Display for RnsTokenContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            RnsTokenContext::ClassDeclaration => write!(f, "class declaration"),
+            RnsTokenContext::ClassDefinition => write!(f, "class definition"),
             RnsTokenContext::ClassBody => write!(f, "class body"),
-            RnsTokenContext::MethodDeclaration => write!(f, "method declaration"),
+            RnsTokenContext::MethodDefinition => write!(f, "method definition"),
             RnsTokenContext::MethodBody => write!(f, "method body"),
             RnsTokenContext::CodeBody => write!(f, "code body"),
             RnsTokenContext::Operand => write!(f, "operand"),
@@ -153,8 +153,8 @@ impl RnsToken {
                 &[RnsTokenContext::ClassBody, RnsTokenContext::MethodBody]
             }
             RnsToken::AccessFlag(_) => &[
-                RnsTokenContext::ClassDeclaration,
-                RnsTokenContext::MethodDeclaration,
+                RnsTokenContext::ClassDefinition,
+                RnsTokenContext::MethodDefinition,
             ],
             RnsToken::Newline(_) | RnsToken::Eof(_) => &[RnsTokenContext::Contextless],
             RnsToken::TypeHint(_)

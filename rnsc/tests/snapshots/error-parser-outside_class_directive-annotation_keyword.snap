@@ -15,7 +15,7 @@ annotation
    │
  3 │ annotation
    │ ─────┬────  
-   │      ╰────── valid contexts for annotation access flag are: 'class declaration', 'method declaration'.
+   │      ╰────── valid contexts for annotation access flag are: 'class definition', 'method definition'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 

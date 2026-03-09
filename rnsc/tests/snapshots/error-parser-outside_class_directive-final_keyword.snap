@@ -15,7 +15,7 @@ final
    │
  3 │ final
    │ ──┬──  
-   │   ╰──── valid contexts for final access flag are: 'class declaration', 'method declaration'.
+   │   ╰──── valid contexts for final access flag are: 'class definition', 'method definition'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 
