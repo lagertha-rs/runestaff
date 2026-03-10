@@ -1,6 +1,6 @@
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::type_hint::TypeHintKind;
+use crate::token::type_hint::{TypeHint, TypeHintKind};
 use crate::token::{RnsToken, Span};
 use std::fmt::{Display, Formatter};
 
@@ -13,21 +13,27 @@ pub(super) enum ParserError {
     UnexpectedTokenBeforeClassDefinition(RnsToken),
     TrailingTokens(usize, Vec<RnsToken>, TrailingTokensContext),
     IdentifierOrHintExpected(Span, RnsToken, IdentifierContext),
+    // TODO: the messages are total shit
+    MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum IdentifierContext {
     ClassName,
+    SuperName,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum TrailingTokensContext {
     Class,
+    Super,
 }
+
 impl Display for TrailingTokensContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             TrailingTokensContext::Class => write!(f, "class definition"),
+            TrailingTokensContext::Super => write!(f, "super class definition"),
         }
     }
 }
@@ -36,6 +42,7 @@ impl Display for IdentifierContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             IdentifierContext::ClassName => write!(f, "class name"),
+            IdentifierContext::SuperName => write!(f, "super class name"),
         }
     }
 }
@@ -50,7 +57,9 @@ impl ParserError {
             ParserError::IdentifierOrHintExpected(_, _, _) => "E-009",
             ParserError::TrailingTokens(_, _, ctx) => match ctx {
                 TrailingTokensContext::Class => "E-010",
+                TrailingTokensContext::Super => "E-012",
             },
+            ParserError::MultipleSuperDefinitions(_) => "E-011",
         }
     }
 
@@ -73,11 +82,10 @@ impl ParserError {
                     ctx
                 )
             }
-            ParserError::TrailingTokens(_, _, ctx) => match ctx {
-                TrailingTokensContext::Class => {
-                    "unexpected trailing tokens after class definition".to_string()
-                }
-            },
+            ParserError::TrailingTokens(_, _, ctx) => {
+                format!("unexpected trailing tokens after {}", ctx)
+            }
+            ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
         }
     }
 
@@ -133,6 +141,21 @@ impl ParserError {
                     ),
                 ]
             }
+            ParserError::MultipleSuperDefinitions(defs) => {
+                let mut labels = Vec::with_capacity(defs.len());
+                for (i, (span, hint)) in defs.iter().enumerate() {
+                    let msg = if i == 0 {
+                        format!(
+                            "first .super directive defined here with super class '{}'",
+                            hint
+                        )
+                    } else {
+                        "multiple .super directives are not allowed".to_string()
+                    };
+                    labels.push(DiagnosticLabel::at(span.as_range(), msg));
+                }
+                labels
+            }
         }
     }
 
@@ -180,6 +203,9 @@ impl ParserError {
                     Some("Remove the trailing tokens or move them to a valid context.".to_string())
                 }
             }
+            ParserError::MultipleSuperDefinitions(_) => Some(
+                "A class can only have one .super directive. Remove the duplicates.".to_string(),
+            ),
         }
     }
 
@@ -188,6 +214,7 @@ impl ParserError {
             ParserError::EmptyFile(span) | ParserError::IdentifierOrHintExpected(span, _, _) => {
                 *span
             }
+            ParserError::MultipleSuperDefinitions(defs) => defs[0].0,
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),

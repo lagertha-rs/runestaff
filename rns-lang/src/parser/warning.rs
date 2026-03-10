@@ -1,11 +1,12 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::token::type_hint::TypeHint;
 use crate::token::{RnsFlag, Span};
 
 #[derive(Debug)]
 pub(super) enum ParserWarning {
     MissingSuperClass {
-        class_name: String,
-        class_directive_pos: Span,
+        class_name: Option<TypeHint>,
+        class_dir_pos: Span,
         default: &'static str,
     },
     ClassDuplicateFlag {
@@ -17,8 +18,8 @@ pub(super) enum ParserWarning {
 impl ParserWarning {
     fn code(&self) -> &'static str {
         match self {
-            ParserWarning::MissingSuperClass { .. } => "W001",
-            ParserWarning::ClassDuplicateFlag { .. } => "W002",
+            ParserWarning::MissingSuperClass { .. } => "W-001",
+            ParserWarning::ClassDuplicateFlag { .. } => "TODO",
         }
     }
     fn asm_msg(&self) -> String {
@@ -33,7 +34,7 @@ impl ParserWarning {
     fn primary_location(&self) -> Span {
         match self {
             ParserWarning::MissingSuperClass {
-                class_directive_pos,
+                class_dir_pos: class_directive_pos,
                 ..
             } => *class_directive_pos,
             ParserWarning::ClassDuplicateFlag { spans, .. } => {
@@ -59,12 +60,12 @@ impl ParserWarning {
     fn labels(&self) -> Vec<DiagnosticLabel> {
         match self {
             ParserWarning::MissingSuperClass {
-                class_directive_pos,
+                class_dir_pos: class_directive_pos,
                 class_name,
                 ..
             } => vec![DiagnosticLabel::at(
                 class_directive_pos.as_range(),
-                format!("class '{}' is missing a '.super' directive", class_name),
+                format!("class '{:?}' is missing a '.super' directive", class_name),
             )],
             ParserWarning::ClassDuplicateFlag { flag, spans } => {
                 let mut labels = Vec::with_capacity(spans.len());

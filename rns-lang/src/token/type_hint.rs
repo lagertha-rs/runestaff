@@ -1,3 +1,4 @@
+use crate::token::Span;
 use crate::token::span::Spanned;
 use std::fmt::Display;
 
@@ -97,6 +98,7 @@ impl Display for TypeHintKind {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum TypeHint {
+    ZeroIndex(Span),
     Utf8(Spanned<String>),
     Integer(Spanned<i32>),
     String(Spanned<String>),

@@ -164,6 +164,10 @@ impl RnsToken {
         }
     }
 
+    pub fn is_line_terminator(&self) -> bool {
+        matches!(self, RnsToken::Newline(_) | RnsToken::Eof(_))
+    }
+
     pub fn is_directive(&self) -> bool {
         matches!(
             self,

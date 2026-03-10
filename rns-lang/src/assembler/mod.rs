@@ -4,28 +4,27 @@ use crate::token::type_hint::TypeHint;
 use crate::token::{RnsFlag, Span};
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
-use jclass::prelude::{AttributeNameMap, ConstantPoolBuilder};
+use jclass::prelude::{ClassFileBuilder, ConstantPoolBuilder};
 use std::collections::BTreeMap;
 
 mod jvm_warning;
 
 pub struct RnsModule {
     pub class_dir: ClassDirective,
-    pub super_directives: Vec<SuperDirective>,
+    pub super_dir: Option<SuperDirective>,
     pub diagnostics: Vec<Diagnostic>,
 }
 
-pub struct ClassDirective {
-    pub directive_span: Span,
-    pub name: TypeHint,
-    // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
-    pub flags: BTreeMap<RnsFlag, Span>,
+pub struct SuperDirective {
+    pub dir_span: Option<Span>,
+    pub name: Option<TypeHint>,
 }
 
-pub struct SuperDirective {
-    pub name: Option<String>,
-    pub identifier_span: Option<Span>,
-    pub directive_span: Span,
+pub struct ClassDirective {
+    pub dir_span: Span,
+    pub name: Option<TypeHint>,
+    // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
+    pub flags: BTreeMap<RnsFlag, Span>,
 }
 
 impl RnsModule {
@@ -88,31 +87,28 @@ impl RnsModule {
         }
     }
 
-    // TODO: need to test that I build exactly same CP as javac
-    pub fn into_class_file(mut self) -> (ClassFile, Vec<Diagnostic>) {
+    fn build_super_class(&mut self, cp_builder: &mut ConstantPoolBuilder) -> Option<u16> {
+        let name = self.super_dir.as_mut()?.name.take()?;
+        Some(Self::add_type_hint_to_cp(cp_builder, name))
+    }
+
+    // TODO: need to test that I build exactly same CP as javac, or not?
+    pub fn into_class_file(mut self) -> (Option<ClassFile>, Vec<Diagnostic>) {
         let mut cp_builder = ConstantPoolBuilder::new();
-        let super_name = self.super_directives[0].name.clone().unwrap();
+        let super_cp_id = self.build_super_class(&mut cp_builder);
         let class_flags = self.build_class_flags();
 
-        let this_cp_id = Self::add_type_hint_to_cp(&mut cp_builder, self.class_dir.name);
-        let super_cp_id = cp_builder.add_class(&super_name);
+        let this_cp_id = self
+            .class_dir
+            .name
+            .map(|name| Self::add_type_hint_to_cp(&mut cp_builder, name));
 
-        (
-            ClassFile {
-                minor_version: 0,
-                major_version: 69, // TODO: allow specifying version in jasm
-                cp: cp_builder.build(),
-                access_flags: class_flags, // TODO: set access flags based on parsed flags
-                this_class: this_cp_id,
-                super_class: super_cp_id,
-                interfaces: vec![],
-                fields: vec![],
-                //methods: std::mem::take(&mut self.methods),
-                methods: vec![],
-                attributes: vec![],
-                attribute_names: AttributeNameMap::new(),
-            },
-            self.diagnostics,
-        )
+        let class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
+            .access_flags(class_flags) // TODO: set access flags based on parsed flags
+            .this_class(this_cp_id)
+            .super_class(super_cp_id)
+            .build();
+
+        (class_file, self.diagnostics)
     }
 }
