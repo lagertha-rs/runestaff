@@ -1,8 +1,10 @@
-use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::{TypeHint, TypeHintKind};
+use crate::token::Spanned;
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
 use std::fmt::{Display, Formatter};
+use std::vec;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(super) enum ParserError {
@@ -11,38 +13,40 @@ pub(super) enum ParserError {
     UnexpectedTokenInClassBody(RnsToken),
     // TODO: the messages are total shit
     UnexpectedTokenBeforeClassDefinition(RnsToken),
-    TrailingTokens(usize, Vec<RnsToken>, TrailingTokensContext),
-    IdentifierOrHintExpected(Span, RnsToken, OperandErrorContext),
+    TrailingTokens(usize, Vec<RnsToken>, TrailingTokensErrContext),
+    IdentifierOrHintExpected(Span, RnsToken, OperandErrPosContext),
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum OperandErrorContext {
+pub(super) enum OperandErrPosContext {
     ClassName,
     SuperName,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum TrailingTokensContext {
+pub(super) enum TrailingTokensErrContext {
     Class,
     Super,
+    TypeHint(Spanned<TypeHintKind>),
 }
 
-impl Display for TrailingTokensContext {
+impl Display for TrailingTokensErrContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            TrailingTokensContext::Class => write!(f, "class definition"),
-            TrailingTokensContext::Super => write!(f, "super class definition"),
+            TrailingTokensErrContext::Class => write!(f, "class definition"),
+            TrailingTokensErrContext::Super => write!(f, "super class definition"),
+            TrailingTokensErrContext::TypeHint(kind) => write!(f, "type hint '{}'", kind.value),
         }
     }
 }
 
-impl Display for OperandErrorContext {
+impl Display for OperandErrPosContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            OperandErrorContext::ClassName => write!(f, "class name"),
-            OperandErrorContext::SuperName => write!(f, "super class name"),
+            OperandErrPosContext::ClassName => write!(f, "class name"),
+            OperandErrPosContext::SuperName => write!(f, "super class name"),
         }
     }
 }
@@ -56,8 +60,9 @@ impl ParserError {
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
             ParserError::IdentifierOrHintExpected(_, _, _) => "E-009",
             ParserError::TrailingTokens(_, _, ctx) => match ctx {
-                TrailingTokensContext::Class => "E-010",
-                TrailingTokensContext::Super => "E-012",
+                TrailingTokensErrContext::Class => "E-010",
+                TrailingTokensErrContext::Super => "E-012",
+                TrailingTokensErrContext::TypeHint(_) => "E-013",
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
         }
@@ -125,16 +130,31 @@ impl ParserError {
                 vec![DiagnosticLabel::at(span.as_range(), msg)]
             }
             ParserError::TrailingTokens(last_valid_end, tokens, ctx) => {
+                let context = match ctx {
+                    TrailingTokensErrContext::TypeHint(th) => {
+                        let operands_count = th.value.operands_count();
+                        DiagnosticLabel::context(
+                            th.span.as_range(),
+                            format!(
+                                "'{}' type hint takes {} operand{}",
+                                th.value,
+                                operands_count,
+                                if operands_count == 1 { "" } else { "s" }
+                            ),
+                        )
+                    }
+                    _ => DiagnosticLabel::context(
+                        *last_valid_end..*last_valid_end,
+                        format!("expected end of {} here", ctx),
+                    ),
+                };
                 let msg = format!(
                     "but found {} trailing token{}",
                     tokens.len(),
                     if tokens.len() == 1 { "" } else { "s" }
                 );
                 vec![
-                    DiagnosticLabel::context(
-                        *last_valid_end..*last_valid_end,
-                        format!("expected end of {} here", ctx),
-                    ),
+                    context,
                     DiagnosticLabel::at(
                         tokens[0].span().byte_start..tokens.last().unwrap().span().byte_end,
                         msg,

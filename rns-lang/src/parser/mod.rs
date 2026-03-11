@@ -1,6 +1,6 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::parser::error::{OperandErrorContext, ParserError, TrailingTokensContext};
+use crate::parser::error::{OperandErrPosContext, ParserError, TrailingTokensErrContext};
 use crate::parser::error_deprecated::{
     IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
     TrailingTokensContextDeprecated,
@@ -105,42 +105,78 @@ impl RnsParser {
         todo!()
     }
 
-    fn resolve_type_hint(_: Spanned<TypeHintKind>) -> Result<TypeHint, Diagnostic> {
-        unimplemented!()
-    }
-
-    fn parse_operand_or_type_hint<F>(
+    fn parse_operand(
         &mut self,
-        err_ctx: OperandErrorContext,
-        infer_hint: F,
-    ) -> Result<TypeHint, Diagnostic>
-    where
-        F: FnOnce(Spanned<String>) -> TypeHint,
-    {
+        err_ctx: OperandErrPosContext,
+    ) -> Result<Spanned<String>, Diagnostic> {
         let prev_token_span = self.last_span;
         let token = self.next_token();
         let token_span = token.span();
-
         match token {
-            RnsToken::Identifier(spanned) => Ok(infer_hint(spanned)),
+            RnsToken::Identifier(spanned) => Ok(spanned),
             RnsToken::DotClass(span)
             | RnsToken::DotSuper(span)
             | RnsToken::DotMethod(span)
             | RnsToken::DotCode(span)
             | RnsToken::DotEnd(span)
             | RnsToken::DotAnnotation(span) => {
-                Ok(infer_hint(Spanned::new(token.to_string(), span)))
+                self.diagnostic
+                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
+                Ok(Spanned::new(token.to_string(), span))
             }
-            RnsToken::AccessFlag(spanned) => Ok(infer_hint(Spanned::new(
-                spanned.value.to_string(),
-                spanned.span,
-            ))),
-            RnsToken::TypeHint(spanned) => Self::resolve_type_hint(spanned),
+            RnsToken::AccessFlag(spanned) => {
+                self.diagnostic
+                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
+                Ok(Spanned::new(spanned.value.to_string(), spanned.span))
+            }
+            RnsToken::TypeHint(ref spanned) => {
+                self.diagnostic
+                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
+                Ok(Spanned::new(token.to_string(), spanned.span))
+            }
             RnsToken::Eof(_) | RnsToken::Newline(_) => {
                 Err(ParserError::IdentifierOrHintExpected(prev_token_span, token, err_ctx).into())
             }
             // TODO: avoid _ everywhere and make sure to handle all cases properly
             _ => Err(ParserError::IdentifierOrHintExpected(token_span, token, err_ctx).into()),
+        }
+    }
+
+    fn resolve_type_hint(
+        &mut self,
+        th: Spanned<TypeHintKind>,
+        err_ctx: OperandErrPosContext,
+    ) -> Result<TypeHint, Diagnostic> {
+        let kind_span = th.span;
+        let res = match th.value {
+            TypeHintKind::Utf8 => Ok(TypeHint::Utf8(kind_span, self.parse_operand(err_ctx)?)),
+            TypeHintKind::Integer => unimplemented!(),
+            TypeHintKind::String => unimplemented!(),
+            TypeHintKind::Class => unimplemented!(),
+            TypeHintKind::Methodref => unimplemented!(),
+            _ => unimplemented!(),
+        };
+
+        self.verify_trailing_tokens(TrailingTokensErrContext::TypeHint(th));
+        res
+    }
+
+    fn parse_operand_or_type_hint<F>(
+        &mut self,
+        err_ctx: OperandErrPosContext,
+        infer_hint: F,
+    ) -> Result<TypeHint, Diagnostic>
+    where
+        F: FnOnce(Spanned<String>) -> TypeHint,
+    {
+        let token = self.peek_token();
+
+        if let Some(RnsToken::TypeHint(th)) = token {
+            let th = th.clone();
+            self.next_token();
+            self.resolve_type_hint(th, err_ctx)
+        } else {
+            Ok(infer_hint(self.parse_operand(err_ctx)?))
         }
     }
 
@@ -176,7 +212,7 @@ impl RnsParser {
     }
 
     // Doesn't need to recover, just check for trailing tokens and report error if they exist
-    fn verify_trailing_tokens(&mut self, context: TrailingTokensContext) {
+    fn verify_trailing_tokens(&mut self, context: TrailingTokensErrContext) {
         let end_of_previous_token = self.last_span.byte_end - 1; // -1 to point to the last character
         let trailing_tokens = self.next_until_newline();
         if !trailing_tokens.is_empty() {
@@ -470,13 +506,15 @@ impl RnsParser {
     fn parse_super_directive(&mut self) {
         let super_token = self.next_token(); // consume .super token
 
-        match self.parse_operand_or_type_hint(OperandErrorContext::SuperName, TypeHint::Class) {
+        match self.parse_operand_or_type_hint(OperandErrPosContext::SuperName, |spanned| {
+            TypeHint::Class(None, spanned)
+        }) {
             Ok(super_name) => self.super_directives.push((super_token.span(), super_name)),
             Err(e) => {
                 self.diagnostic.push(e);
             }
         }
-        self.verify_trailing_tokens(TrailingTokensContext::Super)
+        self.verify_trailing_tokens(TrailingTokensErrContext::Super)
     }
 
     fn anchor_class_directive(&mut self) -> Result<Span, Diagnostic> {
@@ -509,7 +547,9 @@ impl RnsParser {
         self.class_dir_span = self.anchor_class_directive()?;
         self.access_flags = self.parse_class_access_flags();
 
-        match self.parse_operand_or_type_hint(OperandErrorContext::ClassName, TypeHint::Class) {
+        match self.parse_operand_or_type_hint(OperandErrPosContext::ClassName, |spanned| {
+            TypeHint::Class(None, spanned)
+        }) {
             Ok(class_name) => {
                 self.class_name = Some(class_name);
             }
@@ -518,7 +558,7 @@ impl RnsParser {
             }
         }
 
-        self.verify_trailing_tokens(TrailingTokensContext::Class);
+        self.verify_trailing_tokens(TrailingTokensErrContext::Class);
 
         while let Some(token) = self.tokens.peek() {
             match token {
@@ -580,10 +620,10 @@ impl RnsParser {
                 );
                 Some(SuperDirective {
                     dir_span: None,
-                    name: TypeHint::Class(Spanned::new(
-                        JAVA_LANG_OBJECT.to_string(),
-                        Span::default(),
-                    )),
+                    name: TypeHint::Class(
+                        None,
+                        Spanned::new(JAVA_LANG_OBJECT.to_string(), Span::default()),
+                    ),
                 })
             }
             1 => {

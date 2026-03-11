@@ -13,6 +13,7 @@ pub(super) enum ParserWarning {
         flag: RnsFlag,
         spans: Vec<Span>,
     },
+    ReservedLikeIdentifierTodoName,
 }
 
 impl ParserWarning {
@@ -20,6 +21,7 @@ impl ParserWarning {
         match self {
             ParserWarning::MissingSuperClass { .. } => "W-001",
             ParserWarning::ClassDuplicateFlag { .. } => "TODO",
+            ParserWarning::ReservedLikeIdentifierTodoName => "TODO",
         }
     }
     fn asm_msg(&self) -> String {
@@ -27,6 +29,9 @@ impl ParserWarning {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
             ParserWarning::ClassDuplicateFlag { flag, .. } => {
                 format!("duplicate access flag '{}' in class definition", flag)
+            }
+            ParserWarning::ReservedLikeIdentifierTodoName => {
+                "TODO: reserved-like identifier used as name".to_string()
             }
         }
     }
@@ -40,6 +45,7 @@ impl ParserWarning {
             ParserWarning::ClassDuplicateFlag { spans, .. } => {
                 spans.get(1).copied().unwrap_or_default()
             }
+            ParserWarning::ReservedLikeIdentifierTodoName => Span::default(),
         }
     }
 
@@ -54,6 +60,9 @@ impl ParserWarning {
                 "The `{}` flag was already specified. You only need to declare it once.",
                 flag
             )),
+            ParserWarning::ReservedLikeIdentifierTodoName => {
+                Some("TODO: reserved-like identifier used as name".to_string())
+            }
         }
     }
 
@@ -81,6 +90,7 @@ impl ParserWarning {
                 }
                 labels
             }
+            ParserWarning::ReservedLikeIdentifierTodoName => vec![],
         }
     }
 

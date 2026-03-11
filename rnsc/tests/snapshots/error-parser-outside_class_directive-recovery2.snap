@@ -39,7 +39,7 @@ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- Ext
    │
  1 │ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- ExtraToken is second
    │                                               ───┬──  
-   │                                                  ╰──── class 'Some(Class(Spanned { value: "MyClass", span: Span { byte_start: 53, byte_end: 60, line: 0, col_start: 53, col_end: 60 } }))' is missing a '.super' directive
+   │                                                  ╰──── class 'Some(Class(None, Spanned { value: "MyClass", span: Span { byte_start: 53, byte_end: 60, line: 0, col_start: 53, col_end: 60 } }))' is missing a '.super' directive
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯

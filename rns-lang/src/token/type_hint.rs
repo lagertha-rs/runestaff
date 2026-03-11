@@ -1,5 +1,5 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
 use std::fmt::Display;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -47,7 +47,7 @@ impl TypeHintKind {
         }
     }
 
-    pub fn argument_count(&self) -> usize {
+    pub fn operands_count(&self) -> usize {
         match self {
             Self::Utf8 | Self::Integer | Self::String | Self::Class => 1,
             Self::Methodref => 3,
@@ -99,11 +99,11 @@ impl Display for TypeHintKind {
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum TypeHint {
     ZeroIndex(Span),
-    Utf8(Spanned<String>),
-    Integer(Spanned<i32>),
-    String(Spanned<String>),
-    Class(Spanned<String>),
-    Methodref(Spanned<String>, Spanned<String>, Spanned<String>),
+    Utf8(Span, Spanned<String>),
+    Integer(Span, Spanned<i32>),
+    String(Span, Spanned<String>),
+    Class(Option<Span>, Spanned<String>),
+    Methodref(Span, Spanned<String>, Spanned<String>, Spanned<String>),
     Fieldref,
     InterfaceMethodref,
     Float,
@@ -121,11 +121,11 @@ pub enum TypeHint {
 impl Display for TypeHint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Utf8(s) => write!(f, "@utf8 {}", s.value),
-            Self::Integer(n) => write!(f, "@int {}", n.value),
-            Self::String(s) => write!(f, "@string \"{}\"", s.value),
-            Self::Class(s) => write!(f, "@class {}", s.value),
-            Self::Methodref(class, name, descriptor) => write!(
+            Self::Utf8(_, s) => write!(f, "@utf8 {}", s.value),
+            Self::Integer(_, n) => write!(f, "@int {}", n.value),
+            Self::String(_, s) => write!(f, "@string \"{}\"", s.value),
+            Self::Class(_, s) => write!(f, "@class {}", s.value),
+            Self::Methodref(_, class, name, descriptor) => write!(
                 f,
                 "@methodref {} {} {}",
                 class.value, name.value, descriptor.value
