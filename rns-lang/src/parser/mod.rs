@@ -1,6 +1,6 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::parser::error::{IdentifierContext, ParserError, TrailingTokensContext};
+use crate::parser::error::{OperandErrorContext, ParserError, TrailingTokensContext};
 use crate::parser::error_deprecated::{
     IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
     TrailingTokensContextDeprecated,
@@ -109,11 +109,10 @@ impl RnsParser {
         unimplemented!()
     }
 
-    // TODO: find a better name
-    fn expect_next_identifier_and<F>(
+    fn parse_operand_or_type_hint<F>(
         &mut self,
-        err_ctx: IdentifierContext,
-        map_fn: F,
+        err_ctx: OperandErrorContext,
+        infer_hint: F,
     ) -> Result<TypeHint, Diagnostic>
     where
         F: FnOnce(Spanned<String>) -> TypeHint,
@@ -123,14 +122,16 @@ impl RnsParser {
         let token_span = token.span();
 
         match token {
-            RnsToken::Identifier(spanned) => Ok(map_fn(spanned)),
+            RnsToken::Identifier(spanned) => Ok(infer_hint(spanned)),
             RnsToken::DotClass(span)
             | RnsToken::DotSuper(span)
             | RnsToken::DotMethod(span)
             | RnsToken::DotCode(span)
             | RnsToken::DotEnd(span)
-            | RnsToken::DotAnnotation(span) => Ok(map_fn(Spanned::new(token.to_string(), span))),
-            RnsToken::AccessFlag(spanned) => Ok(map_fn(Spanned::new(
+            | RnsToken::DotAnnotation(span) => {
+                Ok(infer_hint(Spanned::new(token.to_string(), span)))
+            }
+            RnsToken::AccessFlag(spanned) => Ok(infer_hint(Spanned::new(
                 spanned.value.to_string(),
                 spanned.span,
             ))),
@@ -469,7 +470,7 @@ impl RnsParser {
     fn parse_super_directive(&mut self) {
         let super_token = self.next_token(); // consume .super token
 
-        match self.expect_next_identifier_and(IdentifierContext::SuperName, TypeHint::Class) {
+        match self.parse_operand_or_type_hint(OperandErrorContext::SuperName, TypeHint::Class) {
             Ok(super_name) => self.super_directives.push((super_token.span(), super_name)),
             Err(e) => {
                 self.diagnostic.push(e);
@@ -490,14 +491,16 @@ impl RnsParser {
             return Ok(next_token.span());
         }
 
-        // first token is not `.class` — try to recover
         let error: Diagnostic =
             ParserError::UnexpectedTokenBeforeClassDefinition(next_token).into();
 
+        // first token is not `.class` — try to recover by finding the next `.class`
         if !self.anchor(&[RnsTokenKind::DotClass]) {
+            // can't recover - fail here
             return Err(error);
         }
 
+        // recovered - report error and continue parsing
         self.diagnostic.push(error);
         Ok(self.next_token().span())
     }
@@ -506,7 +509,7 @@ impl RnsParser {
         self.class_dir_span = self.anchor_class_directive()?;
         self.access_flags = self.parse_class_access_flags();
 
-        match self.expect_next_identifier_and(IdentifierContext::ClassName, TypeHint::Class) {
+        match self.parse_operand_or_type_hint(OperandErrorContext::ClassName, TypeHint::Class) {
             Ok(class_name) => {
                 self.class_name = Some(class_name);
             }
@@ -562,6 +565,41 @@ impl RnsParser {
         }
         false
     }
+
+    fn take_super_directive(&mut self) -> Option<SuperDirective> {
+        let super_directives = std::mem::take(&mut self.super_directives);
+        match super_directives.len() {
+            0 => {
+                self.diagnostic.push(
+                    ParserWarning::MissingSuperClass {
+                        class_name: self.class_name.clone(),
+                        class_dir_pos: self.class_dir_span,
+                        default: JAVA_LANG_OBJECT,
+                    }
+                    .into(),
+                );
+                Some(SuperDirective {
+                    dir_span: None,
+                    name: TypeHint::Class(Spanned::new(
+                        JAVA_LANG_OBJECT.to_string(),
+                        Span::default(),
+                    )),
+                })
+            }
+            1 => {
+                let (dir_span, name) = super_directives.into_iter().next().unwrap();
+                Some(SuperDirective {
+                    dir_span: Some(dir_span),
+                    name,
+                })
+            }
+            _ => {
+                self.diagnostic
+                    .push(ParserError::MultipleSuperDefinitions(super_directives).into());
+                None
+            }
+        }
+    }
 }
 
 pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Diagnostic>> {
@@ -581,43 +619,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         instance.diagnostic.push(e);
         return Err(instance.diagnostic);
     }
-    let super_dir = {
-        match instance.super_directives.len() {
-            0 => {
-                instance.diagnostic.push(
-                    ParserWarning::MissingSuperClass {
-                        class_name: instance.class_name.clone(),
-                        class_dir_pos: instance.class_dir_span,
-                        default: JAVA_LANG_OBJECT,
-                    }
-                    .into(),
-                );
-                Some(SuperDirective {
-                    dir_span: None,
-                    name: Some(TypeHint::Class(Spanned::new(
-                        JAVA_LANG_OBJECT.to_string(),
-                        Span::default(),
-                    ))),
-                })
-            } // TODO: span is incorrect, because the value is synthetic, but probably not important since as it is correct, we never need to refer to it in diagnostics
-            1 => {
-                let (dir_span, name) = instance.super_directives.into_iter().next().unwrap();
-                Some(SuperDirective {
-                    dir_span: Some(dir_span),
-                    name: Some(name),
-                })
-            }
-            _ => {
-                instance.diagnostic.push(
-                    ParserError::MultipleSuperDefinitions(std::mem::take(
-                        &mut instance.super_directives,
-                    ))
-                    .into(),
-                );
-                None
-            }
-        }
-    };
+    let super_dir = instance.take_super_directive();
     let class_dir = ClassDirective {
         dir_span: instance.class_dir_span,
         name: instance.class_name.take(),

@@ -12,13 +12,13 @@ pub(super) enum ParserError {
     // TODO: the messages are total shit
     UnexpectedTokenBeforeClassDefinition(RnsToken),
     TrailingTokens(usize, Vec<RnsToken>, TrailingTokensContext),
-    IdentifierOrHintExpected(Span, RnsToken, IdentifierContext),
+    IdentifierOrHintExpected(Span, RnsToken, OperandErrorContext),
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum IdentifierContext {
+pub(super) enum OperandErrorContext {
     ClassName,
     SuperName,
 }
@@ -38,11 +38,11 @@ impl Display for TrailingTokensContext {
     }
 }
 
-impl Display for IdentifierContext {
+impl Display for OperandErrorContext {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            IdentifierContext::ClassName => write!(f, "class name"),
-            IdentifierContext::SuperName => write!(f, "super class name"),
+            OperandErrorContext::ClassName => write!(f, "class name"),
+            OperandErrorContext::SuperName => write!(f, "super class name"),
         }
     }
 }

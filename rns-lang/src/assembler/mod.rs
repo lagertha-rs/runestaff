@@ -17,7 +17,7 @@ pub struct RnsModule {
 
 pub struct SuperDirective {
     pub dir_span: Option<Span>,
-    pub name: Option<TypeHint>,
+    pub name: TypeHint,
 }
 
 pub struct ClassDirective {
@@ -88,7 +88,7 @@ impl RnsModule {
     }
 
     fn build_super_class(&mut self, cp_builder: &mut ConstantPoolBuilder) -> Option<u16> {
-        let name = self.super_dir.as_mut()?.name.take()?;
+        let name = self.super_dir.take()?.name;
         Some(Self::add_type_hint_to_cp(cp_builder, name))
     }
 
