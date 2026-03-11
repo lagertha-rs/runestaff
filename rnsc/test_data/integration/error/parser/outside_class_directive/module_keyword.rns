@@ -2,3 +2,4 @@
 ; another comment
 module
 .class public HelloWorld
+.super java/lang/Object

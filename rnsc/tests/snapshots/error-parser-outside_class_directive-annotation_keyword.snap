@@ -9,6 +9,7 @@ not generated
 ; another comment
 annotation
 .class public HelloWorld
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected access flag before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/annotation_keyword.rns:3:1 ]

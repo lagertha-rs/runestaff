@@ -2,3 +2,4 @@
 ; another comment
 super
 .class public HelloWorld
+.super java/lang/Object

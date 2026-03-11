@@ -6,6 +6,7 @@ expression: "&snapshot_content"
 not generated
 ----- INPUT -----
 .class MyClass SomethingElse
+.super java/lang/Object
 ----- STDERR -----
 [E-010] Error: unexpected trailing tokens after class definition
    ╭─[ test_data/integration/error/parser/class_header/trailing_identifier.rns:1:16 ]

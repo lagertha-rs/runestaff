@@ -8,6 +8,7 @@ not generated
 
 .method public static main ([Ljava/lang/String;)V
 .class public HelloWorld
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected directive before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/dot_method.rns:2:1 ]

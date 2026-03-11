@@ -7,6 +7,10 @@ not generated
 ----- INPUT -----
    public
 .class public HelloWorld
+
+
+
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected access flag before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/public_keyword.rns:1:4 ]

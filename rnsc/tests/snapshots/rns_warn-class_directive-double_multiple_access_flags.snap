@@ -13,7 +13,7 @@ expression: "&snapshot_content"
 
 .end class
 ----- STDERR -----
-[W002] Warning: duplicate access flag 'public' in class definition
+[TODO] Warning: duplicate access flag 'public' in class definition
    ╭─[ test_data/integration/rns_warn/class_directive/double_multiple_access_flags.rns:1:15 ]
    │
  1 │ .class public public final public final EmptyClass
@@ -26,7 +26,7 @@ expression: "&snapshot_content"
    │ 
    │ Note: The `public` flag was already specified. You only need to declare it once.
 ───╯
-[W002] Warning: duplicate access flag 'final' in class definition
+[TODO] Warning: duplicate access flag 'final' in class definition
    ╭─[ test_data/integration/rns_warn/class_directive/double_multiple_access_flags.rns:1:35 ]
    │
  1 │ .class public public final public final EmptyClass
@@ -38,4 +38,4 @@ expression: "&snapshot_content"
    │ Note: The `final` flag was already specified. You only need to declare it once.
 ───╯
 ----- HASH -----
-15660cc72b14de356de78864cb002c7909cd787fae77332babaf3fb942963ddc
+6010eeb2ce551fd0533a3a87774dda36f009569f4239ca4a2bc8cbb60c1239b0

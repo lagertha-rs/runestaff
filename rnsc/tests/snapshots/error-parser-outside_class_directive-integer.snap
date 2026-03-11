@@ -7,6 +7,8 @@ not generated
 ----- INPUT -----
 42 ; the answer
 .class public HelloWorld
+
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected integer before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/integer.rns:1:1 ]

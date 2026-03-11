@@ -8,6 +8,7 @@ not generated
 ; comment before the directive
 .super java/lang/Object
 .class public HelloWorld
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected directive before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/dot_super.rns:2:1 ]

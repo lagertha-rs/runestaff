@@ -7,6 +7,7 @@ not generated
 ----- INPUT -----
 "Hello World"
 .class public HelloWorld
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected string literal before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/string_literal.rns:1:1 ]

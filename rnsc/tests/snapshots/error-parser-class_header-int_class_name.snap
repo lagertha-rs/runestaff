@@ -6,6 +6,7 @@ expression: "&snapshot_content"
 not generated
 ----- INPUT -----
 .class 42
+.super java/lang/Object
 ----- STDERR -----
 [E-009] Error: unexpected integer where a class name is required
    ╭─[ test_data/integration/error/parser/class_header/int_class_name.rns:1:8 ]

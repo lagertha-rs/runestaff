@@ -10,6 +10,7 @@ not generated
 
 HelloWorld
 .class public HelloWorld
+.super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected identifier before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/identifier.rns:4:1 ]

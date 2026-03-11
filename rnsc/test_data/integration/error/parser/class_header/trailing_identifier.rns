@@ -1,1 +1,2 @@
 .class MyClass SomethingElse
+.super java/lang/Object
