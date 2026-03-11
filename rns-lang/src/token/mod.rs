@@ -62,8 +62,6 @@ pub enum RnsToken {
     TypeHint(Spanned<TypeHintKind>),
 
     Identifier(Spanned<String>),
-    Integer(Spanned<i32>),
-    StringLiteral(Spanned<String>),
     Newline(Span),
     Eof(Span),
 }
@@ -157,10 +155,7 @@ impl RnsToken {
                 RnsTokenContext::MethodDefinition,
             ],
             RnsToken::Newline(_) | RnsToken::Eof(_) => &[RnsTokenContext::Contextless],
-            RnsToken::TypeHint(_)
-            | RnsToken::Identifier(_)
-            | RnsToken::Integer(_)
-            | RnsToken::StringLiteral(_) => &[RnsTokenContext::Operand],
+            RnsToken::TypeHint(_) | RnsToken::Identifier(_) => &[RnsTokenContext::Operand],
         }
     }
 
