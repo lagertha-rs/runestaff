@@ -30,7 +30,7 @@ Newline                         | 75..76    | 3:5..6    | \n
 TypeHint(@utf8)                 | 76..81    | 4:0..5    | @utf8
 Identifier("hello")             | 82..87    | 4:6..11   | hello
 Newline                         | 87..88    | 4:11..12  | \n
-TypeHint(@integer)              | 88..92    | 5:0..4    | @int
+TypeHint(@int)                  | 88..92    | 5:0..4    | @int
 Identifier("42")                | 93..95    | 5:5..7    | 42
 Newline                         | 95..96    | 5:7..8    | \n
 DotEnd                          | 96..100   | 6:0..4    | .end

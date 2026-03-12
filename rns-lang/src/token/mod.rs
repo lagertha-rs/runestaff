@@ -1,23 +1,45 @@
+pub(crate) use crate::token::flag::RnsFlag;
+pub(crate) use crate::token::kind::RnsTokenKind;
 pub(crate) use crate::token::span::{Span, Spanned};
 use crate::token::type_hint::TypeHintKind;
 use std::fmt::{Display, Formatter};
 
+pub mod flag;
+mod kind;
 pub(crate) mod span;
 pub mod type_hint;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
-pub enum RnsFlag {
-    Public,
-    Static,
-    Final,
-    Super,
-    Interface,
-    Abstract,
-    Enum,
-    Synthetic,
-    Annotation,
-    Module,
-}
+pub const DIRECTIVE_DOT_CLASS: &str = ".class";
+pub const DIRECTIVE_DOT_SUPER: &str = ".super";
+pub const DIRECTIVE_DOT_METHOD: &str = ".method";
+pub const DIRECTIVE_DOT_END: &str = ".end";
+pub const DIRECTIVE_DOT_CODE: &str = ".code";
+pub const DIRECTIVE_DOT_ANNOTATION: &str = ".annotation";
+
+pub const DIRECTIVE_CLASS: &str = "class";
+pub const DIRECTIVE_SUPER: &str = "super";
+pub const DIRECTIVE_METHOD: &str = "method";
+pub const DIRECTIVE_END: &str = "end";
+pub const DIRECTIVE_CODE: &str = "code";
+pub const DIRECTIVE_ANNOTATION: &str = "annotation";
+
+pub const FLAG_PUBLIC: &str = "public";
+pub const FLAG_STATIC: &str = "static";
+pub const FLAG_FINAL: &str = "final";
+pub const FLAG_SUPER: &str = "super";
+pub const FLAG_INTERFACE: &str = "interface";
+pub const FLAG_ABSTRACT: &str = "abstract";
+pub const FLAG_ENUM: &str = "enum";
+pub const FLAG_SYNTHETIC: &str = "synthetic";
+pub const FLAG_ANNOTATION: &str = "annotation";
+pub const FLAG_MODULE: &str = "module";
+
+pub const TOKEN_TYPE_DIRECTIVE: &str = "directive";
+pub const TOKEN_TYPE_ACCESS_FLAG: &str = "access flag";
+pub const TOKEN_TYPE_IDENTIFIER: &str = "identifier";
+pub const TOKEN_TYPE_NEWLINE: &str = "newline";
+pub const TOKEN_TYPE_EOF: &str = "eof";
+pub const TOKEN_TYPE_TYPE_HINT: &str = "type hint";
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum RnsTokenContext {
@@ -29,21 +51,6 @@ pub enum RnsTokenContext {
     Operand,
     TopLevel,
     Contextless,
-}
-
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum RnsTokenKind {
-    DotClass,
-    DotSuper,
-    DotMethod,
-    DotEnd,
-    DotCode,
-    DotAnnotation,
-    AccessFlag(RnsFlag),
-    TypeHint(TypeHintKind),
-    Identifier,
-    Newline,
-    Eof,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -79,61 +86,22 @@ impl Display for RnsTokenContext {
     }
 }
 
-impl TryFrom<&str> for RnsFlag {
-    type Error = ();
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "public" => Ok(RnsFlag::Public),
-            "static" => Ok(RnsFlag::Static),
-            "final" => Ok(RnsFlag::Final),
-            "super" => Ok(RnsFlag::Super),
-            "interface" => Ok(RnsFlag::Interface),
-            "abstract" => Ok(RnsFlag::Abstract),
-            "enum" => Ok(RnsFlag::Enum),
-            "synthetic" => Ok(RnsFlag::Synthetic),
-            "annotation" => Ok(RnsFlag::Annotation),
-            "module" => Ok(RnsFlag::Module),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Display for RnsFlag {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RnsFlag::Public => write!(f, "public"),
-            RnsFlag::Static => write!(f, "static"),
-            RnsFlag::Final => write!(f, "final"),
-            RnsFlag::Super => write!(f, "super"),
-            RnsFlag::Interface => write!(f, "interface"),
-            RnsFlag::Abstract => write!(f, "abstract"),
-            RnsFlag::Enum => write!(f, "enum"),
-            RnsFlag::Synthetic => write!(f, "synthetic"),
-            RnsFlag::Annotation => write!(f, "annotation"),
-            RnsFlag::Module => write!(f, "module"),
-        }
-    }
-}
-
-impl RnsFlag {
-    pub fn jvm_spec_name(&self) -> &'static str {
-        match self {
-            RnsFlag::Interface => "ACC_INTERFACE",
-            RnsFlag::Abstract => "ACC_ABSTRACT",
-            RnsFlag::Enum => "ACC_ENUM",
-            RnsFlag::Module => "ACC_MODULE",
-            RnsFlag::Public => "ACC_PUBLIC",
-            RnsFlag::Static => "ACC_STATIC",
-            RnsFlag::Final => "ACC_FINAL",
-            RnsFlag::Super => "ACC_SUPER",
-            RnsFlag::Synthetic => "ACC_SYNTHETIC",
-            RnsFlag::Annotation => "ACC_ANNOTATION",
-        }
-    }
-}
-
 impl RnsToken {
+    pub fn token_name(&self) -> &'static str {
+        match self {
+            RnsToken::DotClass(_) => DIRECTIVE_DOT_CLASS,
+            RnsToken::DotSuper(_) => DIRECTIVE_DOT_SUPER,
+            RnsToken::DotMethod(_) => DIRECTIVE_DOT_METHOD,
+            RnsToken::DotEnd(_) => DIRECTIVE_DOT_END,
+            RnsToken::DotCode(_) => DIRECTIVE_DOT_CODE,
+            RnsToken::DotAnnotation(_) => DIRECTIVE_DOT_ANNOTATION,
+            RnsToken::AccessFlag(spanned) => spanned.value.name(),
+            RnsToken::TypeHint(spanned) => spanned.value.token_at_name(),
+            RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,
+            RnsToken::Newline(_) => TOKEN_TYPE_NEWLINE,
+            RnsToken::Eof(_) => TOKEN_TYPE_EOF,
+        }
+    }
     pub fn can_appear_in(&self) -> &[RnsTokenContext] {
         match self {
             RnsToken::DotClass(_) => &[RnsTokenContext::TopLevel],
@@ -154,6 +122,22 @@ impl RnsToken {
             ],
             RnsToken::Newline(_) | RnsToken::Eof(_) => &[RnsTokenContext::Contextless],
             RnsToken::TypeHint(_) | RnsToken::Identifier(_) => &[RnsTokenContext::Operand],
+        }
+    }
+
+    pub fn kind(&self) -> RnsTokenKind {
+        match self {
+            RnsToken::DotClass(_) => RnsTokenKind::DotClass,
+            RnsToken::DotSuper(_) => RnsTokenKind::DotSuper,
+            RnsToken::DotMethod(_) => RnsTokenKind::DotMethod,
+            RnsToken::DotEnd(_) => RnsTokenKind::DotEnd,
+            RnsToken::DotCode(_) => RnsTokenKind::DotCode,
+            RnsToken::DotAnnotation(_) => RnsTokenKind::DotAnnotation,
+            RnsToken::AccessFlag(spanned) => RnsTokenKind::AccessFlag(spanned.value),
+            RnsToken::TypeHint(spanned) => RnsTokenKind::TypeHint(spanned.value),
+            RnsToken::Identifier(_) => RnsTokenKind::Identifier,
+            RnsToken::Newline(_) => RnsTokenKind::Newline,
+            RnsToken::Eof(_) => RnsTokenKind::Eof,
         }
     }
 
@@ -211,12 +195,12 @@ impl RnsToken {
 
     pub fn from_directive(name: &str, span: Span) -> Option<Self> {
         match name {
-            "class" => Some(RnsToken::DotClass(span)),
-            "super" => Some(RnsToken::DotSuper(span)),
-            "method" => Some(RnsToken::DotMethod(span)),
-            "end" => Some(RnsToken::DotEnd(span)),
-            "code" => Some(RnsToken::DotCode(span)),
-            "annotation" => Some(RnsToken::DotAnnotation(span)),
+            DIRECTIVE_CLASS => Some(RnsToken::DotClass(span)),
+            DIRECTIVE_SUPER => Some(RnsToken::DotSuper(span)),
+            DIRECTIVE_METHOD => Some(RnsToken::DotMethod(span)),
+            DIRECTIVE_END => Some(RnsToken::DotEnd(span)),
+            DIRECTIVE_CODE => Some(RnsToken::DotCode(span)),
+            DIRECTIVE_ANNOTATION => Some(RnsToken::DotAnnotation(span)),
             _ => None,
         }
     }
@@ -252,30 +236,19 @@ impl RnsToken {
             | RnsToken::DotMethod(_)
             | RnsToken::DotEnd(_)
             | RnsToken::DotAnnotation(_)
-            | RnsToken::DotCode(_) => "directive",
-            RnsToken::AccessFlag(_) => "access flag",
-            RnsToken::Identifier(_) => "identifier",
-            RnsToken::Newline(_) => "newline",
-            RnsToken::Eof(_) => "eof",
-            RnsToken::TypeHint(_) => "type hint",
+            | RnsToken::DotCode(_) => TOKEN_TYPE_DIRECTIVE,
+            RnsToken::AccessFlag(_) => TOKEN_TYPE_ACCESS_FLAG,
+            RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,
+            RnsToken::Newline(_) => TOKEN_TYPE_NEWLINE,
+            RnsToken::Eof(_) => TOKEN_TYPE_EOF,
+            RnsToken::TypeHint(_) => TOKEN_TYPE_TYPE_HINT,
         }
     }
-}
 
-impl Display for RnsToken {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    pub fn as_identifier(&self) -> &str {
         match self {
-            RnsToken::DotClass(_) => write!(f, ".class"),
-            RnsToken::DotSuper(_) => write!(f, ".super"),
-            RnsToken::DotMethod(_) => write!(f, ".method"),
-            RnsToken::DotEnd(_) => write!(f, ".end"),
-            RnsToken::DotCode(_) => write!(f, ".code"),
-            RnsToken::DotAnnotation(_) => write!(f, ".annotation"),
-            RnsToken::Newline(_) => write!(f, "newline"),
-            RnsToken::Eof(_) => write!(f, "eof"),
-            RnsToken::AccessFlag(spanned) => write!(f, "{}", spanned.value),
-            RnsToken::Identifier(spanned) => write!(f, "{}", spanned.value.escape_default()),
-            RnsToken::TypeHint(spanned) => write!(f, "{}", spanned.value),
+            RnsToken::Identifier(spanned) => &spanned.value,
+            _ => self.token_name(),
         }
     }
 }

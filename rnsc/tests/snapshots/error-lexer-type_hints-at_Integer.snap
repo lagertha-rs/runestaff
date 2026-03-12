@@ -5,14 +5,16 @@ expression: "&snapshot_content"
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
-@Integer
+@Int
 ----- STDERR -----
 [E-005] Error: unknown type hint
    ╭─[ test_data/integration/error/lexer/type_hints/at_Integer.rns:1:1 ]
    │
- 1 │ @Integer
-   │ ────┬───  
-   │     ╰───── '@Integer' is not a recognized type hint
+ 1 │ @Int
+   │ ──┬─  
+   │   ╰─── '@Int' is not a recognized type hint
+   │ 
+   │ Help: Did you mean '@int'?
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-005

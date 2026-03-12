@@ -1,7 +1,7 @@
+use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::suggestion;
 use crate::token::Span;
-use crate::ERROR_DOCS_BASE_URL;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 

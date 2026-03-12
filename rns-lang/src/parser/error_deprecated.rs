@@ -77,7 +77,10 @@ impl ParserErrorDeprecated {
                         "missing class name in '.class' directive".to_string()
                     }
                     _ if token.is_directive() => {
-                        format!("cannot use directive '{}' as a class name", token)
+                        format!(
+                            "cannot use directive '{}' as a class name",
+                            token.token_name()
+                        )
                     }
                     _ => "expected class name".to_string(),
                 },
@@ -133,7 +136,10 @@ impl ParserErrorDeprecated {
                                 "must start on a new line".to_string()
                             }
                             _ if first_token_kind.is_directive() => {
-                                format!("directive '{}' is not allowed here", first_token_kind)
+                                format!(
+                                    "directive '{}' is not allowed here",
+                                    first_token_kind.token_name()
+                                )
                             }
                             _ if first_token_kind.is_access_flag() => {
                                 "access flags must appear before the class name".to_string()
@@ -153,17 +159,23 @@ impl ParserErrorDeprecated {
                     {
                         format!(
                             "'{}' is only allowed inside a class or method definition",
-                            token
+                            token.token_name()
                         )
                     }
                     _ if token.is_class_nested_directive() => {
-                        format!("'{}' is only allowed inside a class definition", token)
+                        format!(
+                            "'{}' is only allowed inside a class definition",
+                            token.token_name()
+                        )
                     }
                     _ if token.is_method_nested_directive() => {
-                        format!("'{}' is only allowed inside a method definition", token)
+                        format!(
+                            "'{}' is only allowed inside a method definition",
+                            token.token_name()
+                        )
                     }
                     RnsToken::DotEnd(_) => {
-                        format!("'{}' has no matching start directive", token)
+                        format!("'{}' has no matching start directive", token.token_name())
                     }
                     _ => format!(
                         "this {} must appear inside a class definition",
@@ -181,7 +193,7 @@ impl ParserErrorDeprecated {
                         _ if token.is_directive() => {
                             "directives cannot be used as names".to_string()
                         }
-                        _ => format!("found '{}' instead", token),
+                        _ => format!("found '{}' instead", token.token_name()),
                     },
                     IdentifierContextDeprecated::SuperName => {
                         "expected a superclass name".to_string()
@@ -211,13 +223,19 @@ impl ParserErrorDeprecated {
             ParserErrorDeprecated::UnexpectedCodeDirectiveArg(_, token) => {
                 vec![DiagnosticLabel::at(
                     self.primary_location().as_range(),
-                    format!("'{}' is not a valid argument for '.code'", token),
+                    format!(
+                        "'{}' is not a valid argument for '.code'",
+                        token.token_name()
+                    ),
                 )]
             }
             ParserErrorDeprecated::NonNegativeIntegerExpected(_, token, _) => {
                 vec![DiagnosticLabel::at(
                     self.primary_location().as_range(),
-                    format!("expected a non-negative integer, found '{}'", token),
+                    format!(
+                        "expected a non-negative integer, found '{}'",
+                        token.token_name()
+                    ),
                 )]
             }
             ParserErrorDeprecated::UnknownInstruction(_, name) => {
@@ -270,7 +288,7 @@ impl ParserErrorDeprecated {
                 match context {
                     TrailingTokensContextDeprecated::Class => match first_token_kind {
                         _ if first_token_kind.is_class_nested_directive() => {
-                            Some(format!("Consider starting a new line for the '{}' directive.", first_token_kind))
+                            Some(format!("Consider starting a new line for the '{}' directive.", first_token_kind.token_name()))
                         }
                         _ if first_token_kind.is_access_flag() => {
                             // TODO: bad note, almost the same as the label

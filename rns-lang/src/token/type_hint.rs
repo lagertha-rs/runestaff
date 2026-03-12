@@ -1,6 +1,41 @@
-use crate::token::span::Spanned;
 use crate::token::Span;
-use std::fmt::Display;
+use crate::token::span::Spanned;
+
+pub const TYPE_HINT_AT_UTF8: &str = "@utf8";
+pub const TYPE_HINT_AT_INTEGER: &str = "@int";
+pub const TYPE_HINT_AT_STRING: &str = "@string";
+pub const TYPE_HINT_AT_CLASS: &str = "@class";
+pub const TYPE_HINT_AT_METHODREF: &str = "@methodref";
+pub const TYPE_HINT_AT_FIELDREF: &str = "@fieldref";
+pub const TYPE_HINT_AT_INTERFACE_METHODREF: &str = "@interfaceMethodref";
+pub const TYPE_HINT_AT_FLOAT: &str = "@float";
+pub const TYPE_HINT_AT_LONG: &str = "@long";
+pub const TYPE_HINT_AT_DOUBLE: &str = "@double";
+pub const TYPE_HINT_AT_NAME_AND_TYPE: &str = "@nameAndType";
+pub const TYPE_HINT_AT_METHOD_HANDLE: &str = "@methodHandle";
+pub const TYPE_HINT_AT_METHOD_TYPE: &str = "@methodType";
+pub const TYPE_HINT_AT_DYNAMIC: &str = "@dynamic";
+pub const TYPE_HINT_AT_INVOKE_DYNAMIC: &str = "@invokeDynamic";
+pub const TYPE_HINT_AT_MODULE: &str = "@module";
+pub const TYPE_HINT_AT_PACKAGE: &str = "@package";
+
+pub const TYPE_HINT_UTF8: &str = "utf8";
+pub const TYPE_HINT_INTEGER: &str = "int";
+pub const TYPE_HINT_STRING: &str = "string";
+pub const TYPE_HINT_CLASS: &str = "class";
+pub const TYPE_HINT_METHODREF: &str = "methodref";
+pub const TYPE_HINT_FIELDREF: &str = "fieldref";
+pub const TYPE_HINT_INTERFACE_METHODREF: &str = "interfaceMethodref";
+pub const TYPE_HINT_FLOAT: &str = "float";
+pub const TYPE_HINT_LONG: &str = "long";
+pub const TYPE_HINT_DOUBLE: &str = "double";
+pub const TYPE_HINT_NAME_AND_TYPE: &str = "nameAndType";
+pub const TYPE_HINT_METHOD_HANDLE: &str = "methodHandle";
+pub const TYPE_HINT_METHOD_TYPE: &str = "methodType";
+pub const TYPE_HINT_DYNAMIC: &str = "dynamic";
+pub const TYPE_HINT_INVOKE_DYNAMIC: &str = "invokeDynamic";
+pub const TYPE_HINT_MODULE: &str = "module";
+pub const TYPE_HINT_PACKAGE: &str = "package";
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum TypeHintKind {
@@ -26,23 +61,23 @@ pub enum TypeHintKind {
 impl TypeHintKind {
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
-            "utf8" => Some(Self::Utf8),
-            "int" => Some(Self::Integer),
-            "string" => Some(Self::String),
-            "class" => Some(Self::Class),
-            "methodref" => Some(Self::Methodref),
-            "fieldref" => Some(Self::Fieldref),
-            "interfaceMethodref" => Some(Self::InterfaceMethodref),
-            "float" => Some(Self::Float),
-            "long" => Some(Self::Long),
-            "double" => Some(Self::Double),
-            "nameAndType" => Some(Self::NameAndType),
-            "methodHandle" => Some(Self::MethodHandle),
-            "methodType" => Some(Self::MethodType),
-            "dynamic" => Some(Self::Dynamic),
-            "invokeDynamic" => Some(Self::InvokeDynamic),
-            "module" => Some(Self::Module),
-            "package" => Some(Self::Package),
+            TYPE_HINT_UTF8 => Some(Self::Utf8),
+            TYPE_HINT_INTEGER => Some(Self::Integer),
+            TYPE_HINT_STRING => Some(Self::String),
+            TYPE_HINT_CLASS => Some(Self::Class),
+            TYPE_HINT_METHODREF => Some(Self::Methodref),
+            TYPE_HINT_FIELDREF => Some(Self::Fieldref),
+            TYPE_HINT_INTERFACE_METHODREF => Some(Self::InterfaceMethodref),
+            TYPE_HINT_FLOAT => Some(Self::Float),
+            TYPE_HINT_LONG => Some(Self::Long),
+            TYPE_HINT_DOUBLE => Some(Self::Double),
+            TYPE_HINT_NAME_AND_TYPE => Some(Self::NameAndType),
+            TYPE_HINT_METHOD_HANDLE => Some(Self::MethodHandle),
+            TYPE_HINT_METHOD_TYPE => Some(Self::MethodType),
+            TYPE_HINT_DYNAMIC => Some(Self::Dynamic),
+            TYPE_HINT_INVOKE_DYNAMIC => Some(Self::InvokeDynamic),
+            TYPE_HINT_MODULE => Some(Self::Module),
+            TYPE_HINT_PACKAGE => Some(Self::Package),
             _ => None,
         }
     }
@@ -69,30 +104,27 @@ impl TypeHintKind {
             _ => unimplemented!(),
         }
     }
-}
 
-impl Display for TypeHintKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            Self::Utf8 => "@utf8",
-            Self::Integer => "@integer",
-            Self::String => "@string",
-            Self::Class => "@class",
-            Self::Methodref => "@methodref",
-            Self::Fieldref => "@fieldref",
-            Self::InterfaceMethodref => "@interfaceMethodref",
-            Self::Float => "@float",
-            Self::Long => "@long",
-            Self::Double => "@double",
-            Self::NameAndType => "@nameAndType",
-            Self::MethodHandle => "@methodHandle",
-            Self::MethodType => "@methodType",
-            Self::Dynamic => "@dynamic",
-            Self::InvokeDynamic => "@invokeDynamic",
-            Self::Module => "@module",
-            Self::Package => "@package",
-        };
-        write!(f, "{s}")
+    pub fn token_at_name(&self) -> &'static str {
+        match self {
+            Self::Utf8 => TYPE_HINT_AT_UTF8,
+            Self::Integer => TYPE_HINT_AT_INTEGER,
+            Self::String => TYPE_HINT_AT_STRING,
+            Self::Class => TYPE_HINT_AT_CLASS,
+            Self::Methodref => TYPE_HINT_AT_METHODREF,
+            Self::Fieldref => TYPE_HINT_AT_FIELDREF,
+            Self::InterfaceMethodref => TYPE_HINT_AT_INTERFACE_METHODREF,
+            Self::Float => TYPE_HINT_AT_FLOAT,
+            Self::Long => TYPE_HINT_AT_LONG,
+            Self::Double => TYPE_HINT_AT_DOUBLE,
+            Self::NameAndType => TYPE_HINT_AT_NAME_AND_TYPE,
+            Self::MethodHandle => TYPE_HINT_AT_METHOD_HANDLE,
+            Self::MethodType => TYPE_HINT_AT_METHOD_TYPE,
+            Self::Dynamic => TYPE_HINT_AT_DYNAMIC,
+            Self::InvokeDynamic => TYPE_HINT_AT_INVOKE_DYNAMIC,
+            Self::Module => TYPE_HINT_AT_MODULE,
+            Self::Package => TYPE_HINT_AT_PACKAGE,
+        }
     }
 }
 
@@ -118,17 +150,16 @@ pub enum TypeHint {
     Package,
 }
 
-impl Display for TypeHint {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl TypeHint {
+    pub fn token_name_with_value(&self) -> String {
         match self {
-            Self::Utf8(_, s) => write!(f, "@utf8 {}", s.value),
-            Self::Integer(_, n) => write!(f, "@int {}", n.value),
-            Self::String(_, s) => write!(f, "@string \"{}\"", s.value),
-            Self::Class(_, s) => write!(f, "@class {}", s.value),
-            Self::Methodref(_, class, name, descriptor) => write!(
-                f,
-                "@methodref {} {} {}",
-                class.value, name.value, descriptor.value
+            Self::Utf8(_, value) => format!("{} ({})", TYPE_HINT_AT_UTF8, value.value),
+            Self::Integer(_, value) => format!("{} ({})", TYPE_HINT_AT_INTEGER, value.value),
+            Self::String(_, value) => format!("{} ({})", TYPE_HINT_AT_STRING, value.value),
+            Self::Class(_, value) => format!("{} ({})", TYPE_HINT_AT_CLASS, value.value),
+            Self::Methodref(_, class, name, descriptor) => format!(
+                "{} (class: {}, name: {}, descriptor: {})",
+                TYPE_HINT_AT_METHODREF, class.value, name.value, descriptor.value
             ),
             _ => unimplemented!(),
         }

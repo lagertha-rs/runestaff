@@ -2,9 +2,9 @@ use crate::assembler::jvm_warning::JvmWarning;
 use crate::diagnostic::Diagnostic;
 use crate::token::type_hint::TypeHint;
 use crate::token::{RnsFlag, Span};
+use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{ClassFileBuilder, ConstantPoolBuilder};
-use jclass::ClassFile;
 use std::collections::BTreeMap;
 
 mod jvm_warning;
@@ -83,6 +83,7 @@ impl RnsModule {
     fn add_type_hint_to_cp(cp_builder: &mut ConstantPoolBuilder, hint: TypeHint) -> u16 {
         match hint {
             TypeHint::Class(_, class_name) => cp_builder.add_class(&class_name.value),
+            TypeHint::Integer(_, int_value) => cp_builder.add_integer(int_value.value),
             _ => unimplemented!(),
         }
     }

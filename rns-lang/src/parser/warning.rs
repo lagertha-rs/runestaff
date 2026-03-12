@@ -28,7 +28,10 @@ impl ParserWarning {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
             ParserWarning::ClassDuplicateFlag { flag, .. } => {
-                format!("duplicate access flag '{}' in class definition", flag)
+                format!(
+                    "duplicate access flag '{}' in class definition",
+                    flag.name()
+                )
             }
             ParserWarning::ReservedLikeIdentifierTodoName => {
                 "TODO: reserved-like identifier used as name".to_string()
@@ -58,7 +61,7 @@ impl ParserWarning {
             )),
             ParserWarning::ClassDuplicateFlag { flag, .. } => Some(format!(
                 "The `{}` flag was already specified. You only need to declare it once.",
-                flag
+                flag.name()
             )),
             ParserWarning::ReservedLikeIdentifierTodoName => {
                 Some("TODO: reserved-like identifier used as name".to_string())

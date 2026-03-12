@@ -25,7 +25,7 @@ KIND                           | SPAN      | LSP        | TEXT
 ----                           | ----      | ---        | ----
 TypeHint(@utf8)                | 0..5      | 0:0..5     | @utf8
 Newline                        | 5..6      | 0:5..6     | \n
-TypeHint(@integer)             | 6..10     | 1:0..4     | @int
+TypeHint(@int)                 | 6..10     | 1:0..4     | @int
 Newline                        | 10..11    | 1:4..5     | \n
 TypeHint(@string)              | 11..18    | 2:0..7     | @string
 Newline                        | 18..19    | 2:7..8     | \n

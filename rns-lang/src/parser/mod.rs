@@ -20,11 +20,11 @@ mod tests;
 mod warning;
 
 const JAVA_LANG_OBJECT: &str = "java/lang/Object";
-const RECOVER_CLASS_NAME: &str = "Foo";
 
 struct RnsParser {
     tokens: Peekable<IntoIter<RnsToken>>,
     eof_span: Span,
+    last_kind: RnsTokenKind,
     last_span: Span,
 
     diagnostic: Vec<Diagnostic>,
@@ -51,10 +51,12 @@ impl RnsParser {
         match self.tokens.next() {
             Some(token) => {
                 self.last_span = token.span();
+                self.last_kind = token.kind();
                 token
             }
             None => {
                 self.last_span = self.eof_span;
+                self.last_kind = RnsTokenKind::Eof;
                 RnsToken::Eof(self.eof_span)
             }
         }
@@ -106,40 +108,61 @@ impl RnsParser {
         todo!()
     }
 
-    fn parse_operand(
+    fn parse_identifier(
         &mut self,
         err_ctx: OperandErrPosContext,
     ) -> Result<Spanned<String>, Diagnostic> {
         let prev_token_span = self.last_span;
         let token = self.next_token();
-        let token_span = token.span();
         match token {
             RnsToken::Identifier(spanned) => Ok(spanned),
-            RnsToken::DotClass(span)
-            | RnsToken::DotSuper(span)
-            | RnsToken::DotMethod(span)
-            | RnsToken::DotCode(span)
-            | RnsToken::DotEnd(span)
-            | RnsToken::DotAnnotation(span) => {
-                self.diagnostic
-                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
-                Ok(Spanned::new(token.to_string(), span))
-            }
-            RnsToken::AccessFlag(spanned) => {
-                self.diagnostic
-                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
-                Ok(Spanned::new(spanned.value.to_string(), spanned.span))
-            }
-            RnsToken::TypeHint(ref spanned) => {
-                self.diagnostic
-                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
-                Ok(Spanned::new(token.to_string(), spanned.span))
-            }
             RnsToken::Eof(_) | RnsToken::Newline(_) => {
                 Err(ParserError::IdentifierOrHintExpected(prev_token_span, token, err_ctx).into())
             }
-            // TODO: avoid _ everywhere and make sure to handle all cases properly
-            _ => Err(ParserError::IdentifierOrHintExpected(token_span, token, err_ctx).into()),
+            identifier_like => {
+                self.diagnostic
+                    .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
+                Ok(Spanned::new(
+                    identifier_like.token_name().to_string(),
+                    identifier_like.span(),
+                ))
+            }
+        }
+    }
+
+    fn parse_i32(&mut self, ctx: OperandErrPosContext) -> Result<Spanned<i32>, Diagnostic> {
+        let prev_token_span = self.last_span;
+        let prev_token_kind = self.last_kind;
+        let token = self.next_token();
+        let token_span = token.span();
+        match token {
+            RnsToken::Identifier(spanned) => match i32::from_str(&spanned.value) {
+                Ok(value) => Ok(Spanned::new(value, spanned.span)),
+                Err(_) => Err(ParserError::ExpectedI32Operand {
+                    required: prev_token_kind,
+                    required_span: prev_token_span,
+                    found: spanned.value,
+                    found_span: token_span,
+                    ctx,
+                }
+                .into()),
+            },
+            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(ParserError::ExpectedI32Operand {
+                required: prev_token_kind,
+                required_span: prev_token_span,
+                found: token.token_name().to_string(),
+                found_span: token_span,
+                ctx,
+            }
+            .into()),
+            other => Err(ParserError::ExpectedI32Operand {
+                required: prev_token_kind,
+                required_span: prev_token_span,
+                found: other.token_name().to_string(),
+                found_span: token_span,
+                ctx,
+            }
+            .into()),
         }
     }
 
@@ -150,8 +173,8 @@ impl RnsParser {
     ) -> Result<TypeHint, Diagnostic> {
         let kind_span = th.span;
         let res = match th.value {
-            TypeHintKind::Utf8 => Ok(TypeHint::Utf8(kind_span, self.parse_operand(err_ctx)?)),
-            TypeHintKind::Integer => unimplemented!(),
+            TypeHintKind::Utf8 => Ok(TypeHint::Utf8(kind_span, self.parse_identifier(err_ctx)?)),
+            TypeHintKind::Integer => Ok(TypeHint::Integer(kind_span, self.parse_i32(err_ctx)?)),
             TypeHintKind::String => unimplemented!(),
             TypeHintKind::Class => unimplemented!(),
             TypeHintKind::Methodref => unimplemented!(),
@@ -177,7 +200,7 @@ impl RnsParser {
             self.next_token();
             self.resolve_type_hint(th, err_ctx)
         } else {
-            Ok(infer_hint(self.parse_operand(err_ctx)?))
+            Ok(infer_hint(self.parse_identifier(err_ctx)?))
         }
     }
 
@@ -648,6 +671,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         tokens: tokens.into_iter().peekable(),
         eof_span,
         last_span: Span::default(),
+        last_kind: RnsTokenKind::Eof,
         diagnostic: Vec::new(),
 
         class_dir_span: Span::default(),
