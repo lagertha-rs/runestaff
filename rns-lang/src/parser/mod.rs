@@ -10,6 +10,7 @@ use crate::token::type_hint::{TypeHint, TypeHintKind};
 use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
+use std::str::FromStr;
 use std::vec::IntoIter;
 
 mod error;
@@ -246,7 +247,7 @@ impl RnsParser {
     ) -> Result<u32, ParserErrorDeprecated> {
         let token = self.next_token();
         match token {
-            RnsToken::Integer(spanned) if spanned.value >= 0 => Ok(spanned.value as u32),
+            RnsToken::Identifier(spanned) => Ok(u32::from_str(&spanned.value).unwrap()),
             RnsToken::Eof(t) | RnsToken::Newline(t) => {
                 Err(ParserErrorDeprecated::NonNegativeIntegerExpected(
                     Span {

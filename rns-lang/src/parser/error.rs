@@ -198,21 +198,24 @@ impl ParserError {
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => {
                 Some("Make sure the file starts with a '.class' directive.".to_string())
             }
-            ParserError::IdentifierOrHintExpected(_, token, _ctx) => match token {
-                RnsToken::Integer(spanned) => Some(format!(
-                    "The constant pool requires each entry to have a specific kind.\n\
-                     The parser can't determine whether you intended an identifier or an integer from the bare token alone.\n\n\
-                     To treat it as an identifier (will resolve to the appropriate entry kind from context):\n\
-                     #\"{}\"\n\n\
-                     To explicitly store it as an {} constant pool entry:\n\
-                     {} {}",
-                    spanned.value,
-                    TypeHintKind::Integer,
-                    TypeHintKind::Integer,
-                    spanned.value
-                )),
-                _ => unimplemented!(),
-            },
+            ParserError::IdentifierOrHintExpected(_, token, _ctx) =>
+            /*match token {
+            RnsToken::Integer(spanned) => Some(format!(
+                "The constant pool requires each entry to have a specific kind.\n\
+                 The parser can't determine whether you intended an identifier or an integer from the bare token alone.\n\n\
+                 To treat it as an identifier (will resolve to the appropriate entry kind from context):\n\
+                 #\"{}\"\n\n\
+                 To explicitly store it as an {} constant pool entry:\n\
+                 {} {}",
+                spanned.value,
+                TypeHintKind::Integer,
+                TypeHintKind::Integer,
+                spanned.value
+            )),
+            _ =>*/
+            {
+                unimplemented!()
+            }
             ParserError::TrailingTokens(_, tokens, _) => {
                 if tokens[0].is_directive() {
                     Some(format!(

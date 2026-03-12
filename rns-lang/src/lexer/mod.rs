@@ -182,22 +182,9 @@ impl<'a> RnsLexer<'a> {
         }
 
         // point to the opening quote for better error highlighting
-        Err(LexerError::UnterminatedString(
+        Err(LexerError::UnterminatedQuotedIdentifier(
             self.span_for_one_char(byte_start, col_start),
         ))
-    }
-
-    fn read_number(&mut self) -> Result<RnsToken, LexerError> {
-        // TODO: implement all number formats and types, right now only integers are supported
-        // TODO: consider supporting underscore/hex/binary literals in the future
-        let byte_start = self.byte_pos;
-        let col_start = self.col_pos;
-
-        let number_str = self.read_to_delimiter();
-        let position = self.span_for_current_position(byte_start, col_start);
-        i32::from_str(&number_str)
-            .map(|n| RnsToken::Integer(Spanned::new(n, position)))
-            .map_err(|_| LexerError::InvalidInteger(position, number_str))
     }
 
     fn handle_directive(&mut self) -> Result<RnsToken, LexerError> {
@@ -255,33 +242,7 @@ impl<'a> RnsLexer<'a> {
 
         let token = match ch {
             '.' => self.handle_directive()?,
-            '0'..='9' => self.read_number()?,
-            '-' => {
-                let is_digit_after = self.peek_char_at(1).is_some_and(|c| c.is_ascii_digit());
-                if is_digit_after {
-                    self.read_number()?
-                } else {
-                    let str = self.read_to_delimiter();
-                    RnsToken::from_identifier(
-                        str,
-                        self.span_for_current_position(byte_start, col_start),
-                    )
-                }
-            }
-            '"' => RnsToken::StringLiteral(self.read_string(byte_start, col_start)?),
-            '#' => {
-                self.next_char();
-                if let Some(next) = self.peek_char()
-                    && next == '"'
-                {
-                    RnsToken::Identifier(self.read_string(byte_start, col_start)?)
-                } else {
-                    RnsToken::Identifier(Spanned::new(
-                        self.extend_to_delimiter("#".to_string()),
-                        self.span_for_current_position(byte_start, col_start),
-                    ))
-                }
-            }
+            '"' => RnsToken::Identifier(self.read_string(byte_start, col_start)?),
             '@' => self.handle_type_hint()?,
             '\n' => {
                 self.next_char();

@@ -138,13 +138,7 @@ impl ParserErrorDeprecated {
                             _ if first_token_kind.is_access_flag() => {
                                 "access flags must appear before the class name".to_string()
                             }
-                            RnsToken::Integer(_) => {
-                                "integer literals are not allowed here".to_string()
-                            }
                             RnsToken::Identifier(_) => "not allowed here".to_string(),
-                            RnsToken::StringLiteral(_) => {
-                                "string literals are not allowed here".to_string()
-                            }
                             _ => "not allowed here".to_string(),
                         }
                     }
@@ -263,12 +257,6 @@ impl ParserErrorDeprecated {
                 RnsToken::Identifier(spanned) => Some(
                     format!("Found identifier '{}' before any class was defined. Did you forget to start the class? Try: '.class {}'", spanned.value, spanned.value),
                 ),
-                RnsToken::Integer(_) => Some(
-                    "Integer literals are typically used as instruction arguments inside '.code' blocks.".to_string(),
-                ),
-                RnsToken::StringLiteral(_) => Some(
-                    "String literals are constant values that must appear inside '.code' blocks as instruction arguments.".to_string(),
-                ),
                 RnsToken::DotAnnotation(_) => Some(
                     "The '.annotation' directive is only valid inside a class or method definition."
                         .to_string(),
@@ -297,12 +285,6 @@ impl ParserErrorDeprecated {
                         RnsToken::DotEnd(_) => {
                             Some("The '.end' directive must match a previous '.method', '.code', or '.class' directive. It cannot appear directly after the class name.".to_string())
                         }
-                        RnsToken::Integer(_) => {
-                            Some("Integer literals belong inside '.code' blocks as instruction arguments.".to_string())
-                        }
-                        RnsToken::StringLiteral(_) => {
-                            Some("String literals belong inside '.code' blocks as instruction arguments.".to_string())
-                        }
                         RnsToken::Identifier(_) => {
                             Some("The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.".to_string())
                         }
@@ -320,18 +302,8 @@ impl ParserErrorDeprecated {
                 }
             }
             ParserErrorDeprecated::IdentifierExpected(_, kind, context) => match (kind, context) {
-                (
-                    RnsToken::StringLiteral(_),
-                    IdentifierContextDeprecated::ClassName | IdentifierContextDeprecated::SuperName,
-                ) => Some("Consider removing the quotes around the class name".to_string()),
-                (RnsToken::StringLiteral(_), IdentifierContextDeprecated::MethodName) => {
-                    Some("Consider removing the quotes around the method name".to_string())
-                }
                 (RnsToken::DotClass(_) | RnsToken::DotMethod(_) | RnsToken::DotSuper(_) | RnsToken::DotCode(_) | RnsToken::DotEnd(_), IdentifierContextDeprecated::ClassName) => {
                     Some("Directives are reserved keywords. If you meant to start a new directive, do so on a new line.".to_string())
-                }
-                (RnsToken::Integer(_), IdentifierContextDeprecated::ClassName) => {
-                    Some("Integer literals cannot be used as class names. Every class must have a valid identifier as its name.".to_string())
                 }
                 (RnsToken::Newline(_) | RnsToken::Eof(_), IdentifierContextDeprecated::ClassName) => {
                     Some("Every class definition needs a name. Example: '.class public MyClass'".to_string())

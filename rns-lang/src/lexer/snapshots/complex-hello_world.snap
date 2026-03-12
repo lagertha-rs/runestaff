@@ -43,9 +43,9 @@ Identifier("()V")                     | 72..75    | 3:22..25   | ()V
 Newline                               | 75..76    | 3:25..26   | \n
 DotCode                               | 79..84    | 4:3..8     | .code
 Identifier("stack")                   | 85..90    | 4:9..14    | stack
-Integer(10)                           | 91..93    | 4:15..17   | 10
+Identifier("10")                      | 91..93    | 4:15..17   | 10
 Identifier("locals")                  | 94..100   | 4:18..24   | locals
-Integer(10)                           | 101..103  | 4:25..27   | 10
+Identifier("10")                      | 101..103  | 4:25..27   | 10
 Newline                               | 103..104  | 4:27..28   | \n
 Identifier("aload_0")                 | 109..116  | 5:5..12    | aload_0
 Newline                               | 116..117  | 5:12..13   | \n
@@ -72,9 +72,9 @@ Identifier("([Ljava/lang/String;)V")  | 230..252  | 12:27..49  | ([Ljava/lang/St
 Newline                               | 252..253  | 12:49..50  | \n
 DotCode                               | 256..261  | 13:3..8    | .code
 Identifier("stack")                   | 262..267  | 13:9..14   | stack
-Integer(10)                           | 268..270  | 13:15..17  | 10
+Identifier("10")                      | 268..270  | 13:15..17  | 10
 Identifier("locals")                  | 271..277  | 13:18..24  | locals
-Integer(10)                           | 278..280  | 13:25..27  | 10
+Identifier("10")                      | 278..280  | 13:25..27  | 10
 Newline                               | 280..281  | 13:27..28  | \n
 Newline                               | 281..282  | 14:0..1    | \n
 Identifier("getstatic")               | 287..296  | 15:5..14   | getstatic
@@ -83,7 +83,7 @@ Identifier("out")                     | 314..317  | 15:32..35  | out
 Identifier("Ljava/io/PrintStream;")   | 318..339  | 15:36..57  | Ljava/io/PrintStream;
 Newline                               | 339..340  | 15:57..58  | \n
 Identifier("ldc")                     | 345..348  | 16:5..8    | ldc
-StringLiteral("Hello World!")         | 349..363  | 16:9..23   | "Hello World!"
+Identifier("Hello World!")            | 349..363  | 16:9..23   | "Hello World!"
 Newline                               | 363..364  | 16:23..24  | \n
 Identifier("invokevirtual")           | 369..382  | 17:5..18   | invokevirtual
 Identifier("java/io/PrintStream")     | 383..402  | 17:19..38  | java/io/PrintStream

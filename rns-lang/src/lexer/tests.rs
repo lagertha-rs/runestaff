@@ -206,7 +206,7 @@ mod unterminated_string {
     #[test]
     fn string_missing_closing_quote() {
         let diag = expect_one_diagnostic("\"hello");
-        assert_syntax_error(&diag, "unterminated string literal");
+        assert_syntax_error(&diag, "unterminated quoted identifier");
         assert_primary_span(&diag, 0, 1);
         assert_primary_lsp(&diag, 0, 0, 1);
     }
@@ -217,7 +217,7 @@ mod unterminated_string {
         let input = "\"hello\nworld\"";
         let (tokens, diagnostics) = tokenize(input);
         assert_eq!(diagnostics.len(), 1);
-        assert_syntax_error(&diagnostics[0], "unterminated string literal");
+        assert_syntax_error(&diagnostics[0], "unterminated quoted identifier");
         // After recovery, "world" on the next line should be tokenized as an identifier
         assert!(
             tokens
@@ -230,7 +230,7 @@ mod unterminated_string {
     fn empty_unterminated_string() {
         // Just a single quote mark with nothing after
         let diag = expect_one_diagnostic("\"");
-        assert_syntax_error(&diag, "unterminated string literal");
+        assert_syntax_error(&diag, "unterminated quoted identifier");
         assert_primary_span(&diag, 0, 1);
     }
 
@@ -238,7 +238,7 @@ mod unterminated_string {
     fn string_with_backslash_at_eof() {
         // "\" — backslash consumed, then peek returns None => UnterminatedString
         let diag = expect_one_diagnostic("\"\\");
-        assert_syntax_error(&diag, "unterminated string literal");
+        assert_syntax_error(&diag, "unterminated quoted identifier");
     }
 
     #[test]
@@ -261,7 +261,7 @@ mod unterminated_string {
     fn unterminated_string_after_valid_token() {
         let input = ".class \"unterminated";
         let diag = expect_one_diagnostic(input);
-        assert_syntax_error(&diag, "unterminated string literal");
+        assert_syntax_error(&diag, "unterminated quoted identifier");
     }
 }
 
@@ -312,69 +312,6 @@ mod invalid_escape {
             "valid escapes should not produce errors: {:?}",
             diagnostics.iter().map(|d| &d.asm_msg).collect::<Vec<_>>()
         );
-    }
-}
-
-// =============================================================================
-// Invalid Number errors
-// =============================================================================
-mod invalid_number {
-    use super::*;
-
-    #[test]
-    fn integer_overflow() {
-        // 2147483648 is i32::MAX + 1
-        let diag = expect_one_diagnostic("2147483648");
-        assert_syntax_error(&diag, "invalid integer");
-        assert_primary_span(&diag, 0, 10);
-        assert_primary_lsp(&diag, 0, 0, 10);
-    }
-
-    #[test]
-    fn negative_overflow() {
-        // -2147483649 is i32::MIN - 1
-        let diag = expect_one_diagnostic("-2147483649");
-        assert_syntax_error(&diag, "invalid integer");
-    }
-
-    #[test]
-    fn very_large_number() {
-        let diag = expect_one_diagnostic("99999999999999");
-        assert_syntax_error(&diag, "invalid integer");
-    }
-
-    #[test]
-    fn hex_prefix() {
-        // Hex is not supported yet
-        let diag = expect_one_diagnostic("0xFF");
-        assert_syntax_error(&diag, "invalid integer");
-    }
-
-    #[test]
-    fn invalid_chars_in_number() {
-        // "123abc" starts with digit so enters read_number, but can't parse
-        let diag = expect_one_diagnostic("123abc");
-        assert_syntax_error(&diag, "invalid integer");
-    }
-
-    #[test]
-    fn float_not_supported() {
-        // "3.14" starts with digit, read_to_delimiter reads "3.14", parse as i32 fails
-        let diag = expect_one_diagnostic("3.14");
-        assert_syntax_error(&diag, "invalid integer");
-    }
-
-    #[test]
-    fn valid_integers_no_errors() {
-        for input in ["0", "1", "42", "-1", "2147483647", "-2147483648"] {
-            let (_, diagnostics) = tokenize(input);
-            assert!(
-                diagnostics.is_empty(),
-                "input '{}' should not produce errors: {:?}",
-                input,
-                diagnostics.iter().map(|d| &d.asm_msg).collect::<Vec<_>>()
-            );
-        }
     }
 }
 
@@ -466,7 +403,7 @@ mod error_recovery {
         let input = "\"unterminated\n.foobar\n.class";
         let (tokens, diagnostics) = tokenize(input);
         assert_eq!(diagnostics.len(), 2);
-        assert_syntax_error(&diagnostics[0], "unterminated string literal");
+        assert_syntax_error(&diagnostics[0], "unterminated quoted identifier");
         assert_syntax_error(&diagnostics[1], "unknown directive");
         assert!(tokens.iter().any(|t| matches!(t, RnsToken::DotClass(_))));
     }
@@ -519,66 +456,6 @@ mod help {
         assert_eq!(diag.help, Some("Did you mean '@utf8'?".to_string()));
     }
 
-    // -- InvalidInteger --
-
-    #[test]
-    fn integer_overflow_help() {
-        let diag = expect_one_diagnostic("2147483648");
-        assert_eq!(
-            diag.help,
-            Some(
-                "Integers must be between -2147483648 and 2147483647 to fit in a 32-bit signed integer."
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn hex_prefix_help() {
-        let diag = expect_one_diagnostic("0xFF");
-        assert_eq!(
-            diag.help,
-            Some(
-                "Hexadecimal numbers are not supported yet, but are planned for the future."
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn hex_prefix_uppercase_help() {
-        let diag = expect_one_diagnostic("0XFF");
-        assert_eq!(
-            diag.help,
-            Some(
-                "Hexadecimal numbers are not supported yet, but are planned for the future."
-                    .to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn invalid_chars_in_number_help() {
-        let diag = expect_one_diagnostic("123abc");
-        assert_eq!(
-            diag.help,
-            Some(
-                "Integers can only contain digits and an optional leading minus sign.".to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn float_help() {
-        let diag = expect_one_diagnostic("3.14");
-        assert_eq!(
-            diag.help,
-            Some(
-                "Integers can only contain digits and an optional leading minus sign.".to_string()
-            )
-        );
-    }
-
     // -- InvalidEscape --
 
     #[test]
@@ -587,7 +464,7 @@ mod help {
         assert_eq!(
             diag.help,
             Some(
-                "Multiline string literals are not supported yet, but are planned for the future."
+                "Multiline identifiers are not supported yet, but are planned for the future."
                     .to_string()
             )
         );
@@ -599,7 +476,7 @@ mod help {
         assert_eq!(
             diag.help,
             Some(
-                "Multiline string literals are not supported yet, but are planned for the future."
+                "Multiline identifiers are not supported yet, but are planned for the future."
                     .to_string()
             )
         );
@@ -618,7 +495,7 @@ mod help {
         let diag = expect_one_diagnostic("\"hello");
         assert_eq!(
             diag.help,
-            Some("Close the string with a '\"' on the same line.".to_string())
+            Some("Close the identifier with a '\"' on the same line.".to_string())
         );
     }
 }
@@ -660,10 +537,7 @@ mod labels {
     #[test]
     fn unterminated_string_label() {
         let diag = expect_one_diagnostic("\"hello");
-        assert_eq!(
-            first_label_msg(&diag),
-            "this string literal is not terminated"
-        );
+        assert_eq!(first_label_msg(&diag), "this identifier is not terminated");
     }
 
     // -- InvalidEscape --
@@ -694,32 +568,6 @@ mod labels {
             "carriage return characters cannot be escaped"
         );
     }
-
-    // -- InvalidInteger --
-
-    #[test]
-    fn integer_overflow_label() {
-        let diag = expect_one_diagnostic("2147483648");
-        assert_eq!(
-            first_label_msg(&diag),
-            "integer '2147483648' is too large for a 32-bit signed integer"
-        );
-    }
-
-    #[test]
-    fn integer_invalid_chars_label() {
-        let diag = expect_one_diagnostic("123abc");
-        assert_eq!(
-            first_label_msg(&diag),
-            "'123abc' contains invalid characters"
-        );
-    }
-
-    #[test]
-    fn integer_float_label() {
-        let diag = expect_one_diagnostic("3.14");
-        assert_eq!(first_label_msg(&diag), "'3.14' contains invalid characters");
-    }
 }
 
 // =============================================================================
@@ -743,15 +591,6 @@ mod note {
         assert_eq!(
             diag.note,
             Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-002".to_string())
-        );
-    }
-
-    #[test]
-    fn invalid_integer_note() {
-        let diag = expect_one_diagnostic("2147483648");
-        assert_eq!(
-            diag.note,
-            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-003".to_string())
         );
     }
 
@@ -798,7 +637,7 @@ mod lsp_msg {
     #[test]
     fn unterminated_string_matches_asm_msg() {
         let diag = expect_one_diagnostic("\"hello");
-        assert_eq!(diag.lsp_msg, "unterminated string literal");
+        assert_eq!(diag.lsp_msg, "unterminated quoted identifier");
         assert_eq!(diag.lsp_msg, diag.asm_msg);
     }
 
@@ -807,13 +646,6 @@ mod lsp_msg {
         let diag = expect_one_diagnostic("\"\\q\"");
         assert_eq!(diag.lsp_msg, "invalid escape sequence");
         assert_eq!(diag.lsp_msg, diag.asm_msg);
-    }
-
-    #[test]
-    fn invalid_number_matches_asm_msg() {
-        let diag = expect_one_diagnostic("2147483648");
-        assert_eq!(diag.lsp_msg, "invalid 32-bit signed integer");
-        assert_ne!(diag.lsp_msg, diag.asm_msg);
     }
 
     #[test]

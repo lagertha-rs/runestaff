@@ -10,12 +10,12 @@ not generated
 
 .super java/lang/Object
 ----- STDERR -----
-[E-008] Error: unexpected integer before class definition
+[E-008] Error: unexpected identifier before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/integer.rns:1:1 ]
    │
  1 │ 42 ; the answer
    │ ─┬  
-   │  ╰── valid context for 42 integer is: 'operand'.
+   │  ╰── valid context for 42 identifier is: 'operand'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 

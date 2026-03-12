@@ -42,8 +42,6 @@ pub enum RnsTokenKind {
     AccessFlag(RnsFlag),
     TypeHint(TypeHintKind),
     Identifier,
-    Integer,
-    StringLiteral,
     Newline,
     Eof,
 }
@@ -190,8 +188,6 @@ impl RnsToken {
                 spanned.value == expected_hint
             }
             (RnsToken::Identifier(_), RnsTokenKind::Identifier) => true,
-            (RnsToken::Integer(_), RnsTokenKind::Integer) => true,
-            (RnsToken::StringLiteral(_), RnsTokenKind::StringLiteral) => true,
             (RnsToken::Newline(_), RnsTokenKind::Newline) => true,
             (RnsToken::Eof(_), RnsTokenKind::Eof) => true,
             _ => false,
@@ -245,8 +241,6 @@ impl RnsToken {
             | RnsToken::Eof(span) => *span,
             RnsToken::AccessFlag(spanned) => spanned.span,
             RnsToken::Identifier(spanned) => spanned.span,
-            RnsToken::StringLiteral(spanned) => spanned.span,
-            RnsToken::Integer(spanned) => spanned.span,
             RnsToken::TypeHint(spanned) => spanned.span,
         }
     }
@@ -261,8 +255,6 @@ impl RnsToken {
             | RnsToken::DotCode(_) => "directive",
             RnsToken::AccessFlag(_) => "access flag",
             RnsToken::Identifier(_) => "identifier",
-            RnsToken::StringLiteral(_) => "string literal",
-            RnsToken::Integer(_) => "integer",
             RnsToken::Newline(_) => "newline",
             RnsToken::Eof(_) => "eof",
             RnsToken::TypeHint(_) => "type hint",
@@ -283,10 +275,6 @@ impl Display for RnsToken {
             RnsToken::Eof(_) => write!(f, "eof"),
             RnsToken::AccessFlag(spanned) => write!(f, "{}", spanned.value),
             RnsToken::Identifier(spanned) => write!(f, "{}", spanned.value.escape_default()),
-            RnsToken::StringLiteral(spanned) => {
-                write!(f, "{}", spanned.value.escape_default())
-            }
-            RnsToken::Integer(spanned) => write!(f, "{}", spanned.value),
             RnsToken::TypeHint(spanned) => write!(f, "{}", spanned.value),
         }
     }
