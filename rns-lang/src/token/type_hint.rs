@@ -1,5 +1,6 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
+use std::fmt::{Display, Formatter};
 
 pub const TYPE_HINT_AT_UTF8: &str = "@utf8";
 pub const TYPE_HINT_AT_INTEGER: &str = "@int";
@@ -105,7 +106,8 @@ impl TypeHintKind {
         }
     }
 
-    pub fn token_at_name(&self) -> &'static str {
+    /// Returns the source-code form of this type hint (e.g., `"@int"`, `"@utf8"`, `"@class"`).
+    pub fn token_name(&self) -> &'static str {
         match self {
             Self::Utf8 => TYPE_HINT_AT_UTF8,
             Self::Integer => TYPE_HINT_AT_INTEGER,
@@ -125,6 +127,34 @@ impl TypeHintKind {
             Self::Module => TYPE_HINT_AT_MODULE,
             Self::Package => TYPE_HINT_AT_PACKAGE,
         }
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::Utf8 => TYPE_HINT_UTF8,
+            Self::Integer => TYPE_HINT_INTEGER,
+            Self::String => TYPE_HINT_STRING,
+            Self::Class => TYPE_HINT_CLASS,
+            Self::Methodref => TYPE_HINT_METHODREF,
+            Self::Fieldref => TYPE_HINT_FIELDREF,
+            Self::InterfaceMethodref => TYPE_HINT_INTERFACE_METHODREF,
+            Self::Float => TYPE_HINT_FLOAT,
+            Self::Long => TYPE_HINT_LONG,
+            Self::Double => TYPE_HINT_DOUBLE,
+            Self::NameAndType => TYPE_HINT_NAME_AND_TYPE,
+            Self::MethodHandle => TYPE_HINT_METHOD_HANDLE,
+            Self::MethodType => TYPE_HINT_METHOD_TYPE,
+            Self::Dynamic => TYPE_HINT_DYNAMIC,
+            Self::InvokeDynamic => TYPE_HINT_INVOKE_DYNAMIC,
+            Self::Module => TYPE_HINT_MODULE,
+            Self::Package => TYPE_HINT_PACKAGE,
+        }
+    }
+}
+
+impl Display for TypeHintKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.token_name())
     }
 }
 

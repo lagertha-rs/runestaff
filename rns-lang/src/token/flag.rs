@@ -2,6 +2,7 @@ use crate::token::{
     FLAG_ABSTRACT, FLAG_ANNOTATION, FLAG_ENUM, FLAG_FINAL, FLAG_INTERFACE, FLAG_MODULE,
     FLAG_PUBLIC, FLAG_STATIC, FLAG_SUPER, FLAG_SYNTHETIC,
 };
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 pub enum RnsFlag {
@@ -46,6 +47,16 @@ impl RnsFlag {
             RnsFlag::Synthetic => FLAG_SYNTHETIC,
             RnsFlag::Annotation => FLAG_ANNOTATION,
         }
+    }
+
+    pub fn token_name(&self) -> &'static str {
+        self.name()
+    }
+}
+
+impl Display for RnsFlag {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.token_name())
     }
 }
 

@@ -95,8 +95,8 @@ impl RnsToken {
             RnsToken::DotEnd(_) => DIRECTIVE_DOT_END,
             RnsToken::DotCode(_) => DIRECTIVE_DOT_CODE,
             RnsToken::DotAnnotation(_) => DIRECTIVE_DOT_ANNOTATION,
-            RnsToken::AccessFlag(spanned) => spanned.value.name(),
-            RnsToken::TypeHint(spanned) => spanned.value.token_at_name(),
+            RnsToken::AccessFlag(spanned) => spanned.value.token_name(),
+            RnsToken::TypeHint(spanned) => spanned.value.token_name(),
             RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,
             RnsToken::Newline(_) => TOKEN_TYPE_NEWLINE,
             RnsToken::Eof(_) => TOKEN_TYPE_EOF,
@@ -250,5 +250,11 @@ impl RnsToken {
             RnsToken::Identifier(spanned) => &spanned.value,
             _ => self.token_name(),
         }
+    }
+}
+
+impl Display for RnsToken {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.token_name())
     }
 }

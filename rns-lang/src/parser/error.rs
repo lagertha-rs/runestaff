@@ -45,7 +45,7 @@ impl Display for TrailingTokensErrContext {
             TrailingTokensErrContext::Class => write!(f, "class definition"),
             TrailingTokensErrContext::Super => write!(f, "super class definition"),
             TrailingTokensErrContext::TypeHint(kind) => {
-                write!(f, "type hint '{}'", kind.value.token_at_name())
+                write!(f, "type hint '{}'", kind.value.token_name())
             }
         }
     }
@@ -124,7 +124,7 @@ impl ParserError {
             } => {
                 format!(
                     "{} requires an i32 literal, found '{}'",
-                    required.token_dot_name(),
+                    required.token_name(),
                     found
                 )
             }
@@ -174,7 +174,7 @@ impl ParserError {
                             th.span.as_range(),
                             format!(
                                 "'{}' type hint takes {} operand{}",
-                                th.value.token_at_name(),
+                                th.value.token_name(),
                                 operands_count,
                                 if operands_count == 1 { "" } else { "s" }
                             ),
@@ -222,10 +222,7 @@ impl ParserError {
             } => vec![
                 DiagnosticLabel::context(
                     required_span.as_range(),
-                    format!(
-                        "{} expects an 32-bit signed integer",
-                        required.token_dot_name()
-                    ),
+                    format!("{} expects an 32-bit signed integer", required.token_name()),
                 ),
                 DiagnosticLabel::at(found_span.as_range(), format!("but found '{}'", found)),
             ],
