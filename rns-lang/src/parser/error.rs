@@ -1,8 +1,8 @@
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::token::Spanned;
 use crate::token::type_hint::{TypeHint, TypeHintKind};
 use crate::token::{RnsToken, Span};
-use crate::token::{RnsTokenKind, Spanned};
 use std::fmt::{Display, Formatter};
 use std::vec;
 
@@ -17,9 +17,8 @@ pub(super) enum ParserError {
     IdentifierOrHintExpected(Span, RnsToken, OperandErrPosContext),
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
-    ExpectedI32Operand {
-        required: RnsTokenKind,
-        required_span: Span,
+    TypeHintExpectsI32Operand {
+        int_type_hint_span: Span,
         found: String,
         found_span: Span,
         ctx: OperandErrPosContext,
@@ -82,7 +81,7 @@ impl ParserError {
     // TODO: put all codes as consts somewhere, and make sure they are unique across the whole codebase
     fn code(&self) -> &'static str {
         match self {
-            ParserError::ExpectedI32Operand { .. } => "E-003",
+            ParserError::TypeHintExpectsI32Operand { .. } => "E-003",
             ParserError::EmptyFile(_) => "E-006",
             ParserError::UnexpectedTokenInClassBody(_) => "E-007",
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
@@ -119,14 +118,8 @@ impl ParserError {
                 format!("unexpected trailing tokens after {}", ctx)
             }
             ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
-            ParserError::ExpectedI32Operand {
-                required, found, ..
-            } => {
-                format!(
-                    "{} requires an i32 literal, found '{}'",
-                    required.token_name(),
-                    found
-                )
+            ParserError::TypeHintExpectsI32Operand { found, .. } => {
+                format!("@int requires an i32 literal, found '{}'", found)
             }
         }
     }
@@ -213,16 +206,15 @@ impl ParserError {
                 }
                 labels
             }
-            ParserError::ExpectedI32Operand {
-                required_span,
-                required,
+            ParserError::TypeHintExpectsI32Operand {
+                int_type_hint_span,
                 found,
                 found_span,
                 ..
             } => vec![
                 DiagnosticLabel::context(
-                    required_span.as_range(),
-                    format!("{} expects an 32-bit signed integer", required.token_name()),
+                    int_type_hint_span.as_range(),
+                    "expects an 32-bit signed integer operand".to_string(),
                 ),
                 DiagnosticLabel::at(found_span.as_range(), format!("but found '{}'", found)),
             ],
@@ -279,22 +271,24 @@ impl ParserError {
             ParserError::MultipleSuperDefinitions(_) => Some(
                 "A class can only have one .super directive. Remove the duplicates.".to_string(),
             ),
-            ParserError::ExpectedI32Operand {
-                required,
+            ParserError::TypeHintExpectsI32Operand { found, ctx, .. } => Some(format!(
+                "@int type hint is used to explicitly store numeric values in the\n\
+                 constant pool. '{}' is an identifier, not a numeric literal.\n\
+                 \n\
+                 If you intended '{}' to be a {}, remove the @int hint:\n\
+                 {} {}\n\
+                 \n\
+                 If you want to make it an @int, replace '{}' with a valid i32 literal",
+                found,
                 found,
                 ctx,
-                ..
-            } => Some(format!(
-                "Type hints like {} are used to explicitly store numeric values in the\n\
-                 constant pool. {} is an identifier, not a numeric literal.\n\
-                 \n\
-                 If you intended 'jaja' to be a {}, remove the '{}' hint:\n\
-                 {} jaja",
                 ctx.directive_name(),
-                found,
-                ctx.directive_name(),
-                found,
-                ctx.directive_name()
+                if found.contains(' ') {
+                    format!("\"{}\"", found)
+                } else {
+                    found.to_string()
+                },
+                found
             )),
         }
     }
@@ -308,10 +302,9 @@ impl ParserError {
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
-            ParserError::ExpectedI32Operand {
-                required_span: required_for_span,
-                ..
-            } => *required_for_span,
+            ParserError::TypeHintExpectsI32Operand {
+                int_type_hint_span, ..
+            } => *int_type_hint_span,
         }
     }
 

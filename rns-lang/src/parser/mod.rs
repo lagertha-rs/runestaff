@@ -130,34 +130,35 @@ impl RnsParser {
         }
     }
 
-    fn parse_i32(&mut self, ctx: OperandErrPosContext) -> Result<Spanned<i32>, Diagnostic> {
+    fn parse_type_hint_i32(
+        &mut self,
+        ctx: OperandErrPosContext,
+    ) -> Result<Spanned<i32>, Diagnostic> {
         let prev_token_span = self.last_span;
-        let prev_token_kind = self.last_kind;
         let token = self.next_token();
         let token_span = token.span();
         match token {
             RnsToken::Identifier(spanned) => match i32::from_str(&spanned.value) {
                 Ok(value) => Ok(Spanned::new(value, spanned.span)),
-                Err(_) => Err(ParserError::ExpectedI32Operand {
-                    required: prev_token_kind,
-                    required_span: prev_token_span,
+                Err(_) => Err(ParserError::TypeHintExpectsI32Operand {
+                    int_type_hint_span: prev_token_span,
                     found: spanned.value,
                     found_span: token_span,
                     ctx,
                 }
                 .into()),
             },
-            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(ParserError::ExpectedI32Operand {
-                required: prev_token_kind,
-                required_span: prev_token_span,
-                found: token.token_name().to_string(),
-                found_span: token_span,
-                ctx,
+            RnsToken::Eof(_) | RnsToken::Newline(_) => {
+                Err(ParserError::TypeHintExpectsI32Operand {
+                    int_type_hint_span: prev_token_span,
+                    found: token.token_name().to_string(),
+                    found_span: token_span,
+                    ctx,
+                }
+                .into())
             }
-            .into()),
-            other => Err(ParserError::ExpectedI32Operand {
-                required: prev_token_kind,
-                required_span: prev_token_span,
+            other => Err(ParserError::TypeHintExpectsI32Operand {
+                int_type_hint_span: prev_token_span,
                 found: other.token_name().to_string(),
                 found_span: token_span,
                 ctx,
@@ -174,7 +175,10 @@ impl RnsParser {
         let kind_span = th.span;
         let res = match th.value {
             TypeHintKind::Utf8 => Ok(TypeHint::Utf8(kind_span, self.parse_identifier(err_ctx)?)),
-            TypeHintKind::Integer => Ok(TypeHint::Integer(kind_span, self.parse_i32(err_ctx)?)),
+            TypeHintKind::Integer => Ok(TypeHint::Integer(
+                kind_span,
+                self.parse_type_hint_i32(err_ctx)?,
+            )),
             TypeHintKind::String => unimplemented!(),
             TypeHintKind::Class => unimplemented!(),
             TypeHintKind::Methodref => unimplemented!(),

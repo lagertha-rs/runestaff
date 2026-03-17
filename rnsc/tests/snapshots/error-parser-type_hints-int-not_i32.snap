@@ -1,0 +1,32 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class @int identifier
+.super java/lang/Object
+----- STDERR -----
+[E-003] Error: @int requires an i32 literal, found 'identifier'
+   ╭─[ test_data/integration/error/parser/type_hints/int/not_i32.rns:1:8 ]
+   │
+ 1 │ .class @int identifier
+   │        ──┬─ ─────┬────  
+   │          ╰────────────── expects an 32-bit signed integer operand
+   │                  │      
+   │                  ╰────── but found 'identifier'
+   │ 
+   │ Help: @int type hint is used to explicitly store numeric values in the
+   │       constant pool. 'identifier' is an identifier, not a numeric literal.
+   │       
+   │       If you intended 'identifier' to be a class name, remove the @int hint:
+   │       .class identifier
+   │       
+   │       If you want to make it an @int, replace 'identifier' with a valid i32 literal
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
+───╯
+----- HASH -----
+not generated
