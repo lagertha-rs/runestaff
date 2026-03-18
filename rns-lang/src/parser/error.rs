@@ -1,12 +1,12 @@
-use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::Spanned;
 use crate::token::type_hint::{TypeHint, TypeHintKind};
+use crate::token::Spanned;
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
 use std::fmt::{Display, Formatter};
 use std::vec;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub(super) enum ParserError {
     EmptyFile(Span),
     // TODO: the messages are total shit

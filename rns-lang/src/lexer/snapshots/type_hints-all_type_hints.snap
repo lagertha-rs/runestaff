@@ -3,57 +3,60 @@ source: rns/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
+@zero_idx
 @utf8
 @int
 @string
 @class
 @methodref
 @fieldref
-@interfaceMethodref
+@interface_methodref
 @float
 @long
 @double
-@nameAndType
-@methodHandle
-@methodType
+@name_and_type
+@method_handle
+@method_type
 @dynamic
-@invokeDynamic
+@invoke_dynamic
 @module
 @package
 ----- TOKENS -----
-KIND                           | SPAN      | LSP        | TEXT
-----                           | ----      | ---        | ----
-TypeHint(@utf8)                | 0..5      | 0:0..5     | @utf8
-Newline                        | 5..6      | 0:5..6     | \n
-TypeHint(@int)                 | 6..10     | 1:0..4     | @int
-Newline                        | 10..11    | 1:4..5     | \n
-TypeHint(@string)              | 11..18    | 2:0..7     | @string
-Newline                        | 18..19    | 2:7..8     | \n
-TypeHint(@class)               | 19..25    | 3:0..6     | @class
-Newline                        | 25..26    | 3:6..7     | \n
-TypeHint(@methodref)           | 26..36    | 4:0..10    | @methodref
-Newline                        | 36..37    | 4:10..11   | \n
-TypeHint(@fieldref)            | 37..46    | 5:0..9     | @fieldref
-Newline                        | 46..47    | 5:9..10    | \n
-TypeHint(@interfaceMethodref)  | 47..66    | 6:0..19    | @interfaceMethodref
-Newline                        | 66..67    | 6:19..20   | \n
-TypeHint(@float)               | 67..73    | 7:0..6     | @float
-Newline                        | 73..74    | 7:6..7     | \n
-TypeHint(@long)                | 74..79    | 8:0..5     | @long
-Newline                        | 79..80    | 8:5..6     | \n
-TypeHint(@double)              | 80..87    | 9:0..7     | @double
-Newline                        | 87..88    | 9:7..8     | \n
-TypeHint(@nameAndType)         | 88..100   | 10:0..12   | @nameAndType
-Newline                        | 100..101  | 10:12..13  | \n
-TypeHint(@methodHandle)        | 101..114  | 11:0..13   | @methodHandle
-Newline                        | 114..115  | 11:13..14  | \n
-TypeHint(@methodType)          | 115..126  | 12:0..11   | @methodType
-Newline                        | 126..127  | 12:11..12  | \n
-TypeHint(@dynamic)             | 127..135  | 13:0..8    | @dynamic
-Newline                        | 135..136  | 13:8..9    | \n
-TypeHint(@invokeDynamic)       | 136..150  | 14:0..14   | @invokeDynamic
-Newline                        | 150..151  | 14:14..15  | \n
-TypeHint(@module)              | 151..158  | 15:0..7    | @module
-Newline                        | 158..159  | 15:7..8    | \n
-TypeHint(@package)             | 159..167  | 16:0..8    | @package
-Newline                        | 167..168  | 16:8..9    | \n
+KIND                            | SPAN      | LSP        | TEXT
+----                            | ----      | ---        | ----
+TypeHint(@zero_idx)             | 0..9      | 0:0..9     | @zero_idx
+Newline                         | 9..10     | 0:9..10    | \n
+TypeHint(@utf8)                 | 10..15    | 1:0..5     | @utf8
+Newline                         | 15..16    | 1:5..6     | \n
+TypeHint(@int)                  | 16..20    | 2:0..4     | @int
+Newline                         | 20..21    | 2:4..5     | \n
+TypeHint(@string)               | 21..28    | 3:0..7     | @string
+Newline                         | 28..29    | 3:7..8     | \n
+TypeHint(@class)                | 29..35    | 4:0..6     | @class
+Newline                         | 35..36    | 4:6..7     | \n
+TypeHint(@methodref)            | 36..46    | 5:0..10    | @methodref
+Newline                         | 46..47    | 5:10..11   | \n
+TypeHint(@fieldref)             | 47..56    | 6:0..9     | @fieldref
+Newline                         | 56..57    | 6:9..10    | \n
+TypeHint(@interface_methodref)  | 57..77    | 7:0..20    | @interface_methodref
+Newline                         | 77..78    | 7:20..21   | \n
+TypeHint(@float)                | 78..84    | 8:0..6     | @float
+Newline                         | 84..85    | 8:6..7     | \n
+TypeHint(@long)                 | 85..90    | 9:0..5     | @long
+Newline                         | 90..91    | 9:5..6     | \n
+TypeHint(@double)               | 91..98    | 10:0..7    | @double
+Newline                         | 98..99    | 10:7..8    | \n
+TypeHint(@name_and_type)        | 99..113   | 11:0..14   | @name_and_type
+Newline                         | 113..114  | 11:14..15  | \n
+TypeHint(@method_handle)        | 114..128  | 12:0..14   | @method_handle
+Newline                         | 128..129  | 12:14..15  | \n
+TypeHint(@method_type)          | 129..141  | 13:0..12   | @method_type
+Newline                         | 141..142  | 13:12..13  | \n
+TypeHint(@dynamic)              | 142..150  | 14:0..8    | @dynamic
+Newline                         | 150..151  | 14:8..9    | \n
+TypeHint(@invoke_dynamic)       | 151..166  | 15:0..15   | @invoke_dynamic
+Newline                         | 166..167  | 15:15..16  | \n
+TypeHint(@module)               | 167..174  | 16:0..7    | @module
+Newline                         | 174..175  | 16:7..8    | \n
+TypeHint(@package)              | 175..183  | 17:0..8    | @package
+Newline                         | 183..184  | 17:8..9    | \n

@@ -1,45 +1,48 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
 use std::fmt::{Display, Formatter};
 
+pub const TYPE_HINT_AT_ZERO_IDX: &str = "@zero_idx";
 pub const TYPE_HINT_AT_UTF8: &str = "@utf8";
 pub const TYPE_HINT_AT_INTEGER: &str = "@int";
 pub const TYPE_HINT_AT_STRING: &str = "@string";
 pub const TYPE_HINT_AT_CLASS: &str = "@class";
 pub const TYPE_HINT_AT_METHODREF: &str = "@methodref";
 pub const TYPE_HINT_AT_FIELDREF: &str = "@fieldref";
-pub const TYPE_HINT_AT_INTERFACE_METHODREF: &str = "@interfaceMethodref";
+pub const TYPE_HINT_AT_INTERFACE_METHODREF: &str = "@interface_methodref";
 pub const TYPE_HINT_AT_FLOAT: &str = "@float";
 pub const TYPE_HINT_AT_LONG: &str = "@long";
 pub const TYPE_HINT_AT_DOUBLE: &str = "@double";
-pub const TYPE_HINT_AT_NAME_AND_TYPE: &str = "@nameAndType";
-pub const TYPE_HINT_AT_METHOD_HANDLE: &str = "@methodHandle";
-pub const TYPE_HINT_AT_METHOD_TYPE: &str = "@methodType";
+pub const TYPE_HINT_AT_NAME_AND_TYPE: &str = "@name_and_type";
+pub const TYPE_HINT_AT_METHOD_HANDLE: &str = "@method_handle";
+pub const TYPE_HINT_AT_METHOD_TYPE: &str = "@method_type";
 pub const TYPE_HINT_AT_DYNAMIC: &str = "@dynamic";
-pub const TYPE_HINT_AT_INVOKE_DYNAMIC: &str = "@invokeDynamic";
+pub const TYPE_HINT_AT_INVOKE_DYNAMIC: &str = "@invoke_dynamic";
 pub const TYPE_HINT_AT_MODULE: &str = "@module";
 pub const TYPE_HINT_AT_PACKAGE: &str = "@package";
 
+pub const TYPE_HINT_ZERO_IDX: &str = "zero_idx";
 pub const TYPE_HINT_UTF8: &str = "utf8";
 pub const TYPE_HINT_INTEGER: &str = "int";
 pub const TYPE_HINT_STRING: &str = "string";
 pub const TYPE_HINT_CLASS: &str = "class";
 pub const TYPE_HINT_METHODREF: &str = "methodref";
 pub const TYPE_HINT_FIELDREF: &str = "fieldref";
-pub const TYPE_HINT_INTERFACE_METHODREF: &str = "interfaceMethodref";
+pub const TYPE_HINT_INTERFACE_METHODREF: &str = "interface_methodref";
 pub const TYPE_HINT_FLOAT: &str = "float";
 pub const TYPE_HINT_LONG: &str = "long";
 pub const TYPE_HINT_DOUBLE: &str = "double";
-pub const TYPE_HINT_NAME_AND_TYPE: &str = "nameAndType";
-pub const TYPE_HINT_METHOD_HANDLE: &str = "methodHandle";
-pub const TYPE_HINT_METHOD_TYPE: &str = "methodType";
+pub const TYPE_HINT_NAME_AND_TYPE: &str = "name_and_type";
+pub const TYPE_HINT_METHOD_HANDLE: &str = "method_handle";
+pub const TYPE_HINT_METHOD_TYPE: &str = "method_type";
 pub const TYPE_HINT_DYNAMIC: &str = "dynamic";
-pub const TYPE_HINT_INVOKE_DYNAMIC: &str = "invokeDynamic";
+pub const TYPE_HINT_INVOKE_DYNAMIC: &str = "invoke_dynamic";
 pub const TYPE_HINT_MODULE: &str = "module";
 pub const TYPE_HINT_PACKAGE: &str = "package";
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum TypeHintKind {
+    ZeroIndex,
     Utf8,
     Integer,
     String,
@@ -62,6 +65,7 @@ pub enum TypeHintKind {
 impl TypeHintKind {
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
+            TYPE_HINT_ZERO_IDX => Some(Self::ZeroIndex),
             TYPE_HINT_UTF8 => Some(Self::Utf8),
             TYPE_HINT_INTEGER => Some(Self::Integer),
             TYPE_HINT_STRING => Some(Self::String),
@@ -109,6 +113,7 @@ impl TypeHintKind {
     /// Returns the source-code form of this type hint (e.g., `"@int"`, `"@utf8"`, `"@class"`).
     pub fn token_name(&self) -> &'static str {
         match self {
+            Self::ZeroIndex => TYPE_HINT_AT_ZERO_IDX,
             Self::Utf8 => TYPE_HINT_AT_UTF8,
             Self::Integer => TYPE_HINT_AT_INTEGER,
             Self::String => TYPE_HINT_AT_STRING,
@@ -131,6 +136,7 @@ impl TypeHintKind {
 
     pub fn name(&self) -> &'static str {
         match self {
+            Self::ZeroIndex => TYPE_HINT_ZERO_IDX,
             Self::Utf8 => TYPE_HINT_UTF8,
             Self::Integer => TYPE_HINT_INTEGER,
             Self::String => TYPE_HINT_STRING,
@@ -158,7 +164,7 @@ impl Display for TypeHintKind {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TypeHint {
     ZeroIndex(Span),
     Utf8(Span, Spanned<String>),
@@ -166,11 +172,11 @@ pub enum TypeHint {
     String(Span, Spanned<String>),
     Class(Option<Span>, Spanned<String>),
     Methodref(Span, Spanned<String>, Spanned<String>, Spanned<String>),
-    Fieldref,
+    Fieldref(Span, Spanned<String>, Spanned<String>, Spanned<String>),
     InterfaceMethodref,
-    Float,
-    Long,
-    Double,
+    Float(Span, Spanned<f32>),
+    Long(Span, Spanned<i64>),
+    Double(Span, Spanned<f64>),
     NameAndType,
     MethodHandle,
     MethodType,
