@@ -1,6 +1,57 @@
-use crate::token::span::Spanned;
 use crate::token::Span;
+use crate::token::span::Spanned;
 use std::fmt::{Display, Formatter};
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum TypeHintOperandName {
+    Utf8Entry,
+    I32Literal,
+    F32Literal,
+    I64Literal,
+    F64Literal,
+    StringLiteral,
+    ClassName,
+    MethodName,
+    MethodDescriptor,
+    FieldName,
+    FieldDescriptor,
+}
+
+impl Display for TypeHintOperandName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Utf8Entry => write!(f, "utf8 value"),
+            Self::I32Literal => write!(f, "32-bit signed integer"),
+            Self::F32Literal => write!(f, "32-bit float"),
+            Self::I64Literal => write!(f, "64-bit signed integer"),
+            Self::F64Literal => write!(f, "64-bit float"),
+            Self::StringLiteral => write!(f, "string literal"),
+            Self::ClassName => write!(f, "class name"),
+            Self::MethodName => write!(f, "method name"),
+            Self::MethodDescriptor => write!(f, "method descriptor"),
+            Self::FieldName => write!(f, "field name"),
+            Self::FieldDescriptor => write!(f, "field descriptor"),
+        }
+    }
+}
+
+impl TypeHintOperandName {
+    pub fn placeholder(&self) -> &'static str {
+        match self {
+            Self::Utf8Entry => "<utf8_value>",
+            Self::I32Literal => "<i32>",
+            Self::F32Literal => "<f32>",
+            Self::I64Literal => "<i64>",
+            Self::F64Literal => "<f64>",
+            Self::StringLiteral => "\"<string>\"",
+            Self::ClassName => "<class_name>",
+            Self::MethodName => "<method_name>",
+            Self::MethodDescriptor => "<method_descriptor>",
+            Self::FieldName => "<field_name>",
+            Self::FieldDescriptor => "<field_descriptor>",
+        }
+    }
+}
 
 pub const TYPE_HINT_AT_ZERO_IDX: &str = "@zero_idx";
 pub const TYPE_HINT_AT_UTF8: &str = "@utf8";
@@ -110,7 +161,59 @@ impl TypeHintKind {
         }
     }
 
-    /// Returns the source-code form of this type hint (e.g., `"@int"`, `"@utf8"`, `"@class"`).
+    pub fn operand_names(&self) -> &'static [TypeHintOperandName] {
+        match self {
+            Self::Utf8 => &[TypeHintOperandName::Utf8Entry],
+            Self::Integer => &[TypeHintOperandName::I32Literal],
+            Self::Float => &[TypeHintOperandName::F32Literal],
+            Self::Long => &[TypeHintOperandName::I64Literal],
+            Self::Double => &[TypeHintOperandName::F64Literal],
+            Self::String => &[TypeHintOperandName::StringLiteral],
+            Self::Class => &[TypeHintOperandName::ClassName],
+            Self::Methodref => &[
+                TypeHintOperandName::ClassName,
+                TypeHintOperandName::MethodName,
+                TypeHintOperandName::MethodDescriptor,
+            ],
+            Self::Fieldref => &[
+                TypeHintOperandName::ClassName,
+                TypeHintOperandName::FieldName,
+                TypeHintOperandName::FieldDescriptor,
+            ],
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn context_label(&self) -> &'static str {
+        match self {
+            Self::Utf8 => "forces explicit utf8 constant pool type",
+            Self::Integer => "forces explicit integer constant pool type",
+            Self::Float => "forces explicit float constant pool type",
+            Self::Long => "forces explicit long constant pool type",
+            Self::Double => "forces explicit double constant pool type",
+            Self::String => "forces explicit string constant pool type",
+            Self::Class => "forces explicit class constant pool type",
+            Self::Methodref => "forces explicit method reference constant pool type",
+            Self::Fieldref => "forces explicit field reference constant pool type",
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn example(&self) -> &'static str {
+        match self {
+            Self::Utf8 => "@utf8 HelloWorld",
+            Self::Integer => "@int 42",
+            Self::Float => "@float 3.14",
+            Self::Long => "@long 100000",
+            Self::Double => "@double 3.14",
+            Self::String => "@string \"Hello, World!\"",
+            Self::Class => "@class java/lang/Object",
+            Self::Methodref => "@methodref java/io/PrintStream println (Ljava/lang/String;)V",
+            Self::Fieldref => "@fieldref java/lang/System out Ljava/io/PrintStream;",
+            _ => unimplemented!(),
+        }
+    }
+
     pub fn token_name(&self) -> &'static str {
         match self {
             Self::ZeroIndex => TYPE_HINT_AT_ZERO_IDX,

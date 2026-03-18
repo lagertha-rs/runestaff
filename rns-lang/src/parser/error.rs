@@ -1,8 +1,8 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::type_hint::{TypeHint, TypeHintKind};
-use crate::token::Spanned;
-use crate::token::{RnsToken, Span};
 use crate::ERROR_DOCS_BASE_URL;
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::token::Spanned;
+use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
+use crate::token::{RnsToken, Span};
 use std::fmt::{Display, Formatter};
 use std::vec;
 
@@ -15,6 +15,10 @@ pub(super) enum ParserError {
     UnexpectedTokenBeforeClassDefinition(RnsToken),
     TrailingTokens(usize, Vec<RnsToken>, TrailingTokensErrContext),
     IdentifierOrHintExpected(Span, RnsToken, OperandErrPosContext),
+    MissingTypeHintOperand {
+        type_hint: Spanned<TypeHintKind>,
+        operand: TypeHintOperandName,
+    },
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
     TypeHintExpectsI32Operand {
@@ -92,6 +96,7 @@ impl ParserError {
                 TrailingTokensErrContext::TypeHint(_) => "E-013",
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
+            ParserError::MissingTypeHintOperand { .. } => "E-014",
         }
     }
 
@@ -120,6 +125,13 @@ impl ParserError {
             ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
             ParserError::TypeHintExpectsI32Operand { found, .. } => {
                 format!("@int requires an i32 literal, found '{}'", found)
+            }
+            ParserError::MissingTypeHintOperand { type_hint, operand } => {
+                format!(
+                    "'{}' type hint is missing its {}",
+                    type_hint.value.token_name(),
+                    operand
+                )
             }
         }
     }
@@ -218,6 +230,18 @@ impl ParserError {
                 ),
                 DiagnosticLabel::at(found_span.as_range(), format!("but found '{}'", found)),
             ],
+            ParserError::MissingTypeHintOperand { type_hint, operand } => {
+                vec![
+                    DiagnosticLabel::context(
+                        type_hint.span.as_range(),
+                        type_hint.value.context_label().to_string(),
+                    ),
+                    DiagnosticLabel::at(
+                        type_hint.span.byte_end..type_hint.span.byte_end,
+                        format!("but {} is missing", operand),
+                    ),
+                ]
+            }
         }
     }
 
@@ -240,24 +264,13 @@ impl ParserError {
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => {
                 Some("Make sure the file starts with a '.class' directive.".to_string())
             }
-            ParserError::IdentifierOrHintExpected(_, token, _ctx) =>
-            /*match token {
-            RnsToken::Integer(spanned) => Some(format!(
-                "The constant pool requires each entry to have a specific kind.\n\
-                 The parser can't determine whether you intended an identifier or an integer from the bare token alone.\n\n\
-                 To treat it as an identifier (will resolve to the appropriate entry kind from context):\n\
-                 #\"{}\"\n\n\
-                 To explicitly store it as an {} constant pool entry:\n\
-                 {} {}",
-                spanned.value,
-                TypeHintKind::Integer,
-                TypeHintKind::Integer,
-                spanned.value
+            ParserError::IdentifierOrHintExpected(_, _token, ctx) => Some(format!(
+                "Provide a {} after the '{}' directive, e.g.:\n\
+                     {} MyClassName",
+                ctx,
+                ctx.directive_name(),
+                ctx.directive_name()
             )),
-            _ =>*/
-            {
-                unimplemented!()
-            }
             ParserError::TrailingTokens(_, tokens, _) => {
                 if tokens[0].is_directive() {
                     Some(format!(
@@ -290,6 +303,24 @@ impl ParserError {
                 },
                 found
             )),
+            ParserError::MissingTypeHintOperand { type_hint, .. } => {
+                let syntax = type_hint
+                    .value
+                    .operand_names()
+                    .iter()
+                    .map(|op| op.placeholder())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                Some(format!(
+                    "Provide the value immediately after the hint:\n\
+                     {} {}\n\n\
+                     For example:\n\
+                     {}",
+                    type_hint.value.token_name(),
+                    syntax,
+                    type_hint.value.example()
+                ))
+            }
         }
     }
 
@@ -302,6 +333,7 @@ impl ParserError {
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
+            ParserError::MissingTypeHintOperand { type_hint, .. } => type_hint.span,
             ParserError::TypeHintExpectsI32Operand {
                 int_type_hint_span, ..
             } => *int_type_hint_span,

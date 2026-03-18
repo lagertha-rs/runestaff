@@ -6,7 +6,7 @@ use crate::parser::error_deprecated::{
     TrailingTokensContextDeprecated,
 };
 use crate::parser::warning::ParserWarning;
-use crate::token::type_hint::{TypeHint, TypeHintKind};
+use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
@@ -108,17 +108,17 @@ impl RnsParser {
         todo!()
     }
 
-    fn parse_identifier(
-        &mut self,
-        err_ctx: OperandErrPosContext,
-    ) -> Result<Spanned<String>, Diagnostic> {
-        let prev_token_span = self.last_span;
+    fn try_next_identifier(&mut self) -> Result<Spanned<String>, RnsToken> {
+        // don't consume to not break trailing tokens check
+        if let Some(next) = self.peek_token()
+            && matches!(next, RnsToken::Eof(_) | RnsToken::Newline(_))
+        {
+            return Err(next.clone());
+        }
         let token = self.next_token();
         match token {
             RnsToken::Identifier(spanned) => Ok(spanned),
-            RnsToken::Eof(_) | RnsToken::Newline(_) => {
-                Err(ParserError::IdentifierOrHintExpected(prev_token_span, token, err_ctx).into())
-            }
+            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(token),
             identifier_like => {
                 self.diagnostic
                     .push(ParserWarning::ReservedLikeIdentifierTodoName.into());
@@ -128,6 +128,25 @@ impl RnsParser {
                 ))
             }
         }
+    }
+
+    fn parse_identifier(
+        &mut self,
+        err_ctx: OperandErrPosContext,
+    ) -> Result<Spanned<String>, Diagnostic> {
+        let prev_token_span = self.last_span;
+        self.try_next_identifier().map_err(|token| {
+            ParserError::IdentifierOrHintExpected(prev_token_span, token, err_ctx).into()
+        })
+    }
+
+    fn parse_type_hint_identifier_operand(
+        &mut self,
+        type_hint: Spanned<TypeHintKind>,
+        operand: TypeHintOperandName,
+    ) -> Result<Spanned<String>, ParserError> {
+        self.try_next_identifier()
+            .map_err(|_| ParserError::MissingTypeHintOperand { type_hint, operand })
     }
 
     fn parse_type_hint_i32(
@@ -174,7 +193,13 @@ impl RnsParser {
     ) -> Result<TypeHint, Diagnostic> {
         let kind_span = th.span;
         let res = match th.value {
-            TypeHintKind::Utf8 => Ok(TypeHint::Utf8(kind_span, self.parse_identifier(err_ctx)?)),
+            TypeHintKind::Utf8 => Ok(TypeHint::Utf8(
+                kind_span,
+                self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::Utf8Entry,
+                )?,
+            )),
             TypeHintKind::Integer => Ok(TypeHint::Integer(
                 kind_span,
                 self.parse_type_hint_i32(err_ctx)?,
