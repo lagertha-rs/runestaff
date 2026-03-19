@@ -1,6 +1,8 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
-use crate::parser::error::{OperandErrPosContext, ParserError, TrailingTokensErrContext};
+use crate::parser::error::{
+    OperandErrPosContext, ParserError, SignedIntRejection, TrailingTokensErrContext,
+};
 use crate::parser::error_deprecated::{
     IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
     TrailingTokensContextDeprecated,
@@ -130,6 +132,52 @@ impl RnsParser {
         }
     }
 
+    fn try_next_i32(&mut self) -> Result<Spanned<i32>, SignedIntRejection> {
+        // Don't consume EOF/newline to not break trailing tokens check
+        if let Some(next) = self.peek_token()
+            && matches!(next, RnsToken::Eof(_) | RnsToken::Newline(_))
+        {
+            return Err(SignedIntRejection::Missing(next.clone()));
+        }
+        let token = self.next_token();
+        match token {
+            RnsToken::Identifier(ref spanned) => {
+                let raw = &spanned.value;
+                match i32::from_str(raw) {
+                    Ok(value) => Ok(Spanned::new(value, spanned.span)),
+                    Err(e) => {
+                        if raw.contains('.') || self.looks_like_scientific_notation(raw) {
+                            Err(SignedIntRejection::FloatingPoint(spanned.clone()))
+                        } else if e.kind() == &std::num::IntErrorKind::PosOverflow
+                            || e.kind() == &std::num::IntErrorKind::NegOverflow
+                        {
+                            Err(SignedIntRejection::Overflow(spanned.clone()))
+                        } else {
+                            Err(SignedIntRejection::NotNumeric(spanned.clone()))
+                        }
+                    }
+                }
+            }
+            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(SignedIntRejection::Missing(token)),
+            _ => {
+                let spanned = Spanned::new(token.as_identifier().to_string(), token.span());
+                Err(SignedIntRejection::NotNumeric(spanned))
+            }
+        }
+    }
+
+    fn looks_like_scientific_notation(&self, s: &str) -> bool {
+        let s = s
+            .strip_prefix('-')
+            .or_else(|| s.strip_prefix('+'))
+            .unwrap_or(s);
+        if let Some(e_pos) = s.find('e').or_else(|| s.find('E')) {
+            e_pos > 0 && s[..e_pos].chars().all(|c| c.is_ascii_digit())
+        } else {
+            false
+        }
+    }
+
     fn parse_identifier(
         &mut self,
         err_ctx: OperandErrPosContext,
@@ -156,46 +204,23 @@ impl RnsParser {
 
     fn parse_type_hint_i32(
         &mut self,
-        ctx: OperandErrPosContext,
-    ) -> Result<Spanned<i32>, Diagnostic> {
-        let prev_token_span = self.last_span;
-        let token = self.next_token();
-        let token_span = token.span();
-        match token {
-            RnsToken::Identifier(spanned) => match i32::from_str(&spanned.value) {
-                Ok(value) => Ok(Spanned::new(value, spanned.span)),
-                Err(_) => Err(ParserError::TypeHintExpectsI32Operand {
-                    int_type_hint_span: prev_token_span,
-                    found: spanned.value,
-                    found_span: token_span,
-                    ctx,
-                }
-                .into()),
+        type_hint: Spanned<TypeHintKind>,
+    ) -> Result<Spanned<i32>, ParserError> {
+        let after_span = self.last_span;
+        self.try_next_i32().map_err(|rejection| match rejection {
+            SignedIntRejection::Missing(_) => ParserError::MissingTypeHintOperand {
+                type_hint,
+                operand: TypeHintOperandName::I32Literal,
+                after_span,
             },
-            RnsToken::Eof(_) | RnsToken::Newline(_) => {
-                Err(ParserError::TypeHintExpectsI32Operand {
-                    int_type_hint_span: prev_token_span,
-                    found: token.token_name().to_string(),
-                    found_span: token_span,
-                    ctx,
-                }
-                .into())
-            }
-            other => Err(ParserError::TypeHintExpectsI32Operand {
-                int_type_hint_span: prev_token_span,
-                found: other.token_name().to_string(),
-                found_span: token_span,
-                ctx,
-            }
-            .into()),
-        }
+            other => ParserError::TypeHintExpectsI32Operand {
+                type_hint,
+                rejection: other,
+            },
+        })
     }
 
-    fn resolve_type_hint(
-        &mut self,
-        th: Spanned<TypeHintKind>,
-        err_ctx: OperandErrPosContext,
-    ) -> Result<TypeHint, Diagnostic> {
+    fn resolve_type_hint(&mut self, th: Spanned<TypeHintKind>) -> Result<TypeHint, Diagnostic> {
         let kind_span = th.span;
         let res = match th.value {
             TypeHintKind::ZeroIndex => Ok(TypeHint::ZeroIndex(kind_span)),
@@ -208,7 +233,7 @@ impl RnsParser {
             )),
             TypeHintKind::Integer => Ok(TypeHint::Integer(
                 kind_span,
-                self.parse_type_hint_i32(err_ctx)?,
+                self.parse_type_hint_i32(th.clone())?,
             )),
             TypeHintKind::String => Ok(TypeHint::String(
                 kind_span,
@@ -281,7 +306,7 @@ impl RnsParser {
         if let Some(RnsToken::TypeHint(th)) = token {
             let th = th.clone();
             self.next_token();
-            self.resolve_type_hint(th, err_ctx)
+            self.resolve_type_hint(th)
         } else {
             Ok(infer_hint(self.parse_identifier(err_ctx)?))
         }

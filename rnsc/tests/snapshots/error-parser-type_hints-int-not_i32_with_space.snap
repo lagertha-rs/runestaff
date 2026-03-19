@@ -8,22 +8,22 @@ not generated
 .class @int "not an int" ; <- has space and should be quoted in help
 .super java/lang/Object
 ----- STDERR -----
-[E-003] Error: @int requires an i32 literal, found 'not an int'
+[E-003] Error: '@int' requires a 32-bit integer, but 'not an int' is not a number
    ╭─[ test_data/integration/error/parser/type_hints/int/not_i32_with_space.rns:1:8 ]
    │
  1 │ .class @int "not an int" ; <- has space and should be quoted in help
    │        ──┬─ ──────┬─────  
-   │          ╰──────────────── expects an 32-bit signed integer operand
+   │          ╰──────────────── forces explicit integer constant pool type
    │                   │       
-   │                   ╰─────── but found 'not an int'
+   │                   ╰─────── 'not an int' is not a number
    │ 
-   │ Help: @int type hint is used to explicitly store numeric values in the
-   │       constant pool. 'not an int' is an identifier, not a numeric literal.
+   │ Help: 'not an int' is not a valid integer literal.
    │       
-   │       If you intended 'not an int' to be a class name, remove the @int hint:
-   │       .class "not an int"
+   │       Syntax:
+   │       @int <i32>
    │       
-   │       If you want to make it an @int, replace 'not an int' with a valid i32 literal
+   │       For example:
+   │       @int 42
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-003

@@ -8,22 +8,22 @@ not generated
 .class @int identifier
 .super java/lang/Object
 ----- STDERR -----
-[E-003] Error: @int requires an i32 literal, found 'identifier'
+[E-003] Error: '@int' requires a 32-bit integer, but 'identifier' is not a number
    ╭─[ test_data/integration/error/parser/type_hints/int/not_i32.rns:1:8 ]
    │
  1 │ .class @int identifier
    │        ──┬─ ─────┬────  
-   │          ╰────────────── expects an 32-bit signed integer operand
+   │          ╰────────────── forces explicit integer constant pool type
    │                  │      
-   │                  ╰────── but found 'identifier'
+   │                  ╰────── 'identifier' is not a number
    │ 
-   │ Help: @int type hint is used to explicitly store numeric values in the
-   │       constant pool. 'identifier' is an identifier, not a numeric literal.
+   │ Help: 'identifier' is not a valid integer literal.
    │       
-   │       If you intended 'identifier' to be a class name, remove the @int hint:
-   │       .class identifier
+   │       Syntax:
+   │       @int <i32>
    │       
-   │       If you want to make it an @int, replace 'identifier' with a valid i32 literal
+   │       For example:
+   │       @int 42
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-003

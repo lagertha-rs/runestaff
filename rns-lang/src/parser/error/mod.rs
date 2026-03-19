@@ -1,9 +1,14 @@
+mod context;
+mod rejection;
+
+pub(super) use context::{OperandErrPosContext, TrailingTokensErrContext};
+pub(super) use rejection::SignedIntRejection;
+
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::Spanned;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsToken, Span};
-use std::fmt::{Display, Formatter};
 use std::vec;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -18,70 +23,14 @@ pub(super) enum ParserError {
     MissingTypeHintOperand {
         type_hint: Spanned<TypeHintKind>,
         operand: TypeHintOperandName,
-        /// Span of the last successfully parsed token before the missing operand.
-        /// Used to position the error label after the correct token.
         after_span: Span,
     },
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
     TypeHintExpectsI32Operand {
-        int_type_hint_span: Span,
-        found: String,
-        found_span: Span,
-        ctx: OperandErrPosContext,
+        type_hint: Spanned<TypeHintKind>,
+        rejection: SignedIntRejection,
     },
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum OperandErrPosContext {
-    ClassName,
-    SuperName,
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub(super) enum TrailingTokensErrContext {
-    Class,
-    Super,
-    TypeHint(Spanned<TypeHintKind>),
-}
-
-impl Display for TrailingTokensErrContext {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TrailingTokensErrContext::Class => write!(f, "class definition"),
-            TrailingTokensErrContext::Super => write!(f, "super class definition"),
-            TrailingTokensErrContext::TypeHint(kind) => {
-                write!(f, "type hint '{}'", kind.value.token_name())
-            }
-        }
-    }
-}
-
-impl Display for OperandErrPosContext {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OperandErrPosContext::ClassName => write!(f, "class name"),
-            OperandErrPosContext::SuperName => write!(f, "super class name"),
-        }
-    }
-}
-
-impl OperandErrPosContext {
-    fn expected_type_hint_kinds(&self) -> Vec<TypeHintKind> {
-        match self {
-            OperandErrPosContext::ClassName | OperandErrPosContext::SuperName => {
-                vec![TypeHintKind::Class]
-            }
-        }
-    }
-
-    fn directive_name(&self) -> &'static str {
-        match self {
-            //TODO: use something like TokenKind::DotClass.name() to not hardcode here
-            OperandErrPosContext::ClassName => ".class",
-            OperandErrPosContext::SuperName => ".super",
-        }
-    }
 }
 
 impl ParserError {
@@ -126,9 +75,32 @@ impl ParserError {
                 format!("unexpected trailing tokens after {}", ctx)
             }
             ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
-            ParserError::TypeHintExpectsI32Operand { found, .. } => {
-                format!("@int requires an i32 literal, found '{}'", found)
-            }
+            ParserError::TypeHintExpectsI32Operand { rejection, .. } => match rejection {
+                SignedIntRejection::NotNumeric(spanned) => {
+                    format!(
+                        "'{}' requires a 32-bit integer, but '{}' is not a number",
+                        TypeHintKind::Integer.token_name(),
+                        spanned.value
+                    )
+                }
+                SignedIntRejection::FloatingPoint(spanned) => {
+                    format!(
+                        "'{}' requires a whole number, but '{}' has a decimal point",
+                        TypeHintKind::Integer.token_name(),
+                        spanned.value
+                    )
+                }
+                SignedIntRejection::Overflow(spanned) => {
+                    format!(
+                        "'{}' requires a 32-bit integer, but '{}' is out of range",
+                        TypeHintKind::Integer.token_name(),
+                        spanned.value
+                    )
+                }
+                SignedIntRejection::Missing(_) => {
+                    unreachable!("Missing case handled by MissingTypeHintOperand")
+                }
+            },
             ParserError::MissingTypeHintOperand {
                 type_hint, operand, ..
             } => {
@@ -224,17 +196,32 @@ impl ParserError {
                 labels
             }
             ParserError::TypeHintExpectsI32Operand {
-                int_type_hint_span,
-                found,
-                found_span,
-                ..
-            } => vec![
-                DiagnosticLabel::context(
-                    int_type_hint_span.as_range(),
-                    "expects an 32-bit signed integer operand".to_string(),
-                ),
-                DiagnosticLabel::at(found_span.as_range(), format!("but found '{}'", found)),
-            ],
+                type_hint,
+                rejection,
+            } => {
+                let context_label = DiagnosticLabel::context(
+                    type_hint.span.as_range(),
+                    type_hint.value.context_label().to_string(),
+                );
+                let error_label = match rejection {
+                    SignedIntRejection::NotNumeric(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("'{}' is not a number", spanned.value),
+                    ),
+                    SignedIntRejection::FloatingPoint(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("must be a whole number without a decimal point"),
+                    ),
+                    SignedIntRejection::Overflow(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("32-bit integer range is {} to {}", i32::MIN, i32::MAX),
+                    ),
+                    SignedIntRejection::Missing(_) => {
+                        unreachable!("Missing case handled by MissingTypeHintOperand")
+                    }
+                };
+                vec![context_label, error_label]
+            }
             ParserError::MissingTypeHintOperand {
                 type_hint,
                 operand,
@@ -293,25 +280,40 @@ impl ParserError {
             ParserError::MultipleSuperDefinitions(_) => Some(
                 "A class can only have one .super directive. Remove the duplicates.".to_string(),
             ),
-            ParserError::TypeHintExpectsI32Operand { found, ctx, .. } => Some(format!(
-                "@int type hint is used to explicitly store numeric values in the\n\
-                 constant pool. '{}' is an identifier, not a numeric literal.\n\
-                 \n\
-                 If you intended '{}' to be a {}, remove the @int hint:\n\
-                 {} {}\n\
-                 \n\
-                 If you want to make it an @int, replace '{}' with a valid i32 literal",
-                found,
-                found,
-                ctx,
-                ctx.directive_name(),
-                if found.contains(' ') {
-                    format!("\"{}\"", found)
-                } else {
-                    found.to_string()
-                },
-                found
-            )),
+            ParserError::TypeHintExpectsI32Operand {
+                type_hint,
+                rejection,
+            } => {
+                let syntax = format!(
+                    "{} {}",
+                    type_hint.value.token_name(),
+                    TypeHintOperandName::I32Literal.placeholder()
+                );
+                let example = type_hint.value.example();
+                match rejection {
+                    SignedIntRejection::NotNumeric(spanned) => Some(format!(
+                        "'{}' is not a valid integer literal.\n\n\
+                         Syntax:\n\
+                         {}\n\n\
+                         For example:\n\
+                         {}",
+                        spanned.value, syntax, example
+                    )),
+                    SignedIntRejection::FloatingPoint(spanned) => Some(format!(
+                        "If you need a fractional value, use @float instead:\n\
+                         @float {}",
+                        spanned.value
+                    )),
+                    SignedIntRejection::Overflow(spanned) => Some(format!(
+                        "If you need a larger integer, use @long instead:\n\
+                         @long {}",
+                        spanned.value
+                    )),
+                    SignedIntRejection::Missing(_) => {
+                        unreachable!("Missing case handled by MissingTypeHintOperand")
+                    }
+                }
+            }
             ParserError::MissingTypeHintOperand { type_hint, .. } => {
                 let syntax = type_hint
                     .value
@@ -342,10 +344,8 @@ impl ParserError {
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
-            ParserError::MissingTypeHintOperand { type_hint, .. } => type_hint.span,
-            ParserError::TypeHintExpectsI32Operand {
-                int_type_hint_span, ..
-            } => *int_type_hint_span,
+            ParserError::MissingTypeHintOperand { type_hint, .. }
+            | ParserError::TypeHintExpectsI32Operand { type_hint, .. } => type_hint.span,
         }
     }
 
