@@ -205,7 +205,13 @@ impl RnsParser {
                 kind_span,
                 self.parse_type_hint_i32(err_ctx)?,
             )),
-            TypeHintKind::String => unimplemented!(),
+            TypeHintKind::String => Ok(TypeHint::Utf8(
+                kind_span,
+                self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::StringLiteral,
+                )?,
+            )),
             TypeHintKind::Class => unimplemented!(),
             TypeHintKind::Methodref => unimplemented!(),
             _ => unimplemented!(),
