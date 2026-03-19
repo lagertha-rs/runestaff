@@ -1,0 +1,26 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class @zero_idx tailing_token
+.super java/lang/Object
+----- STDERR -----
+[E-013] Error: unexpected trailing tokens after type hint '@zero_idx'
+   ╭─[ test_data/integration/error/parser/type_hints/zero_index/trailing_tokens.rns:1:18 ]
+   │
+ 1 │ .class @zero_idx tailing_token
+   │        ────┬──── ──────┬──────  
+   │            ╰──────────────────── '@zero_idx' type hint takes 0 operands
+   │                        │        
+   │                        ╰──────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-013
+───╯
+----- HASH -----
+not generated

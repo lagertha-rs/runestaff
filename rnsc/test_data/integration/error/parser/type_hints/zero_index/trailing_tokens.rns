@@ -1,0 +1,2 @@
+.class @zero_idx tailing_token
+.super java/lang/Object

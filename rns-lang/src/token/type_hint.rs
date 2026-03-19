@@ -140,6 +140,7 @@ impl TypeHintKind {
 
     pub fn operands_count(&self) -> usize {
         match self {
+            Self::ZeroIndex => 0,
             Self::Utf8 | Self::Integer | Self::String | Self::Class => 1,
             Self::Methodref => 3,
             _ => unimplemented!(),

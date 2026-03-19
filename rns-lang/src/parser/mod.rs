@@ -193,6 +193,7 @@ impl RnsParser {
     ) -> Result<TypeHint, Diagnostic> {
         let kind_span = th.span;
         let res = match th.value {
+            TypeHintKind::ZeroIndex => Ok(TypeHint::ZeroIndex(kind_span)),
             TypeHintKind::Utf8 => Ok(TypeHint::Utf8(
                 kind_span,
                 self.parse_type_hint_identifier_operand(
