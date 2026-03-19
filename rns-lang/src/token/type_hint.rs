@@ -142,7 +142,7 @@ impl TypeHintKind {
         match self {
             Self::ZeroIndex => 0,
             Self::Utf8 | Self::Integer | Self::String | Self::Class => 1,
-            Self::Methodref => 3,
+            Self::Methodref | Self::Fieldref => 3,
             _ => unimplemented!(),
         }
     }
@@ -300,6 +300,10 @@ impl TypeHint {
             Self::Methodref(_, class, name, descriptor) => format!(
                 "{} (class: {}, name: {}, descriptor: {})",
                 TYPE_HINT_AT_METHODREF, class.value, name.value, descriptor.value
+            ),
+            Self::Fieldref(_, class, name, descriptor) => format!(
+                "{} (class: {}, name: {}, descriptor: {})",
+                TYPE_HINT_AT_FIELDREF, class.value, name.value, descriptor.value
             ),
             _ => unimplemented!(),
         }

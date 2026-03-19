@@ -244,6 +244,23 @@ impl RnsParser {
                     descriptor,
                 ))
             }
+            TypeHintKind::Fieldref => {
+                let class_name = self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::ClassName,
+                )?;
+                let field_name = self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::FieldName,
+                )?;
+                let descriptor = self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::FieldDescriptor,
+                )?;
+                Ok(TypeHint::Fieldref(
+                    kind_span, class_name, field_name, descriptor,
+                ))
+            }
             _ => unimplemented!(),
         };
 

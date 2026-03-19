@@ -1,0 +1,38 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class   @fieldref MyClass
+----- STDERR -----
+[E-014] Error: '@fieldref' type hint is missing its field name
+   ╭─[ test_data/integration/error/parser/type_hints/fieldref/no_operand_2_recovers.rns:1:10 ]
+   │
+ 1 │ .class   @fieldref MyClass
+   │          ────┬────        │ 
+   │              ╰────────────── forces explicit field reference constant pool type
+   │                           │ 
+   │                           ╰─ but field name is missing
+   │ 
+   │ Help: Provide the value immediately after the hint:
+   │       @fieldref <class_name> <field_name> <field_descriptor>
+   │       
+   │       For example:
+   │       @fieldref java/lang/System out Ljava/io/PrintStream;
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-014
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/integration/error/parser/type_hints/fieldref/no_operand_2_recovers.rns:1:1 ]
+   │
+ 1 │ .class   @fieldref MyClass
+   │ ───┬──  
+   │    ╰──── class 'None' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+not generated
