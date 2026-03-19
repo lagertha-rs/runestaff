@@ -18,6 +18,9 @@ pub(super) enum ParserError {
     MissingTypeHintOperand {
         type_hint: Spanned<TypeHintKind>,
         operand: TypeHintOperandName,
+        /// Span of the last successfully parsed token before the missing operand.
+        /// Used to position the error label after the correct token.
+        after_span: Span,
     },
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
@@ -126,7 +129,9 @@ impl ParserError {
             ParserError::TypeHintExpectsI32Operand { found, .. } => {
                 format!("@int requires an i32 literal, found '{}'", found)
             }
-            ParserError::MissingTypeHintOperand { type_hint, operand } => {
+            ParserError::MissingTypeHintOperand {
+                type_hint, operand, ..
+            } => {
                 format!(
                     "'{}' type hint is missing its {}",
                     type_hint.value.token_name(),
@@ -230,14 +235,18 @@ impl ParserError {
                 ),
                 DiagnosticLabel::at(found_span.as_range(), format!("but found '{}'", found)),
             ],
-            ParserError::MissingTypeHintOperand { type_hint, operand } => {
+            ParserError::MissingTypeHintOperand {
+                type_hint,
+                operand,
+                after_span,
+            } => {
                 vec![
                     DiagnosticLabel::context(
                         type_hint.span.as_range(),
                         type_hint.value.context_label().to_string(),
                     ),
                     DiagnosticLabel::at(
-                        type_hint.span.byte_end..type_hint.span.byte_end,
+                        after_span.byte_end..after_span.byte_end,
                         format!("but {} is missing", operand),
                     ),
                 ]

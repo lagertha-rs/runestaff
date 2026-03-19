@@ -145,8 +145,13 @@ impl RnsParser {
         type_hint: Spanned<TypeHintKind>,
         operand: TypeHintOperandName,
     ) -> Result<Spanned<String>, ParserError> {
+        let after_span = self.last_span;
         self.try_next_identifier()
-            .map_err(|_| ParserError::MissingTypeHintOperand { type_hint, operand })
+            .map_err(|_| ParserError::MissingTypeHintOperand {
+                type_hint,
+                operand,
+                after_span,
+            })
     }
 
     fn parse_type_hint_i32(
@@ -219,7 +224,26 @@ impl RnsParser {
                     TypeHintOperandName::ClassName,
                 )?,
             )),
-            TypeHintKind::Methodref => unimplemented!(),
+            TypeHintKind::Methodref => {
+                let class_name = self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::ClassName,
+                )?;
+                let method_name = self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::MethodName,
+                )?;
+                let descriptor = self.parse_type_hint_identifier_operand(
+                    th.clone(),
+                    TypeHintOperandName::MethodDescriptor,
+                )?;
+                Ok(TypeHint::Methodref(
+                    kind_span,
+                    class_name,
+                    method_name,
+                    descriptor,
+                ))
+            }
             _ => unimplemented!(),
         };
 
