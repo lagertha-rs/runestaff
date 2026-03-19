@@ -26,7 +26,7 @@ not generated
    │
  1 │ .class @string value unexpected_second_operand ; <- this error shouldn't block no superclass warn
    │ ───┬──  
-   │    ╰──── class 'Some(Utf8(Span { byte_start: 7, byte_end: 14, line: 0, col_start: 7, col_end: 14 }, Spanned { value: "value", span: Span { byte_start: 15, byte_end: 20, line: 0, col_start: 15, col_end: 20 } }))' is missing a '.super' directive
+   │    ╰──── class 'Some(String(Span { byte_start: 7, byte_end: 14, line: 0, col_start: 7, col_end: 14 }, Spanned { value: "value", span: Span { byte_start: 15, byte_end: 20, line: 0, col_start: 15, col_end: 20 } }))' is missing a '.super' directive
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
