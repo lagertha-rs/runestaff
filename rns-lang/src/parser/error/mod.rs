@@ -2,7 +2,7 @@ mod context;
 mod rejection;
 
 pub(super) use context::{OperandErrPosContext, TrailingTokensErrContext};
-pub(super) use rejection::SignedIntRejection;
+pub(super) use rejection::{FloatRejection, SignedIntRejection};
 
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
@@ -31,6 +31,10 @@ pub(super) enum ParserError {
         type_hint: Spanned<TypeHintKind>,
         rejection: SignedIntRejection,
     },
+    TypeHintExpectsFloatOperand {
+        type_hint: Spanned<TypeHintKind>,
+        rejection: FloatRejection,
+    },
 }
 
 impl ParserError {
@@ -38,6 +42,7 @@ impl ParserError {
     fn code(&self) -> &'static str {
         match self {
             ParserError::TypeHintExpectsIntegerOperand { .. } => "E-003",
+            ParserError::TypeHintExpectsFloatOperand { .. } => "E-003",
             ParserError::EmptyFile(_) => "E-006",
             ParserError::UnexpectedTokenInClassBody(_) => "E-007",
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
@@ -120,6 +125,36 @@ impl ParserError {
                     type_hint.value.token_name(),
                     operand
                 )
+            }
+            ParserError::TypeHintExpectsFloatOperand {
+                type_hint,
+                rejection,
+            } => {
+                let bit_width = match type_hint.value {
+                    TypeHintKind::Double => "64-bit",
+                    _ => "32-bit",
+                };
+                match rejection {
+                    FloatRejection::NotNumeric(spanned) => {
+                        format!(
+                            "'{}' requires a {} float, but '{}' is not a number",
+                            type_hint.value.token_name(),
+                            bit_width,
+                            spanned.value
+                        )
+                    }
+                    FloatRejection::Overflow(spanned) => {
+                        format!(
+                            "'{}' requires a {} float, but '{}' is out of range",
+                            type_hint.value.token_name(),
+                            bit_width,
+                            spanned.value
+                        )
+                    }
+                    FloatRejection::Missing(_) => {
+                        unreachable!("Missing case handled by MissingTypeHintOperand")
+                    }
+                }
             }
         }
     }
@@ -240,6 +275,36 @@ impl ParserError {
                 };
                 vec![context_label, error_label]
             }
+            ParserError::TypeHintExpectsFloatOperand {
+                type_hint,
+                rejection,
+            } => {
+                let context_label = DiagnosticLabel::context(
+                    type_hint.span.as_range(),
+                    type_hint.value.context_label().to_string(),
+                );
+                let error_label = match rejection {
+                    FloatRejection::NotNumeric(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("'{}' is not a number", spanned.value),
+                    ),
+                    FloatRejection::Overflow(spanned) => {
+                        let range_msg = match type_hint.value {
+                            TypeHintKind::Double => {
+                                format!("64-bit float range is {} to {}", f64::MIN, f64::MAX)
+                            }
+                            _ => {
+                                format!("32-bit float range is {} to {}", f32::MIN, f32::MAX)
+                            }
+                        };
+                        DiagnosticLabel::at(spanned.span.as_range(), range_msg)
+                    }
+                    FloatRejection::Missing(_) => {
+                        unreachable!("Missing case handled by MissingTypeHintOperand")
+                    }
+                };
+                vec![context_label, error_label]
+            }
             ParserError::MissingTypeHintOperand {
                 type_hint,
                 operand,
@@ -350,6 +415,47 @@ impl ParserError {
                     }
                 }
             }
+            ParserError::TypeHintExpectsFloatOperand {
+                type_hint,
+                rejection,
+            } => {
+                let operand_name = match type_hint.value {
+                    TypeHintKind::Double => TypeHintOperandName::F64Literal,
+                    _ => TypeHintOperandName::F32Literal,
+                };
+                let syntax = format!(
+                    "{} {}",
+                    type_hint.value.token_name(),
+                    operand_name.placeholder()
+                );
+                let example = type_hint.value.example();
+                match rejection {
+                    FloatRejection::NotNumeric(spanned) => Some(format!(
+                        "'{}' is not a valid float literal.\n\n\
+                         Syntax:\n\
+                         {}\n\n\
+                         For example:\n\
+                         {}",
+                        spanned.value, syntax, example
+                    )),
+                    FloatRejection::Overflow(spanned) => match type_hint.value {
+                        TypeHintKind::Double => Some(format!(
+                            "The value '{}' exceeds the 64-bit float range ({} to {}).",
+                            spanned.value,
+                            f64::MIN,
+                            f64::MAX
+                        )),
+                        _ => Some(format!(
+                            "If you need a larger float, use @double instead:\n\
+                             @double {}",
+                            spanned.value
+                        )),
+                    },
+                    FloatRejection::Missing(_) => {
+                        unreachable!("Missing case handled by MissingTypeHintOperand")
+                    }
+                }
+            }
             ParserError::MissingTypeHintOperand { type_hint, .. } => {
                 let syntax = type_hint
                     .value
@@ -381,7 +487,8 @@ impl ParserError {
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
             ParserError::MissingTypeHintOperand { type_hint, .. }
-            | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. } => type_hint.span,
+            | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. }
+            | ParserError::TypeHintExpectsFloatOperand { type_hint, .. } => type_hint.span,
         }
     }
 

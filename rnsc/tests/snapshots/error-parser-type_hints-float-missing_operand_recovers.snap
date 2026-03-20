@@ -1,0 +1,43 @@
+---
+source: rns-asm/tests/rns_test.rs
+assertion_line: 210
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class @float
+unexpected_token ; <- this error should be reported as well
+----- STDERR -----
+[E-014] Error: '@float' type hint is missing its 32-bit float
+   ╭─[ test_data/integration/error/parser/type_hints/float/missing_operand_recovers.rns:1:8 ]
+   │
+ 1 │ .class @float
+   │        ───┬──│ 
+   │           ╰──── forces explicit float constant pool type
+   │              │ 
+   │              ╰─ but 32-bit float is missing
+   │ 
+   │ Help: Provide the value immediately after the hint:
+   │       @float <float>
+   │       
+   │       For example:
+   │       @float 3.14
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-014
+───╯
+[E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unexpected_token", span: Span { byte_start: 14, byte_end: 30, line: 1, col_start: 0, col_end: 16 } })'
+   ╭─[ test_data/integration/error/parser/type_hints/float/missing_operand_recovers.rns:2:1 ]
+   │
+ 2 │ unexpected_token ; <- this error should be reported as well
+   │ ────────┬───────  
+   │         ╰───────── unexpected token
+   │ 
+   │ Help: Check the syntax of the class body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-007
+───╯
+----- HASH -----
+not generated

@@ -1,7 +1,7 @@
 use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
 use crate::parser::error::{
-    OperandErrPosContext, ParserError, SignedIntRejection, TrailingTokensErrContext,
+    FloatRejection, OperandErrPosContext, ParserError, SignedIntRejection, TrailingTokensErrContext,
 };
 use crate::parser::error_deprecated::{
     IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
@@ -200,6 +200,36 @@ impl RnsParser {
         }
     }
 
+    fn try_next_f32(&mut self) -> Result<Spanned<f32>, FloatRejection> {
+        // Don't consume EOF/newline to not break trailing tokens check
+        if let Some(next) = self.peek_token()
+            && matches!(next, RnsToken::Eof(_) | RnsToken::Newline(_))
+        {
+            return Err(FloatRejection::Missing(next.clone()));
+        }
+        let token = self.next_token();
+        match token {
+            RnsToken::Identifier(ref spanned) => {
+                let raw = &spanned.value;
+                match f32::from_str(raw) {
+                    Ok(value) => {
+                        if value.is_infinite() {
+                            Err(FloatRejection::Overflow(spanned.clone()))
+                        } else {
+                            Ok(Spanned::new(value, spanned.span))
+                        }
+                    }
+                    Err(_) => Err(FloatRejection::NotNumeric(spanned.clone())),
+                }
+            }
+            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(FloatRejection::Missing(token)),
+            _ => {
+                let spanned = Spanned::new(token.as_identifier().to_string(), token.span());
+                Err(FloatRejection::NotNumeric(spanned))
+            }
+        }
+    }
+
     fn looks_like_scientific_notation(&self, s: &str) -> bool {
         let s = s
             .strip_prefix('-')
@@ -272,6 +302,24 @@ impl RnsParser {
         })
     }
 
+    fn parse_type_hint_f32(
+        &mut self,
+        type_hint: Spanned<TypeHintKind>,
+    ) -> Result<Spanned<f32>, ParserError> {
+        let after_span = self.last_span;
+        self.try_next_f32().map_err(|rejection| match rejection {
+            FloatRejection::Missing(_) => ParserError::MissingTypeHintOperand {
+                type_hint,
+                operand: TypeHintOperandName::F32Literal,
+                after_span,
+            },
+            other => ParserError::TypeHintExpectsFloatOperand {
+                type_hint,
+                rejection: other,
+            },
+        })
+    }
+
     fn resolve_type_hint(&mut self, th: Spanned<TypeHintKind>) -> Result<TypeHint, Diagnostic> {
         let kind_span = th.span;
         let res = match th.value {
@@ -290,6 +338,10 @@ impl RnsParser {
             TypeHintKind::Long => Ok(TypeHint::Long(
                 kind_span,
                 self.parse_type_hint_i64(th.clone())?,
+            )),
+            TypeHintKind::Float => Ok(TypeHint::Float(
+                kind_span,
+                self.parse_type_hint_f32(th.clone())?,
             )),
             TypeHintKind::String => Ok(TypeHint::String(
                 kind_span,

@@ -1,0 +1,28 @@
+---
+source: rns-asm/tests/rns_test.rs
+assertion_line: 210
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class @float 9999999999999999999999999999999999999999
+.super java/lang/Object
+----- STDERR -----
+[E-003] Error: '@float' requires a 32-bit float, but '9999999999999999999999999999999999999999' is out of range
+   ╭─[ test_data/integration/error/parser/type_hints/float/overflow.rns:1:8 ]
+   │
+ 1 │ .class @float 9999999999999999999999999999999999999999
+   │        ───┬── ────────────────────┬───────────────────  
+   │           ╰───────────────────────────────────────────── forces explicit float constant pool type
+   │                                   │                     
+   │                                   ╰───────────────────── 32-bit float range is -340282350000000000000000000000000000000 to 340282350000000000000000000000000000000
+   │ 
+   │ Help: If you need a larger float, use @double instead:
+   │       @double 9999999999999999999999999999999999999999
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
+───╯
+----- HASH -----
+not generated
