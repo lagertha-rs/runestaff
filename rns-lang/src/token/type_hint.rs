@@ -1,5 +1,5 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -141,7 +141,13 @@ impl TypeHintKind {
     pub fn operands_count(&self) -> usize {
         match self {
             Self::ZeroIndex => 0,
-            Self::Utf8 | Self::Integer | Self::Long | Self::Float | Self::String | Self::Class => 1,
+            Self::Utf8
+            | Self::Integer
+            | Self::Long
+            | Self::Float
+            | Self::Double
+            | Self::String
+            | Self::Class => 1,
             Self::Methodref | Self::Fieldref => 3,
             _ => unimplemented!(),
         }
@@ -153,6 +159,7 @@ impl TypeHintKind {
             Self::Integer => &["integer"],
             Self::Long => &["integer"],
             Self::Float => &["float"],
+            Self::Double => &["double"],
             Self::String => &["string literal"],
             Self::Class => &["identifier"],
             Self::Methodref => &[
@@ -309,6 +316,7 @@ impl TypeHint {
             ),
             Self::Long(_, value) => format!("{} ({})", TYPE_HINT_AT_LONG, value.value),
             Self::Float(_, value) => format!("{} ({})", TYPE_HINT_AT_FLOAT, value.value),
+            Self::Double(_, value) => format!("{} ({})", TYPE_HINT_AT_DOUBLE, value.value),
             _ => unimplemented!(),
         }
     }
