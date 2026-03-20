@@ -20,7 +20,7 @@ not generated
    │ Help: 'not an int' is not a valid integer literal.
    │       
    │       Syntax:
-   │       @int <i32>
+   │       @int <integer>
    │       
    │       For example:
    │       @int 42

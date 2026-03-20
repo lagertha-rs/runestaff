@@ -27,7 +27,7 @@ pub(super) enum ParserError {
     },
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
-    TypeHintExpectsI32Operand {
+    TypeHintExpectsIntegerOperand {
         type_hint: Spanned<TypeHintKind>,
         rejection: SignedIntRejection,
     },
@@ -37,7 +37,7 @@ impl ParserError {
     // TODO: put all codes as consts somewhere, and make sure they are unique across the whole codebase
     fn code(&self) -> &'static str {
         match self {
-            ParserError::TypeHintExpectsI32Operand { .. } => "E-003",
+            ParserError::TypeHintExpectsIntegerOperand { .. } => "E-003",
             ParserError::EmptyFile(_) => "E-006",
             ParserError::UnexpectedTokenInClassBody(_) => "E-007",
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
@@ -75,32 +75,43 @@ impl ParserError {
                 format!("unexpected trailing tokens after {}", ctx)
             }
             ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
-            ParserError::TypeHintExpectsI32Operand { rejection, .. } => match rejection {
-                SignedIntRejection::NotNumeric(spanned) => {
-                    format!(
-                        "'{}' requires a 32-bit integer, but '{}' is not a number",
-                        TypeHintKind::Integer.token_name(),
-                        spanned.value
-                    )
+            ParserError::TypeHintExpectsIntegerOperand {
+                type_hint,
+                rejection,
+            } => {
+                let bit_width = match type_hint.value {
+                    TypeHintKind::Long => "64-bit",
+                    _ => "32-bit",
+                };
+                match rejection {
+                    SignedIntRejection::NotNumeric(spanned) => {
+                        format!(
+                            "'{}' requires a {} integer, but '{}' is not a number",
+                            type_hint.value.token_name(),
+                            bit_width,
+                            spanned.value
+                        )
+                    }
+                    SignedIntRejection::FloatingPoint(spanned) => {
+                        format!(
+                            "'{}' requires a whole number, but '{}' has a decimal point",
+                            type_hint.value.token_name(),
+                            spanned.value
+                        )
+                    }
+                    SignedIntRejection::Overflow(spanned) => {
+                        format!(
+                            "'{}' requires a {} integer, but '{}' is out of range",
+                            type_hint.value.token_name(),
+                            bit_width,
+                            spanned.value
+                        )
+                    }
+                    SignedIntRejection::Missing(_) => {
+                        unreachable!("Missing case handled by MissingTypeHintOperand")
+                    }
                 }
-                SignedIntRejection::FloatingPoint(spanned) => {
-                    format!(
-                        "'{}' requires a whole number, but '{}' has a decimal point",
-                        TypeHintKind::Integer.token_name(),
-                        spanned.value
-                    )
-                }
-                SignedIntRejection::Overflow(spanned) => {
-                    format!(
-                        "'{}' requires a 32-bit integer, but '{}' is out of range",
-                        TypeHintKind::Integer.token_name(),
-                        spanned.value
-                    )
-                }
-                SignedIntRejection::Missing(_) => {
-                    unreachable!("Missing case handled by MissingTypeHintOperand")
-                }
-            },
+            }
             ParserError::MissingTypeHintOperand {
                 type_hint, operand, ..
             } => {
@@ -195,7 +206,7 @@ impl ParserError {
                 }
                 labels
             }
-            ParserError::TypeHintExpectsI32Operand {
+            ParserError::TypeHintExpectsIntegerOperand {
                 type_hint,
                 rejection,
             } => {
@@ -212,10 +223,17 @@ impl ParserError {
                         spanned.span.as_range(),
                         format!("must be a whole number without a decimal point"),
                     ),
-                    SignedIntRejection::Overflow(spanned) => DiagnosticLabel::at(
-                        spanned.span.as_range(),
-                        format!("32-bit integer range is {} to {}", i32::MIN, i32::MAX),
-                    ),
+                    SignedIntRejection::Overflow(spanned) => {
+                        let range_msg = match type_hint.value {
+                            TypeHintKind::Long => {
+                                format!("64-bit integer range is {} to {}", i64::MIN, i64::MAX)
+                            }
+                            _ => {
+                                format!("32-bit integer range is {} to {}", i32::MIN, i32::MAX)
+                            }
+                        };
+                        DiagnosticLabel::at(spanned.span.as_range(), range_msg)
+                    }
                     SignedIntRejection::Missing(_) => {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
@@ -280,14 +298,18 @@ impl ParserError {
             ParserError::MultipleSuperDefinitions(_) => Some(
                 "A class can only have one .super directive. Remove the duplicates.".to_string(),
             ),
-            ParserError::TypeHintExpectsI32Operand {
+            ParserError::TypeHintExpectsIntegerOperand {
                 type_hint,
                 rejection,
             } => {
+                let operand_name = match type_hint.value {
+                    TypeHintKind::Long => TypeHintOperandName::I64Literal,
+                    _ => TypeHintOperandName::I32Literal,
+                };
                 let syntax = format!(
                     "{} {}",
                     type_hint.value.token_name(),
-                    TypeHintOperandName::I32Literal.placeholder()
+                    operand_name.placeholder()
                 );
                 let example = type_hint.value.example();
                 match rejection {
@@ -299,16 +321,30 @@ impl ParserError {
                          {}",
                         spanned.value, syntax, example
                     )),
-                    SignedIntRejection::FloatingPoint(spanned) => Some(format!(
-                        "If you need a fractional value, use @float instead:\n\
-                         @float {}",
-                        spanned.value
-                    )),
-                    SignedIntRejection::Overflow(spanned) => Some(format!(
-                        "If you need a larger integer, use @long instead:\n\
-                         @long {}",
-                        spanned.value
-                    )),
+                    SignedIntRejection::FloatingPoint(spanned) => {
+                        let float_hint = match type_hint.value {
+                            TypeHintKind::Long => "@double",
+                            _ => "@float",
+                        };
+                        Some(format!(
+                            "If you need a fractional value, use {} instead:\n\
+                             {} {}",
+                            float_hint, float_hint, spanned.value
+                        ))
+                    }
+                    SignedIntRejection::Overflow(spanned) => match type_hint.value {
+                        TypeHintKind::Long => Some(format!(
+                            "The value '{}' exceeds the 64-bit integer range ({} to {}).",
+                            spanned.value,
+                            i64::MIN,
+                            i64::MAX
+                        )),
+                        _ => Some(format!(
+                            "If you need a larger integer, use @long instead:\n\
+                             @long {}",
+                            spanned.value
+                        )),
+                    },
                     SignedIntRejection::Missing(_) => {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
@@ -345,7 +381,7 @@ impl ParserError {
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
             ParserError::MissingTypeHintOperand { type_hint, .. }
-            | ParserError::TypeHintExpectsI32Operand { type_hint, .. } => type_hint.span,
+            | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. } => type_hint.span,
         }
     }
 

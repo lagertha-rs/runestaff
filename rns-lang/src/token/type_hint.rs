@@ -39,10 +39,10 @@ impl TypeHintOperandName {
     pub fn placeholder(&self) -> &'static str {
         match self {
             Self::Utf8Entry => "<utf8_value>",
-            Self::I32Literal => "<i32>",
-            Self::F32Literal => "<f32>",
-            Self::I64Literal => "<i64>",
-            Self::F64Literal => "<f64>",
+            Self::I32Literal => "<integer>",
+            Self::F32Literal => "<float>",
+            Self::I64Literal => "<long>",
+            Self::F64Literal => "<double>",
             Self::StringLiteral => "\"<string>\"",
             Self::ClassName => "<class_name>",
             Self::MethodName => "<method_name>",
@@ -141,7 +141,7 @@ impl TypeHintKind {
     pub fn operands_count(&self) -> usize {
         match self {
             Self::ZeroIndex => 0,
-            Self::Utf8 | Self::Integer | Self::String | Self::Class => 1,
+            Self::Utf8 | Self::Integer | Self::Long | Self::String | Self::Class => 1,
             Self::Methodref | Self::Fieldref => 3,
             _ => unimplemented!(),
         }
@@ -151,6 +151,7 @@ impl TypeHintKind {
         match self {
             Self::Utf8 => &["identifier"],
             Self::Integer => &["integer"],
+            Self::Long => &["integer"],
             Self::String => &["string literal"],
             Self::Class => &["identifier"],
             Self::Methodref => &[
@@ -305,6 +306,7 @@ impl TypeHint {
                 "{} (class: {}, name: {}, descriptor: {})",
                 TYPE_HINT_AT_FIELDREF, class.value, name.value, descriptor.value
             ),
+            Self::Long(_, value) => format!("{} ({})", TYPE_HINT_AT_LONG, value.value),
             _ => unimplemented!(),
         }
     }

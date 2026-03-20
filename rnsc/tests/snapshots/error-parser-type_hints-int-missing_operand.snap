@@ -18,7 +18,7 @@ not generated
    │            ╰─ but 32-bit signed integer is missing
    │ 
    │ Help: Provide the value immediately after the hint:
-   │       @int <i32>
+   │       @int <integer>
    │       
    │       For example:
    │       @int 42

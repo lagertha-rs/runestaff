@@ -1,0 +1,39 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class @long 3.14
+unexpected_token ; <- this error should be reported as well
+----- STDERR -----
+[E-003] Error: '@long' requires a whole number, but '3.14' has a decimal point
+   ╭─[ test_data/integration/error/parser/type_hints/long/float_recovers.rns:1:8 ]
+   │
+ 1 │ .class @long 3.14
+   │        ──┬── ──┬─  
+   │          ╰───────── forces explicit long constant pool type
+   │                │   
+   │                ╰─── must be a whole number without a decimal point
+   │ 
+   │ Help: If you need a fractional value, use @double instead:
+   │       @double 3.14
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-003
+───╯
+[E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unexpected_token", span: Span { byte_start: 18, byte_end: 34, line: 1, col_start: 0, col_end: 16 } })'
+   ╭─[ test_data/integration/error/parser/type_hints/long/float_recovers.rns:2:1 ]
+   │
+ 2 │ unexpected_token ; <- this error should be reported as well
+   │ ────────┬───────  
+   │         ╰───────── unexpected token
+   │ 
+   │ Help: Check the syntax of the class body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-007
+───╯
+----- HASH -----
+not generated

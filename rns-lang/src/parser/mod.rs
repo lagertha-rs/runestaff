@@ -166,6 +166,40 @@ impl RnsParser {
         }
     }
 
+    fn try_next_i64(&mut self) -> Result<Spanned<i64>, SignedIntRejection> {
+        // Don't consume EOF/newline to not break trailing tokens check
+        if let Some(next) = self.peek_token()
+            && matches!(next, RnsToken::Eof(_) | RnsToken::Newline(_))
+        {
+            return Err(SignedIntRejection::Missing(next.clone()));
+        }
+        let token = self.next_token();
+        match token {
+            RnsToken::Identifier(ref spanned) => {
+                let raw = &spanned.value;
+                match i64::from_str(raw) {
+                    Ok(value) => Ok(Spanned::new(value, spanned.span)),
+                    Err(e) => {
+                        if raw.contains('.') || self.looks_like_scientific_notation(raw) {
+                            Err(SignedIntRejection::FloatingPoint(spanned.clone()))
+                        } else if e.kind() == &std::num::IntErrorKind::PosOverflow
+                            || e.kind() == &std::num::IntErrorKind::NegOverflow
+                        {
+                            Err(SignedIntRejection::Overflow(spanned.clone()))
+                        } else {
+                            Err(SignedIntRejection::NotNumeric(spanned.clone()))
+                        }
+                    }
+                }
+            }
+            RnsToken::Eof(_) | RnsToken::Newline(_) => Err(SignedIntRejection::Missing(token)),
+            _ => {
+                let spanned = Spanned::new(token.as_identifier().to_string(), token.span());
+                Err(SignedIntRejection::NotNumeric(spanned))
+            }
+        }
+    }
+
     fn looks_like_scientific_notation(&self, s: &str) -> bool {
         let s = s
             .strip_prefix('-')
@@ -213,7 +247,25 @@ impl RnsParser {
                 operand: TypeHintOperandName::I32Literal,
                 after_span,
             },
-            other => ParserError::TypeHintExpectsI32Operand {
+            other => ParserError::TypeHintExpectsIntegerOperand {
+                type_hint,
+                rejection: other,
+            },
+        })
+    }
+
+    fn parse_type_hint_i64(
+        &mut self,
+        type_hint: Spanned<TypeHintKind>,
+    ) -> Result<Spanned<i64>, ParserError> {
+        let after_span = self.last_span;
+        self.try_next_i64().map_err(|rejection| match rejection {
+            SignedIntRejection::Missing(_) => ParserError::MissingTypeHintOperand {
+                type_hint,
+                operand: TypeHintOperandName::I64Literal,
+                after_span,
+            },
+            other => ParserError::TypeHintExpectsIntegerOperand {
                 type_hint,
                 rejection: other,
             },
@@ -234,6 +286,10 @@ impl RnsParser {
             TypeHintKind::Integer => Ok(TypeHint::Integer(
                 kind_span,
                 self.parse_type_hint_i32(th.clone())?,
+            )),
+            TypeHintKind::Long => Ok(TypeHint::Long(
+                kind_span,
+                self.parse_type_hint_i64(th.clone())?,
             )),
             TypeHintKind::String => Ok(TypeHint::String(
                 kind_span,
