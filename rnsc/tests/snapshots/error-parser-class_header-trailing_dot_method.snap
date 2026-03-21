@@ -14,8 +14,8 @@ not generated
    ╭─[ test_data/integration/error/parser/class_header/trailing_dot_method.rns:2:14 ]
    │
  2 │ .class Class .method kababoom
-   │            │ ────────┬───────  
-   │            ╰─────────────────── expected end of class definition here
+   │             │────────┬───────  
+   │             ╰────────────────── expected end of class definition here
    │                      │         
    │                      ╰───────── but found 2 trailing tokens
    │ 

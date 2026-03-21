@@ -1,0 +1,27 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MyClass
+.super
+----- STDERR -----
+[E-009] Error: unexpected eof where a super class name is required
+   ╭─[ test_data/integration/error/parser/super_directive/missing_operand.rns:2:1 ]
+   │
+ 2 │ .super
+   │ ───┬──│ 
+   │    ╰──── the '.super' directive requires a super class name as operand
+   │       │ 
+   │       ╰─ but nothing was provided
+   │ 
+   │ Help: Provide a super class name after the '.super' directive, e.g.:
+   │       .super MyClassName
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-009
+───╯
+----- HASH -----
+not generated

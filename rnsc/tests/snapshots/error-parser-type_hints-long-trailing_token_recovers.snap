@@ -6,6 +6,7 @@ expression: "&snapshot_content"
 not generated
 ----- INPUT -----
 .class @long 100000 unexpected_second_operand ; <- this error shouldn't block next error
+.super java/lang/Object
 unknown_token ; <- this error should be reported as well
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@long'
@@ -22,10 +23,10 @@ unknown_token ; <- this error should be reported as well
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-013
 ───╯
-[E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unknown_token", span: Span { byte_start: 89, byte_end: 102, line: 1, col_start: 0, col_end: 13 } })'
-   ╭─[ test_data/integration/error/parser/type_hints/long/trailing_token_recovers.rns:2:1 ]
+[E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unknown_token", span: Span { byte_start: 113, byte_end: 126, line: 2, col_start: 0, col_end: 13 } })'
+   ╭─[ test_data/integration/error/parser/type_hints/long/trailing_token_recovers.rns:3:1 ]
    │
- 2 │ unknown_token ; <- this error should be reported as well
+ 3 │ unknown_token ; <- this error should be reported as well
    │ ──────┬──────  
    │       ╰──────── unexpected token
    │ 

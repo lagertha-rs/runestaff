@@ -12,8 +12,8 @@ not generated
    ╭─[ test_data/integration/error/parser/class_header/trailing_identifier.rns:1:16 ]
    │
  1 │ .class MyClass SomethingElse
-   │              │ ──────┬──────  
-   │              ╰──────────────── expected end of class definition here
+   │               │──────┬──────  
+   │               ╰─────────────── expected end of class definition here
    │                      │        
    │                      ╰──────── but found 1 trailing token
    │ 

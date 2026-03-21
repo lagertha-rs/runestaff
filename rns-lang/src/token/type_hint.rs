@@ -302,21 +302,38 @@ pub enum TypeHint {
 impl TypeHint {
     pub fn token_name_with_value(&self) -> String {
         match self {
-            Self::Utf8(_, value) => format!("{} ({})", TYPE_HINT_AT_UTF8, value.value),
-            Self::Integer(_, value) => format!("{} ({})", TYPE_HINT_AT_INTEGER, value.value),
-            Self::String(_, value) => format!("{} ({})", TYPE_HINT_AT_STRING, value.value),
-            Self::Class(_, value) => format!("{} ({})", TYPE_HINT_AT_CLASS, value.value),
+            Self::Utf8(_, value) => format!("{} {}", TYPE_HINT_AT_UTF8, value.value),
+            Self::Integer(_, value) => format!("{} {}", TYPE_HINT_AT_INTEGER, value.value),
+            Self::String(_, value) => format!("{} {}", TYPE_HINT_AT_STRING, value.value),
+            Self::Class(_, value) => format!("{} {}", TYPE_HINT_AT_CLASS, value.value),
             Self::Methodref(_, class, name, descriptor) => format!(
-                "{} (class: {}, name: {}, descriptor: {})",
+                "{} class: {}, name: {}, descriptor: {}",
                 TYPE_HINT_AT_METHODREF, class.value, name.value, descriptor.value
             ),
             Self::Fieldref(_, class, name, descriptor) => format!(
-                "{} (class: {}, name: {}, descriptor: {})",
+                "{} class: {}, name: {}, descriptor: {}",
                 TYPE_HINT_AT_FIELDREF, class.value, name.value, descriptor.value
             ),
-            Self::Long(_, value) => format!("{} ({})", TYPE_HINT_AT_LONG, value.value),
-            Self::Float(_, value) => format!("{} ({})", TYPE_HINT_AT_FLOAT, value.value),
-            Self::Double(_, value) => format!("{} ({})", TYPE_HINT_AT_DOUBLE, value.value),
+            Self::Long(_, value) => format!("{} {}", TYPE_HINT_AT_LONG, value.value),
+            Self::Float(_, value) => format!("{} {}", TYPE_HINT_AT_FLOAT, value.value),
+            Self::Double(_, value) => format!("{} {}", TYPE_HINT_AT_DOUBLE, value.value),
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn value(&self) -> String {
+        match self {
+            Self::Integer(_, value) => value.value.to_string(),
+            Self::Long(_, value) => format!("{} {}", TYPE_HINT_AT_LONG, value.value),
+            Self::Float(_, value) => format!("{} {}", TYPE_HINT_AT_FLOAT, value.value),
+            Self::Double(_, value) => format!("{} {}", TYPE_HINT_AT_DOUBLE, value.value),
+            Self::Utf8(_, value) | Self::String(_, value) | Self::Class(_, value) => {
+                value.value.to_string()
+            }
+            Self::Methodref(_, class, name, descriptor)
+            | Self::Fieldref(_, class, name, descriptor) => {
+                format!("{} {} {}", class.value, name.value, descriptor.value)
+            }
             _ => unimplemented!(),
         }
     }

@@ -24,8 +24,8 @@ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- Ext
    ╭─[ test_data/integration/error/parser/outside_class_directive/recovery2.rns:1:62 ]
    │
  1 │ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- ExtraToken is second
-   │                                                            │ ─────┬────  
-   │                                                            ╰───────────── expected end of class definition here
+   │                                                             │─────┬────  
+   │                                                             ╰──────────── expected end of class definition here
    │                                                                   │      
    │                                                                   ╰────── but found 1 trailing token
    │ 

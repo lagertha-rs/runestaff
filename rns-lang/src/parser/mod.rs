@@ -36,6 +36,7 @@ struct RnsParser {
     access_flags: BTreeMap<RnsFlag, Span>,
 
     super_directives: Vec<(Span, TypeHint)>,
+    super_err_present: bool,
 }
 
 impl RnsParser {
@@ -505,7 +506,7 @@ impl RnsParser {
 
     // Doesn't need to recover, just check for trailing tokens and report error if they exist
     fn verify_trailing_tokens(&mut self, context: TrailingTokensErrContext) {
-        let end_of_previous_token = self.last_span.byte_end - 1; // -1 to point to the last character
+        let end_of_previous_token = self.last_span.byte_end;
         let trailing_tokens = self.next_until_newline();
         if !trailing_tokens.is_empty() {
             self.diagnostic.push(
@@ -803,6 +804,7 @@ impl RnsParser {
         }) {
             Ok(super_name) => self.super_directives.push((super_token.span(), super_name)),
             Err(e) => {
+                self.super_err_present = true;
                 self.diagnostic.push(e);
             }
         }
@@ -876,11 +878,9 @@ impl RnsParser {
                 _ => {
                     let unexpected_error =
                         ParserError::UnexpectedTokenInClassBody(self.next_token());
-                    if self.anchor(&[RnsTokenKind::DotMethod, RnsTokenKind::DotSuper]) {
-                        self.diagnostic.push(unexpected_error.into());
-                    } else {
-                        return Err(unexpected_error.into());
-                    }
+                    self.diagnostic.push(unexpected_error.into());
+                    // TODO: test unknown_token .super/.method etc.
+                    self.anchor(&[RnsTokenKind::DotMethod, RnsTokenKind::DotSuper]);
                 }
             }
         }
@@ -903,7 +903,8 @@ impl RnsParser {
         match super_directives.len() {
             0 => {
                 // If no class name is defined, doesn't make sense to report missing superclass
-                if self.class_name.is_some() {
+                // If problem with super is already report, don't report missing superclass to avoid duplicate errors
+                if self.class_name.is_some() && !self.super_err_present {
                     self.diagnostic.push(
                         ParserWarning::MissingSuperClass {
                             class_name: self.class_name.clone(),
@@ -948,6 +949,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         class_dir_span: Span::default(),
         class_name: None,
         super_directives: Vec::new(),
+        super_err_present: false,
         access_flags: Default::default(),
     };
 

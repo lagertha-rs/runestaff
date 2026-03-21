@@ -245,16 +245,22 @@ impl ParserError {
             }
             ParserError::MultipleSuperDefinitions(defs) => {
                 let mut labels = Vec::with_capacity(defs.len());
-                for (i, (span, hint)) in defs.iter().enumerate() {
-                    let msg = if i == 0 {
+                labels.push(DiagnosticLabel::context(
+                    defs[0].0.as_range(),
+                    format!(
+                        "first .super directive defined here with super class '{}'",
+                        defs[0].1.value()
+                    ),
+                ));
+
+                for (span, hint) in defs.iter().skip(1) {
+                    labels.push(DiagnosticLabel::at(
+                        span.as_range(),
                         format!(
-                            "first .super directive defined here with super class '{}'",
-                            hint.token_name_with_value()
-                        )
-                    } else {
-                        "multiple .super directives are not allowed".to_string()
-                    };
-                    labels.push(DiagnosticLabel::at(span.as_range(), msg));
+                            "but another .super directive defined here with super class '{}'",
+                            hint.value()
+                        ),
+                    ));
                 }
                 labels
             }
@@ -499,7 +505,7 @@ impl ParserError {
             ParserError::EmptyFile(span) | ParserError::IdentifierOrHintExpected(span, _, _) => {
                 *span
             }
-            ParserError::MultipleSuperDefinitions(defs) => defs[0].0,
+            ParserError::MultipleSuperDefinitions(defs) => defs[1].0,
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::UnexpectedTokenInClassBody(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),

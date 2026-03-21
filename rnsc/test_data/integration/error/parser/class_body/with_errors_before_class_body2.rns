@@ -1,2 +1,4 @@
 .class 42
 unexpected
+.super java/lang/Object
+

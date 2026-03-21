@@ -29,8 +29,8 @@ to give more feedback and not fail fast
    ╭─[ test_data/integration/error/parser/outside_class_directive/recovery1.rns:6:16 ]
    │
  6 │ .class MyClass ExtraToken ; <- ExtraToken should be reported as error
-   │              │ ─────┬────  
-   │              ╰───────────── expected end of class definition here
+   │               │─────┬────  
+   │               ╰──────────── expected end of class definition here
    │                     │      
    │                     ╰────── but found 1 trailing token
    │ 
