@@ -1,7 +1,9 @@
 mod context;
 mod rejection;
 
-pub(super) use context::{AccessFlagContext, OperandErrPosContext, TrailingTokensErrContext};
+pub(super) use context::{
+    AccessFlagContext, OperandErrPosContext, TrailingTokensErrContext, UnexpectedTokenContext,
+};
 pub(super) use rejection::{FloatRejection, SignedIntRejection};
 
 use crate::ERROR_DOCS_BASE_URL;
@@ -14,8 +16,7 @@ use std::vec;
 #[derive(Debug, PartialEq, Clone)]
 pub(super) enum ParserError {
     EmptyFile(Span),
-    // TODO: the messages are total shit
-    UnexpectedTokenInClassBody(RnsToken),
+    UnexpectedBodyToken(UnexpectedTokenContext, RnsToken),
     // TODO: the messages are total shit
     UnexpectedTokenBeforeClassDefinition(RnsToken),
     TrailingTokens(usize, Vec<RnsToken>, TrailingTokensErrContext),
@@ -45,13 +46,14 @@ impl ParserError {
             ParserError::TypeHintExpectsIntegerOperand { .. } => "E-003",
             ParserError::TypeHintExpectsFloatOperand { .. } => "E-003",
             ParserError::EmptyFile(_) => "E-006",
-            ParserError::UnexpectedTokenInClassBody(_) => "E-007",
+            ParserError::UnexpectedBodyToken(ctx, _) => ctx.error_code(),
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
             ParserError::IdentifierOrHintExpected(_, _, _) => "E-009",
             ParserError::TrailingTokens(_, _, ctx) => match ctx {
                 TrailingTokensErrContext::Class => "E-010",
                 TrailingTokensErrContext::Super => "E-012",
                 TrailingTokensErrContext::TypeHint(_) => "E-013",
+                TrailingTokensErrContext::Method => "E-018",
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
             ParserError::MissingTypeHintOperand { .. } => "E-014",
@@ -62,8 +64,8 @@ impl ParserError {
     fn asm_msg(&self) -> String {
         match self {
             ParserError::EmptyFile(_) => "file contains no class definition".to_string(),
-            ParserError::UnexpectedTokenInClassBody(token) => {
-                format!("unexpected token in class body: '{token:?}'")
+            ParserError::UnexpectedBodyToken(ctx, token) => {
+                format!("unexpected token in {}: '{token:?}'", ctx)
             }
             ParserError::UnexpectedTokenBeforeClassDefinition(unexpected) => {
                 format!(
@@ -169,7 +171,7 @@ impl ParserError {
             ParserError::EmptyFile(_) => {
                 vec![DiagnosticLabel::at(0..0, "expected a '.class' directive")]
             }
-            ParserError::UnexpectedTokenInClassBody(token) => {
+            ParserError::UnexpectedBodyToken(_, token) => {
                 vec![DiagnosticLabel::at(
                     token.span().as_range(),
                     "unexpected token",
@@ -375,9 +377,10 @@ impl ParserError {
             ParserError::EmptyFile(_) => {
                 Some("Make sure the file contains a valid class definition.".to_string())
             }
-            ParserError::UnexpectedTokenInClassBody(_) => Some(
-                "Check the syntax of the class body and ensure all tokens are valid.".to_string(),
-            ),
+            ParserError::UnexpectedBodyToken(ctx, _) => Some(format!(
+                "Check the syntax of the {} and ensure all tokens are valid.",
+                ctx
+            )),
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => {
                 Some("Make sure the file starts with a '.class' directive.".to_string())
             }
@@ -523,7 +526,7 @@ impl ParserError {
             }
             ParserError::MultipleSuperDefinitions(defs) => defs[1].0,
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
-            ParserError::UnexpectedTokenInClassBody(token)
+            ParserError::UnexpectedBodyToken(_, token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
             ParserError::MissingTypeHintOperand { type_hint, .. }
             | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. }

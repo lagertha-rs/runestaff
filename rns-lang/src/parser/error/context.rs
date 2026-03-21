@@ -26,6 +26,30 @@ impl AccessFlagContext {
     }
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub(in crate::parser) enum UnexpectedTokenContext {
+    ClassBody,
+    MethodBody,
+}
+
+impl Display for UnexpectedTokenContext {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UnexpectedTokenContext::ClassBody => write!(f, "class body"),
+            UnexpectedTokenContext::MethodBody => write!(f, "method body"),
+        }
+    }
+}
+
+impl UnexpectedTokenContext {
+    pub(in crate::parser) fn error_code(&self) -> &'static str {
+        match self {
+            UnexpectedTokenContext::ClassBody => "E-007",
+            UnexpectedTokenContext::MethodBody => "E-017",
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(in crate::parser) enum OperandErrPosContext {
     ClassName,
@@ -36,6 +60,7 @@ pub(in crate::parser) enum OperandErrPosContext {
 pub(in crate::parser) enum TrailingTokensErrContext {
     Class,
     Super,
+    Method,
     TypeHint(Spanned<TypeHintKind>),
 }
 
@@ -44,6 +69,7 @@ impl Display for TrailingTokensErrContext {
         match self {
             TrailingTokensErrContext::Class => write!(f, "class definition"),
             TrailingTokensErrContext::Super => write!(f, "super class definition"),
+            TrailingTokensErrContext::Method => write!(f, "method definition"),
             TrailingTokensErrContext::TypeHint(kind) => {
                 write!(f, "type hint '{}'", kind.value.token_name())
             }

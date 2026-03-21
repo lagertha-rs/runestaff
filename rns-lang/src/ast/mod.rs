@@ -25,3 +25,5 @@ pub struct ClassDirective {
 }
 
 pub struct MethodDirective {}
+
+pub struct CodeDirective {}
