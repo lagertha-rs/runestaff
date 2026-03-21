@@ -1,0 +1,28 @@
+---
+source: rns-asm/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class ; class name is missing
+.super java/lang/Object
+.end
+----- STDERR -----
+[E-009] Error: unexpected newline where a class name is required
+   ╭─[ test_data/integration/error/parser/class_header/missing_class_name.rns:1:1 ]
+   │
+ 1 │ .class ; class name is missing
+   │ ───┬──│ 
+   │    ╰──── the '.class' directive requires a class name as operand
+   │       │ 
+   │       ╰─ but nothing was provided
+   │ 
+   │ Help: Provide a class name after the '.class' directive, e.g.:
+   │       .class MyClassName
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/e-009
+───╯
+----- HASH -----
+not generated

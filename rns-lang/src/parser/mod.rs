@@ -902,14 +902,17 @@ impl RnsParser {
         let super_directives = std::mem::take(&mut self.super_directives);
         match super_directives.len() {
             0 => {
-                self.diagnostic.push(
-                    ParserWarning::MissingSuperClass {
-                        class_name: self.class_name.clone(),
-                        class_dir_pos: self.class_dir_span,
-                        default: JAVA_LANG_OBJECT,
-                    }
-                    .into(),
-                );
+                // If no class name is defined, doesn't make sense to report missing superclass
+                if self.class_name.is_some() {
+                    self.diagnostic.push(
+                        ParserWarning::MissingSuperClass {
+                            class_name: self.class_name.clone(),
+                            class_dir_pos: self.class_dir_span,
+                            default: JAVA_LANG_OBJECT,
+                        }
+                        .into(),
+                    );
+                }
                 Some(SuperDirective {
                     dir_span: None,
                     name: TypeHint::Class(

@@ -1,1 +1,2 @@
 .class   @methodref MyClass
+.unknown ; <- still reported

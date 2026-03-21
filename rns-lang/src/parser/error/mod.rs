@@ -187,12 +187,29 @@ impl ParserError {
                 vec![DiagnosticLabel::at(unexpected.span().as_range(), msg)]
             }
             ParserError::IdentifierOrHintExpected(span, token, ctx) => {
-                let token_type = token.token_type();
-                let msg = format!(
-                    "attempted to set {} as {}, but it can't be resolved as either an identifier or a type hint",
-                    token_type, ctx
+                let context_label = DiagnosticLabel::context(
+                    span.as_range(),
+                    format!(
+                        "the '{}' directive requires a {} as operand",
+                        ctx.directive_name(),
+                        ctx
+                    ),
                 );
-                vec![DiagnosticLabel::at(span.as_range(), msg)]
+                let error_label = if token.is_line_terminator() {
+                    DiagnosticLabel::at(
+                        span.byte_end..span.byte_end,
+                        "but nothing was provided".to_string(),
+                    )
+                } else {
+                    DiagnosticLabel::at(
+                        token.span().as_range(),
+                        format!(
+                            "{} is not a valid identifier or type hint",
+                            token.token_type()
+                        ),
+                    )
+                };
+                vec![context_label, error_label]
             }
             ParserError::TrailingTokens(last_valid_end, tokens, ctx) => {
                 let context = match ctx {
