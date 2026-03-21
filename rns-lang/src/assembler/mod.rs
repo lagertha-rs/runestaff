@@ -1,34 +1,13 @@
 use crate::assembler::jvm_warning::JvmWarning;
+use crate::ast::RnsModule;
+use crate::ast::flag::RnsClassFlag;
 use crate::diagnostic::Diagnostic;
-use crate::token::Span;
-use crate::token::flag::RnsClassFlag;
 use crate::token::type_hint::TypeHint;
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{ClassFileBuilder, ConstantPoolBuilder};
-use std::collections::BTreeMap;
 
 mod jvm_warning;
-
-pub struct RnsModule {
-    pub class_dir: ClassDirective,
-    pub super_dir: Option<SuperDirective>,
-    pub diagnostics: Vec<Diagnostic>,
-}
-
-pub struct SuperDirective {
-    pub dir_span: Option<Span>,
-    pub name: TypeHint,
-}
-
-pub struct ClassDirective {
-    pub dir_span: Span,
-    pub name: Option<TypeHint>,
-    // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
-    pub flags: BTreeMap<RnsClassFlag, Span>,
-}
-
-pub struct MethodDirective {}
 
 impl RnsModule {
     fn build_class_flags(&mut self) -> ClassFlags {

@@ -1,7 +1,7 @@
 mod context;
 mod rejection;
 
-pub(super) use context::{OperandErrPosContext, TrailingTokensErrContext};
+pub(super) use context::{AccessFlagContext, OperandErrPosContext, TrailingTokensErrContext};
 pub(super) use rejection::{FloatRejection, SignedIntRejection};
 
 use crate::ERROR_DOCS_BASE_URL;
@@ -35,7 +35,7 @@ pub(super) enum ParserError {
         type_hint: Spanned<TypeHintKind>,
         rejection: FloatRejection,
     },
-    InvalidClassFlag(Spanned<RnsFlag>),
+    InvalidAccessFlag(AccessFlagContext, Spanned<RnsFlag>),
 }
 
 impl ParserError {
@@ -55,7 +55,7 @@ impl ParserError {
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
             ParserError::MissingTypeHintOperand { .. } => "E-014",
-            ParserError::InvalidClassFlag(_) => "E-015",
+            ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
         }
     }
 
@@ -158,8 +158,8 @@ impl ParserError {
                     }
                 }
             }
-            ParserError::InvalidClassFlag(flag) => {
-                format!("invalid class access flag '{}'", flag.value.token_name())
+            ParserError::InvalidAccessFlag(ctx, flag) => {
+                format!("invalid {} access flag '{}'", ctx, flag.value.token_name())
             }
         }
     }
@@ -349,12 +349,13 @@ impl ParserError {
                     ),
                 ]
             }
-            ParserError::InvalidClassFlag(flag) => {
+            ParserError::InvalidAccessFlag(ctx, flag) => {
                 vec![DiagnosticLabel::at(
                     flag.span.as_range(),
                     format!(
-                        "'{}' is not a valid class access flag",
-                        flag.value.token_name()
+                        "'{}' is not a valid {} access flag",
+                        flag.value.token_name(),
+                        ctx
                     ),
                 )]
             }
@@ -511,9 +512,7 @@ impl ParserError {
                     type_hint.value.example()
                 ))
             }
-            ParserError::InvalidClassFlag { .. } => Some(
-                "Valid class access flags include: public, final, super, interface, abstract, enum, synthetic, annotation, module.".to_string()
-            ),
+            ParserError::InvalidAccessFlag(_, _) => None,
         }
     }
 
@@ -529,7 +528,7 @@ impl ParserError {
             ParserError::MissingTypeHintOperand { type_hint, .. }
             | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. }
             | ParserError::TypeHintExpectsFloatOperand { type_hint, .. } => type_hint.span,
-            ParserError::InvalidClassFlag(flag) => flag.span,
+            ParserError::InvalidAccessFlag(_, flag) => flag.span,
         }
     }
 

@@ -1,4 +1,5 @@
 pub mod assembler;
+pub mod ast;
 pub mod diagnostic;
 pub mod instruction;
 pub mod lexer;

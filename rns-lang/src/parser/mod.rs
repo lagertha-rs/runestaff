@@ -1,14 +1,12 @@
-use crate::assembler::{ClassDirective, RnsModule, SuperDirective};
+use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
+use crate::ast::{ClassDirective, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
 use crate::parser::error::{
-    FloatRejection, OperandErrPosContext, ParserError, SignedIntRejection, TrailingTokensErrContext,
+    AccessFlagContext, FloatRejection, OperandErrPosContext, ParserError, SignedIntRejection,
+    TrailingTokensErrContext,
 };
-use crate::parser::error_deprecated::{
-    IdentifierContextDeprecated, NonNegativeIntegerContextDeprecated, ParserErrorDeprecated,
-    TrailingTokensContextDeprecated,
-};
+use crate::parser::error_deprecated::{NonNegativeIntegerContextDeprecated, ParserErrorDeprecated};
 use crate::parser::warning::ParserWarning;
-use crate::token::flag::RnsClassFlag;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::BTreeMap;
@@ -77,22 +75,27 @@ impl RnsParser {
         tokens
     }
 
-    fn parse_class_access_flags(&mut self) -> BTreeMap<RnsClassFlag, Span> {
-        let mut flags = BTreeMap::new();
+    fn parse_access_flags<F: Ord>(
+        &mut self,
+        ctx: AccessFlagContext,
+        convert: fn(&crate::token::flag::RnsFlag) -> Option<F>,
+    ) -> BTreeMap<F, Span> {
+        let mut flags: BTreeMap<F, (crate::token::flag::RnsFlag, Vec<Span>)> = BTreeMap::new();
         loop {
             match self.peek_token() {
                 Some(token) if token.is_access_flag() => {
                     let next_token = self.next_token();
                     let next_token_span = next_token.span();
                     if let RnsToken::AccessFlag(spanned) = next_token {
-                        if let Some(class_flag) = spanned.value.as_class_flag() {
+                        if let Some(flag) = convert(&spanned.value) {
                             flags
-                                .entry(class_flag)
-                                .or_insert_with(Vec::new)
+                                .entry(flag)
+                                .or_insert_with(|| (spanned.value, Vec::new()))
+                                .1
                                 .push(next_token_span);
                         } else {
                             self.diagnostic
-                                .push(ParserError::InvalidClassFlag(spanned).into())
+                                .push(ParserError::InvalidAccessFlag(ctx, spanned).into())
                         }
                     }
                 }
@@ -101,20 +104,29 @@ impl RnsParser {
         }
         flags
             .into_iter()
-            .map(|(k, v)| {
-                let first_span = v[0];
-                if v.len() > 1 {
-                    self.diagnostic
-                        .push(ParserWarning::ClassDuplicateFlag { flag: k, spans: v }.into());
+            .map(|(k, (rns_flag, spans))| {
+                let first_span = spans[0];
+                if spans.len() > 1 {
+                    self.diagnostic.push(
+                        ParserWarning::DuplicateAccessFlag {
+                            ctx,
+                            flag: rns_flag,
+                            spans,
+                        }
+                        .into(),
+                    );
                 }
                 (k, first_span)
             })
             .collect()
     }
 
-    //TODO: add all flags, handle orders, and check for duplicates
-    fn parse_method_access_flags(&mut self) -> Result<u16, ParserErrorDeprecated> {
-        todo!()
+    fn parse_class_access_flags(&mut self) -> BTreeMap<RnsClassFlag, Span> {
+        self.parse_access_flags(AccessFlagContext::Class, |f| f.as_class_flag())
+    }
+
+    fn parse_method_access_flags(&mut self) -> BTreeMap<RnsMethodFlag, Span> {
+        self.parse_access_flags(AccessFlagContext::Method, |f| f.as_method_flag())
     }
 
     fn try_next_identifier(&mut self) -> Result<Spanned<String>, RnsToken> {
@@ -479,37 +491,6 @@ impl RnsParser {
         }
     }
 
-    fn expect_next_identifier_deprecated(
-        &mut self,
-        context: IdentifierContextDeprecated,
-        prev_token_byte_end: usize,
-        prev_token_col_end: usize,
-    ) -> Result<(String, Span), ParserErrorDeprecated> {
-        let token = self.next_token();
-        let token_span = token.span();
-        match token {
-            RnsToken::Identifier(spanned) => Ok((spanned.value, token_span)),
-            RnsToken::Eof(t) | RnsToken::Newline(t) => {
-                Err(ParserErrorDeprecated::IdentifierExpected(
-                    Span {
-                        byte_start: prev_token_byte_end,
-                        byte_end: prev_token_byte_end,
-                        line: t.line,
-                        col_start: prev_token_col_end,
-                        col_end: prev_token_col_end,
-                    },
-                    token,
-                    context,
-                ))
-            }
-            _ => Err(ParserErrorDeprecated::IdentifierExpected(
-                token.span(),
-                token,
-                context,
-            )),
-        }
-    }
-
     // Doesn't need to recover, just check for trailing tokens and report error if they exist
     fn verify_trailing_tokens(&mut self, context: TrailingTokensErrContext) {
         let end_of_previous_token = self.last_span.byte_end;
@@ -519,20 +500,6 @@ impl RnsParser {
                 ParserError::TrailingTokens(end_of_previous_token, trailing_tokens, context).into(),
             );
         }
-    }
-
-    fn expect_no_trailing_tokens_deprecated(
-        &mut self,
-        context: TrailingTokensContextDeprecated,
-    ) -> Result<(), ParserErrorDeprecated> {
-        let trailing_tokens = self.next_until_newline();
-        if !trailing_tokens.is_empty() {
-            return Err(ParserErrorDeprecated::TrailingTokens(
-                trailing_tokens,
-                context,
-            ));
-        }
-        Ok(())
     }
 
     // TODO: this is wrong.. also need to review integer token.. it is i32

@@ -1,6 +1,7 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::parser::error::AccessFlagContext;
 use crate::token::Span;
-use crate::token::flag::RnsClassFlag;
+use crate::token::flag::RnsFlag;
 use crate::token::type_hint::TypeHint;
 
 #[derive(Debug)]
@@ -10,8 +11,9 @@ pub(super) enum ParserWarning {
         class_dir_pos: Span,
         default: &'static str,
     },
-    ClassDuplicateFlag {
-        flag: RnsClassFlag,
+    DuplicateAccessFlag {
+        ctx: AccessFlagContext,
+        flag: RnsFlag,
         spans: Vec<Span>,
     },
     ReservedLikeIdentifierTodoName,
@@ -21,17 +23,18 @@ impl ParserWarning {
     fn code(&self) -> &'static str {
         match self {
             ParserWarning::MissingSuperClass { .. } => "W-001",
-            ParserWarning::ClassDuplicateFlag { .. } => "TODO",
+            ParserWarning::DuplicateAccessFlag { .. } => "TODO",
             ParserWarning::ReservedLikeIdentifierTodoName => "TODO",
         }
     }
     fn asm_msg(&self) -> String {
         match self {
             ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
-            ParserWarning::ClassDuplicateFlag { flag, .. } => {
+            ParserWarning::DuplicateAccessFlag { ctx, flag, .. } => {
                 format!(
-                    "duplicate access flag '{}' in class definition",
-                    flag.name()
+                    "duplicate access flag '{}' in {} definition",
+                    flag.name(),
+                    ctx
                 )
             }
             ParserWarning::ReservedLikeIdentifierTodoName => {
@@ -46,7 +49,7 @@ impl ParserWarning {
                 class_dir_pos: class_directive_pos,
                 ..
             } => *class_directive_pos,
-            ParserWarning::ClassDuplicateFlag { spans, .. } => {
+            ParserWarning::DuplicateAccessFlag { spans, .. } => {
                 spans.get(1).copied().unwrap_or_default()
             }
             ParserWarning::ReservedLikeIdentifierTodoName => Span::default(),
@@ -60,7 +63,7 @@ impl ParserWarning {
                  Defaulting to '{}'.",
                 default
             )),
-            ParserWarning::ClassDuplicateFlag { flag, .. } => Some(format!(
+            ParserWarning::DuplicateAccessFlag { flag, .. } => Some(format!(
                 "The `{}` flag was already specified. You only need to declare it once.",
                 flag.name()
             )),
@@ -80,7 +83,7 @@ impl ParserWarning {
                 class_directive_pos.as_range(),
                 format!("class '{:?}' is missing a '.super' directive", class_name),
             )],
-            ParserWarning::ClassDuplicateFlag { flag, spans } => {
+            ParserWarning::DuplicateAccessFlag { flag: _, spans, .. } => {
                 let mut labels = Vec::with_capacity(spans.len());
                 labels.push(DiagnosticLabel::context(
                     spans[0].as_range(),

@@ -2,6 +2,30 @@ use crate::token::Spanned;
 use crate::token::type_hint::TypeHintKind;
 use std::fmt::{Display, Formatter};
 
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub(in crate::parser) enum AccessFlagContext {
+    Class,
+    Method,
+}
+
+impl Display for AccessFlagContext {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AccessFlagContext::Class => write!(f, "class"),
+            AccessFlagContext::Method => write!(f, "method"),
+        }
+    }
+}
+
+impl AccessFlagContext {
+    pub(in crate::parser) fn error_code(&self) -> &'static str {
+        match self {
+            AccessFlagContext::Class => "E-015",
+            AccessFlagContext::Method => "E-016",
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(in crate::parser) enum OperandErrPosContext {
     ClassName,

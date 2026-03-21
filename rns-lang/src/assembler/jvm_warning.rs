@@ -1,6 +1,6 @@
 use crate::ERROR_DOCS_BASE_URL;
+use crate::ast::flag::RnsClassFlag;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::flag::RnsClassFlag;
 use crate::token::{RnsFlag, Span};
 
 #[derive(Debug)]

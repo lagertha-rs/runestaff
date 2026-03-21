@@ -1,3 +1,4 @@
+use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::token::{
     FLAG_ABSTRACT, FLAG_ANNOTATION, FLAG_BRIDGE, FLAG_ENUM, FLAG_FINAL, FLAG_INTERFACE,
     FLAG_MODULE, FLAG_NATIVE, FLAG_PRIVATE, FLAG_PROTECTED, FLAG_PUBLIC, FLAG_STATIC, FLAG_STRICT,
@@ -108,68 +109,24 @@ impl RnsFlag {
             _ => None,
         }
     }
-}
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
-pub enum RnsClassFlag {
-    Public,
-    Static,
-    Final,
-    Super,
-    Interface,
-    Abstract,
-    Enum,
-    Synthetic,
-    Annotation,
-    Module,
-}
-
-impl RnsClassFlag {
-    pub fn jvm_spec_name(&self) -> &'static str {
+    pub fn as_method_flag(&self) -> Option<RnsMethodFlag> {
         match self {
-            RnsClassFlag::Interface => JVMS_INTERFACE_FLAG_NAME,
-            RnsClassFlag::Abstract => JVMS_ABSTRACT_FLAG_NAME,
-            RnsClassFlag::Enum => JVMS_ENUM_FLAG_NAME,
-            RnsClassFlag::Module => JVMS_MODULE_FLAG_NAME,
-            RnsClassFlag::Public => JVMS_PUBLIC_FLAG_NAME,
-            RnsClassFlag::Static => JVMS_STATIC_FLAG_NAME,
-            RnsClassFlag::Final => JVMS_FINAL_FLAG_NAME,
-            RnsClassFlag::Super => JVMS_SUPER_FLAG_NAME,
-            RnsClassFlag::Synthetic => JVMS_SYNTHETIC_FLAG_NAME,
-            RnsClassFlag::Annotation => JVMS_ANNOTATION_FLAG_NAME,
+            RnsFlag::Public => Some(RnsMethodFlag::Public),
+            RnsFlag::Private => Some(RnsMethodFlag::Private),
+            RnsFlag::Protected => Some(RnsMethodFlag::Protected),
+            RnsFlag::Static => Some(RnsMethodFlag::Static),
+            RnsFlag::Final => Some(RnsMethodFlag::Final),
+            RnsFlag::Synchronized => Some(RnsMethodFlag::Synchronized),
+            RnsFlag::Bridge => Some(RnsMethodFlag::Bridge),
+            RnsFlag::Varargs => Some(RnsMethodFlag::Varargs),
+            RnsFlag::Native => Some(RnsMethodFlag::Native),
+            RnsFlag::Abstract => Some(RnsMethodFlag::Abstract),
+            RnsFlag::Strict => Some(RnsMethodFlag::Strict),
+            RnsFlag::Synthetic => Some(RnsMethodFlag::Synthetic),
+            _ => None,
         }
     }
-
-    pub fn name(&self) -> &'static str {
-        match self {
-            RnsClassFlag::Interface => FLAG_INTERFACE,
-            RnsClassFlag::Abstract => FLAG_ABSTRACT,
-            RnsClassFlag::Enum => FLAG_ENUM,
-            RnsClassFlag::Module => FLAG_MODULE,
-            RnsClassFlag::Public => FLAG_PUBLIC,
-            RnsClassFlag::Static => FLAG_STATIC,
-            RnsClassFlag::Final => FLAG_FINAL,
-            RnsClassFlag::Super => FLAG_SUPER,
-            RnsClassFlag::Synthetic => FLAG_SYNTHETIC,
-            RnsClassFlag::Annotation => FLAG_ANNOTATION,
-        }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
-pub enum RnsMethodFlag {
-    Public,
-    Private,
-    Protected,
-    Static,
-    Final,
-    Synchronized,
-    Bridge,
-    Varargs,
-    Native,
-    Abstract,
-    Strict,
-    Synthetic,
 }
 
 impl Display for RnsFlag {
@@ -184,11 +141,18 @@ impl TryFrom<&str> for RnsFlag {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             FLAG_PUBLIC => Ok(RnsFlag::Public),
+            FLAG_PRIVATE => Ok(RnsFlag::Private),
+            FLAG_PROTECTED => Ok(RnsFlag::Protected),
             FLAG_STATIC => Ok(RnsFlag::Static),
             FLAG_FINAL => Ok(RnsFlag::Final),
+            FLAG_SYNCHRONIZED => Ok(RnsFlag::Synchronized),
+            FLAG_BRIDGE => Ok(RnsFlag::Bridge),
+            FLAG_VARARGS => Ok(RnsFlag::Varargs),
+            FLAG_NATIVE => Ok(RnsFlag::Native),
             FLAG_SUPER => Ok(RnsFlag::Super),
             FLAG_INTERFACE => Ok(RnsFlag::Interface),
             FLAG_ABSTRACT => Ok(RnsFlag::Abstract),
+            FLAG_STRICT => Ok(RnsFlag::Strict),
             FLAG_ENUM => Ok(RnsFlag::Enum),
             FLAG_SYNTHETIC => Ok(RnsFlag::Synthetic),
             FLAG_ANNOTATION => Ok(RnsFlag::Annotation),
