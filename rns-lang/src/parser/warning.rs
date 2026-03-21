@@ -1,6 +1,7 @@
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::token::Span;
+use crate::token::flag::RnsClassFlag;
 use crate::token::type_hint::TypeHint;
-use crate::token::{RnsFlag, Span};
 
 #[derive(Debug)]
 pub(super) enum ParserWarning {
@@ -10,7 +11,7 @@ pub(super) enum ParserWarning {
         default: &'static str,
     },
     ClassDuplicateFlag {
-        flag: RnsFlag,
+        flag: RnsClassFlag,
         spans: Vec<Span>,
     },
     ReservedLikeIdentifierTodoName,

@@ -1,7 +1,8 @@
 use crate::assembler::jvm_warning::JvmWarning;
 use crate::diagnostic::Diagnostic;
+use crate::token::Span;
+use crate::token::flag::RnsClassFlag;
 use crate::token::type_hint::TypeHint;
-use crate::token::{RnsFlag, Span};
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{ClassFileBuilder, ConstantPoolBuilder};
@@ -24,20 +25,22 @@ pub struct ClassDirective {
     pub dir_span: Span,
     pub name: Option<TypeHint>,
     // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
-    pub flags: BTreeMap<RnsFlag, Span>,
+    pub flags: BTreeMap<RnsClassFlag, Span>,
 }
+
+pub struct MethodDirective {}
 
 impl RnsModule {
     fn build_class_flags(&mut self) -> ClassFlags {
         let mut res = ClassFlags::new(0);
         for (flag, span) in &self.class_dir.flags {
             match flag {
-                RnsFlag::Public => res.set_public(),
-                RnsFlag::Final => res.set_final(),
-                RnsFlag::Super => res.set_super(),
-                RnsFlag::Interface => {
+                RnsClassFlag::Public => res.set_public(),
+                RnsClassFlag::Final => res.set_final(),
+                RnsClassFlag::Super => res.set_super(),
+                RnsClassFlag::Interface => {
                     // TODO: put in method?
-                    if !self.class_dir.flags.contains_key(&RnsFlag::Abstract) {
+                    if !self.class_dir.flags.contains_key(&RnsClassFlag::Abstract) {
                         self.diagnostics.push(
                             JvmWarning::InterfaceFlagWithMissingAbstract {
                                 interface_span: *span,
@@ -53,7 +56,10 @@ impl RnsModule {
                             // TODO: add a method, something like "is_exclusive_with_interface" to RnsFlag
                             matches!(
                                 f,
-                                RnsFlag::Final | RnsFlag::Enum | RnsFlag::Module | RnsFlag::Super
+                                RnsClassFlag::Final
+                                    | RnsClassFlag::Enum
+                                    | RnsClassFlag::Module
+                                    | RnsClassFlag::Super
                             )
                         })
                         .map(|(f, s)| (*f, *s))
@@ -69,11 +75,11 @@ impl RnsModule {
                     }
                     res.set_interface()
                 }
-                RnsFlag::Abstract => res.set_abstract(),
-                RnsFlag::Enum => res.set_enum(),
-                RnsFlag::Synthetic => res.set_synthetic(),
-                RnsFlag::Annotation => res.set_annotation(),
-                RnsFlag::Module => res.set_module(),
+                RnsClassFlag::Abstract => res.set_abstract(),
+                RnsClassFlag::Enum => res.set_enum(),
+                RnsClassFlag::Synthetic => res.set_synthetic(),
+                RnsClassFlag::Annotation => res.set_annotation(),
+                RnsClassFlag::Module => res.set_module(),
                 _ => unimplemented!(),
             }
         }

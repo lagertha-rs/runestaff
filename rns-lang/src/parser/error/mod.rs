@@ -6,8 +6,8 @@ pub(super) use rejection::{FloatRejection, SignedIntRejection};
 
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
-use crate::token::Spanned;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
+use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
 use std::vec;
 
@@ -35,6 +35,7 @@ pub(super) enum ParserError {
         type_hint: Spanned<TypeHintKind>,
         rejection: FloatRejection,
     },
+    InvalidClassFlag(Spanned<RnsFlag>),
 }
 
 impl ParserError {
@@ -54,6 +55,7 @@ impl ParserError {
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
             ParserError::MissingTypeHintOperand { .. } => "E-014",
+            ParserError::InvalidClassFlag(_) => "E-015",
         }
     }
 
@@ -155,6 +157,9 @@ impl ParserError {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
                 }
+            }
+            ParserError::InvalidClassFlag(flag) => {
+                format!("invalid class access flag '{}'", flag.value.token_name())
             }
         }
     }
@@ -344,6 +349,15 @@ impl ParserError {
                     ),
                 ]
             }
+            ParserError::InvalidClassFlag(flag) => {
+                vec![DiagnosticLabel::at(
+                    flag.span.as_range(),
+                    format!(
+                        "'{}' is not a valid class access flag",
+                        flag.value.token_name()
+                    ),
+                )]
+            }
         }
     }
 
@@ -497,6 +511,9 @@ impl ParserError {
                     type_hint.value.example()
                 ))
             }
+            ParserError::InvalidClassFlag { .. } => Some(
+                "Valid class access flags include: public, final, super, interface, abstract, enum, synthetic, annotation, module.".to_string()
+            ),
         }
     }
 
@@ -512,6 +529,7 @@ impl ParserError {
             ParserError::MissingTypeHintOperand { type_hint, .. }
             | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. }
             | ParserError::TypeHintExpectsFloatOperand { type_hint, .. } => type_hint.span,
+            ParserError::InvalidClassFlag(flag) => flag.span,
         }
     }
 

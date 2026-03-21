@@ -33,6 +33,13 @@ pub const FLAG_ENUM: &str = "enum";
 pub const FLAG_SYNTHETIC: &str = "synthetic";
 pub const FLAG_ANNOTATION: &str = "annotation";
 pub const FLAG_MODULE: &str = "module";
+pub const FLAG_PRIVATE: &str = "private";
+pub const FLAG_PROTECTED: &str = "protected";
+pub const FLAG_SYNCHRONIZED: &str = "synchronized";
+pub const FLAG_BRIDGE: &str = "bridge";
+pub const FLAG_VARARGS: &str = "varargs";
+pub const FLAG_NATIVE: &str = "native";
+pub const FLAG_STRICT: &str = "strict";
 
 pub const TOKEN_TYPE_DIRECTIVE: &str = "directive";
 pub const TOKEN_TYPE_ACCESS_FLAG: &str = "access flag";

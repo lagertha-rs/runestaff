@@ -8,8 +8,9 @@ use crate::parser::error_deprecated::{
     TrailingTokensContextDeprecated,
 };
 use crate::parser::warning::ParserWarning;
+use crate::token::flag::RnsClassFlag;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
-use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span, Spanned};
+use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::BTreeMap;
 use std::iter::Peekable;
 use std::str::FromStr;
@@ -33,7 +34,7 @@ struct RnsParser {
 
     class_dir_span: Span,
     class_name: Option<TypeHint>,
-    access_flags: BTreeMap<RnsFlag, Span>,
+    access_flags: BTreeMap<RnsClassFlag, Span>,
 
     super_directives: Vec<(Span, TypeHint)>,
     super_err_present: bool,
@@ -76,7 +77,7 @@ impl RnsParser {
         tokens
     }
 
-    fn parse_class_access_flags(&mut self) -> BTreeMap<RnsFlag, Span> {
+    fn parse_class_access_flags(&mut self) -> BTreeMap<RnsClassFlag, Span> {
         let mut flags = BTreeMap::new();
         loop {
             match self.peek_token() {
@@ -84,10 +85,15 @@ impl RnsParser {
                     let next_token = self.next_token();
                     let next_token_span = next_token.span();
                     if let RnsToken::AccessFlag(spanned) = next_token {
-                        flags
-                            .entry(spanned.value)
-                            .or_insert_with(Vec::new)
-                            .push(next_token_span);
+                        if let Some(class_flag) = spanned.value.as_class_flag() {
+                            flags
+                                .entry(class_flag)
+                                .or_insert_with(Vec::new)
+                                .push(next_token_span);
+                        } else {
+                            self.diagnostic
+                                .push(ParserError::InvalidClassFlag(spanned).into())
+                        }
                     }
                 }
                 _ => break,
@@ -702,8 +708,8 @@ impl RnsParser {
         })
     }
 
-    fn parse_method(&mut self) -> Result<MethodInfo, ParserError> {
-        let dot_method = self.next_token()?; // consume .method token
+    fn parse_method(&mut self) -> Result<MethodDirective, Diagnostic> {
+        let dot_method = self.next_token(); // consume .method token
         let access_flags = self.parse_method_access_flags()?;
         let (method_name, _) =
             self.expect_next_identifier(IdentifierContext::MethodName, dot_method.span.end)?;
@@ -739,60 +745,6 @@ impl RnsParser {
             descriptor_index: self.cp_builder.add_utf8(&method_descriptor),
             attributes: vec![MethodAttribute::Code(code_attr)],
         })
-    }
-
-    fn parse_class(&mut self) -> Result<(), ParserError> {
-        self.skip_newlines()?;
-        let class_token = self.next_token()?;
-        if matches!(class_token.kind, JasmTokenKind::Eof) {
-            return Err(ParserError::EmptyFile(class_token.span));
-        }
-        if !matches!(class_token.kind, JasmTokenKind::DotClass) {
-            return Err(ParserError::ClassDirectiveExpected(
-                class_token.span,
-                class_token.kind,
-            ));
-        }
-        self.class_directive_pos = class_token.span;
-        self.parse_class_access_flags()?;
-
-        let (class_name, _) =
-            self.expect_next_identifier(IdentifierContext::ClassName, self.last_span.end)?;
-        self.name = class_name;
-
-        // TODO: test EOF right after class name and check for correct span in error
-        self.expect_no_trailing_tokens(TrailingTokensContext::Class)?;
-
-        while let Some(token) = self.tokens.peek() {
-            match token.kind {
-                JasmTokenKind::Newline => {
-                    self.next_token()?;
-                }
-                JasmTokenKind::DotMethod => {
-                    let method = self.parse_method()?;
-                    self.methods.push(method);
-                }
-                JasmTokenKind::DotSuper => self.parse_super_directive()?,
-                JasmTokenKind::DotEnd => {
-                    self.next_token()?; // consume .end
-                    if let Some(token) = self.tokens.peek() {
-                        if let JasmTokenKind::Identifier(ref s) = token.kind {
-                            if s == "class" {
-                                self.next_token()?; // consume "class"
-                                break; // .end class - finish parsing
-                            }
-                        }
-                    }
-                }
-                JasmTokenKind::Eof => break,
-                _ => {
-                    eprintln!("DEBUG: Unexpected token in class body: {:?}", token.kind);
-                    todo!("Unexpected token in class body")
-                }
-            }
-        }
-
-        Ok(())
     }
      */
 
