@@ -5,12 +5,12 @@ expression: formatted
 ----- SOURCE -----
 .method
 .code
-.end
+.code_end
 ----- TOKENS -----
-KIND       | SPAN    | LSP     | TEXT
-----       | ----    | ---     | ----
-DotMethod  | 0..7    | 0:0..7  | .method
-Newline    | 7..8    | 0:7..8  | \n
-DotCode    | 8..13   | 1:0..5  | .code
-Newline    | 13..14  | 1:5..6  | \n
-DotEnd     | 14..18  | 2:0..4  | .end
+KIND        | SPAN    | LSP     | TEXT
+----        | ----    | ---     | ----
+DotMethod   | 0..7    | 0:0..7  | .method
+Newline     | 7..8    | 0:7..8  | \n
+DotCode     | 8..13   | 1:0..5  | .code
+Newline     | 13..14  | 1:5..6  | \n
+DotCodeEnd  | 14..23  | 2:0..9  | .code_end

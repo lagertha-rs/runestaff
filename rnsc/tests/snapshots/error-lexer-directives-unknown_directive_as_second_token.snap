@@ -6,7 +6,7 @@ expression: "&snapshot_content"
 not generated
 ----- INPUT -----
 .class .unknown_directive HelloWorld
-.end
+.class_end
 ----- STDERR -----
 [E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/unknown_directive_as_second_token.rns:1:8 ]

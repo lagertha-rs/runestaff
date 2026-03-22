@@ -6,7 +6,7 @@
      aload_0
      invokespecial java/lang/Object <init> ()V
      return
-   .end code
-.end method
+   .code_end
+.method_end
 
 .super java/lang/Object

@@ -11,7 +11,7 @@ expression: "&snapshot_content"
 .class interface final super enum module EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end
 ----- STDERR -----
 [JVMS-001] Warning: interface must also be declared as 'abstract'
    ╭─[ test_data/integration/jvms/001-interface-flag/with_all_exclusive_and_no_abstract.rns:1:8 ]

@@ -6,8 +6,8 @@
      aload_0
      invokespecial java/lang/Object <init> ()V
      return
-   .end code
-.end method
+   .code_end
+.method_end
 
 
 .method public static main ([Ljava/lang/String;)V
@@ -18,5 +18,5 @@
      invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
 
      return
-   .code end
-.end method
+   .code_end
+.method_end

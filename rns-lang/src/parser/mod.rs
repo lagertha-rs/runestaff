@@ -420,8 +420,8 @@ impl RnsParser {
         }
     }
 
-    /*
     fn parse_instruction(&mut self, code: &mut Vec<u8>) -> Result<(), ParserError> {
+        /*
         let (instruction_name, _) =
             self.expect_next_identifier(IdentifierContext::InstructionName, self.last_span.end)?;
         let instruction_pos = self.last_span;
@@ -491,14 +491,14 @@ impl RnsParser {
             }
         }
         Ok(())
+         */
+        todo!()
     }
-     */
 
     /* TODO: doesn't handle errors. In the closest future I want to calculate stack and locals and make it optional.
        TODO: When it will be explicitly specified but don't match my calculations, it should warn.
     */
     fn parse_code_header(&mut self) -> (u16, u16) {
-        /*
         let mut stack = None;
         let mut locals = None;
 
@@ -506,73 +506,38 @@ impl RnsParser {
             let identifier_token = self.next_token();
             match identifier_token {
                 RnsToken::Identifier(ref name) if name.value == "stack" => {
-                    stack = Some(
-                        self.expect_next_non_negative_integer(
-                            NonNegativeIntegerContext::CodeStack,
-                            identifier_token.span.end,
-                        )
-                        .unwrap(),
-                    );
+                    stack = Some(self.try_next_numeric().unwrap().value);
                 }
                 RnsToken::Identifier(ref name) if name.value == "locals" => {
-                    locals = Some(
-                        self.expect_next_non_negative_integer(
-                            NonNegativeIntegerContext::CodeLocals,
-                            identifier_token.span.end,
-                        )
-                        .unwrap(),
-                    );
+                    locals = Some(self.try_next_numeric().unwrap().value);
                 }
-                RnsToken::Identifier(_) => panic!("Unexpected code directive argument"), // TODO: proper error handling
-                _ => unreachable!(),
+                other => panic!("Unexpected code directive argument {other:?}"),
             }
         }
 
-        (stack.unwrap() as u16, locals.unwrap() as u16) // TODO: proper error handling and u16 conversion check
-         */
-        todo!()
+        if !matches!(self.peek_token(), Some(RnsToken::Newline(_))) {
+            panic!("Unexpected tokens after code directive header");
+        }
+
+        (stack.unwrap(), locals.unwrap())
     }
 
     fn parse_code_directive(&mut self) -> Result<CodeDirective, ParserError> {
-        // TODO: Do I need "already defined" checks for stack and locals?
         /*
-        let mut stack = None;
-        let mut locals = None;
         self.next_token(); // consume .code token
-        let mut code = Vec::with_capacity(16); // TODO: find a better initial capacity
 
-        while let Some(JasmTokenKind::Identifier(_)) = self.peek_token_kind() {
-            let identifier_token = self.next_token()?;
-            match identifier_token.kind {
-                JasmTokenKind::Identifier(ref name) if name == "stack" => {
-                    stack = Some(self.expect_next_non_negative_integer(
-                        NonNegativeIntegerContext::CodeStack,
-                        identifier_token.span.end,
-                    )?);
-                }
-                JasmTokenKind::Identifier(ref name) if name == "locals" => {
-                    locals = Some(self.expect_next_non_negative_integer(
-                        NonNegativeIntegerContext::CodeLocals,
-                        identifier_token.span.end,
-                    )?);
-                }
-                JasmTokenKind::Identifier(_) => Err(ParserError::UnexpectedCodeDirectiveArg(
-                    identifier_token.span,
-                    identifier_token.kind,
-                ))?,
-                _ => unreachable!(),
-            }
-        }
-
-        self.expect_no_trailing_tokens(TrailingTokensContext::Code)?;
-        self.skip_newlines()?;
+        let (stack, locals) = self.parse_code_header();
+        self.skip_newlines();
 
         while let Some(token) = self.tokens.peek() {
-            if matches!(token.kind, JasmTokenKind::DotEnd | JasmTokenKind::Eof) {
+            match token {
+                RnsToken::Eof(_) |
+            }
+            if matches!(token, RnsToken::DotEnd(_) | RnsToken::Eof(_)) {
                 break;
             }
+            self.skip_newlines();
             self.parse_instruction(&mut code)?;
-            self.skip_newlines()?
         }
 
         // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
@@ -600,12 +565,13 @@ impl RnsParser {
             exception_table: vec![],
             attributes: vec![],
         })
-
          */
+
         todo!()
     }
 
     fn parse_method(&mut self) -> Result<MethodDirective, Diagnostic> {
+        /*
         let dot_method = self.next_token(); // consume .method token
         let access_flags = self.parse_method_access_flags();
         let method_name = self.try_next_identifier().map_err(|token| todo!()).ok();
@@ -647,6 +613,7 @@ impl RnsParser {
                 }
             }
         }
+         */
 
         todo!()
     }
@@ -715,17 +682,9 @@ impl RnsParser {
                     self.method_dirs.push(method_dir);
                 }
                 RnsToken::DotSuper(_) => self.parse_super_directive(),
-                RnsToken::DotEnd(_) => {
-                    self.next_token(); // consume .end
-                    if let Some(token) = self.tokens.peek() {
-                        if let RnsToken::Identifier(s) = token {
-                            // TODO: handle error cases when not class
-                            if s.value == "class" {
-                                self.next_token(); // consume "class"
-                                break; // .end class - finish parsing
-                            }
-                        }
-                    }
+                RnsToken::DotClassEnd(_) => {
+                    self.next_token(); // consume .class_end
+                    break;
                 }
                 RnsToken::Eof(_) => break,
                 _ => {

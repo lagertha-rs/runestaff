@@ -11,8 +11,8 @@ expression: formatted
      aload_0
      invokespecial java/lang/Object <init> ()V
      return
-   .end code
-.end method
+   .code_end
+.method_end
 
 
 .method public static main ([Ljava/lang/String;)V
@@ -23,8 +23,8 @@ expression: formatted
      invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
 
      return
-   .code end
-.end method
+   .code_end
+.method_end
 ----- TOKENS -----
 KIND                                  | SPAN      | LSP        | TEXT
 ----                                  | ----      | ---        | ----
@@ -56,11 +56,9 @@ Identifier("()V")                     | 160..163  | 6:43..46   | ()V
 Newline                               | 163..164  | 6:46..47   | \n
 Identifier("return")                  | 169..175  | 7:5..11    | return
 Newline                               | 175..176  | 7:11..12   | \n
-DotEnd                                | 179..183  | 8:3..7     | .end
-Identifier("code")                    | 184..188  | 8:8..12    | code
+DotCodeEnd                            | 179..188  | 8:3..12    | .code_end
 Newline                               | 188..189  | 8:12..13   | \n
-DotEnd                                | 189..193  | 9:0..4     | .end
-Identifier("method")                  | 194..200  | 9:5..11    | method
+DotMethodEnd                          | 189..200  | 9:0..11    | .method_end
 Newline                               | 200..201  | 9:11..12   | \n
 Newline                               | 201..202  | 10:0..1    | \n
 Newline                               | 202..203  | 11:0..1    | \n
@@ -93,8 +91,6 @@ Newline                               | 432..433  | 17:68..69  | \n
 Newline                               | 433..434  | 18:0..1    | \n
 Identifier("return")                  | 439..445  | 19:5..11   | return
 Newline                               | 445..446  | 19:11..12  | \n
-DotCode                               | 449..454  | 20:3..8    | .code
-Identifier("end")                     | 455..458  | 20:9..12   | end
+DotCodeEnd                            | 449..458  | 20:3..12   | .code_end
 Newline                               | 458..459  | 20:12..13  | \n
-DotEnd                                | 459..463  | 21:0..4    | .end
-Identifier("method")                  | 464..470  | 21:5..11   | method
+DotMethodEnd                          | 459..470  | 21:0..11   | .method_end

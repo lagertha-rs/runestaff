@@ -8,7 +8,7 @@ not generated
 .class public Test
 "String that breaks
 across lines"
-.end
+.class_end
 ----- STDERR -----
 [E-001] Error: unterminated quoted identifier
    ╭─[ test_data/integration/error/lexer/quoted_identifiers/unterminated_string_with_newline.rns:2:1 ]

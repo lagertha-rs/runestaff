@@ -27,12 +27,14 @@ fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     prev[s2_len]
 }
 
-const DIRECTIVES: [&str; 6] = [
+const DIRECTIVES: [&str; 8] = [
     ".class",
+    ".class_end",
     ".super",
     ".method",
-    ".end",
+    ".method_end",
     ".code",
+    ".code_end",
     ".annotation",
 ];
 

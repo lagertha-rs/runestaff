@@ -11,7 +11,7 @@ expression: "&snapshot_content"
 .class public public final public final EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end
 ----- STDERR -----
 [TODO] Warning: duplicate access flag 'public' in class definition
    ╭─[ test_data/integration/rns_warn/class_directive/double_multiple_access_flags.rns:1:15 ]

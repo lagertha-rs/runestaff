@@ -7,7 +7,7 @@ not generated
 ----- INPUT -----
 .method
     .;comment after semicolon
-.end
+.method_end
 ----- STDERR -----
 [E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_semicolon.rns:2:5 ]

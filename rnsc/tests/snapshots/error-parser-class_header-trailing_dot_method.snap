@@ -8,7 +8,7 @@ not generated
 ; .method isn't expected there. but as it is a directive, error should suggest to put it on a new line.
 .class Class .method kababoom
 .super java/lang/Object
-.end
+.class_end
 ----- STDERR -----
 [E-010] Error: unexpected trailing tokens after class definition
    ╭─[ test_data/integration/error/parser/class_header/trailing_dot_method.rns:2:14 ]

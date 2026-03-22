@@ -9,7 +9,7 @@ expression: formatted
 .code
 @utf8 hello
 @int 42
-.end
+.code_end
 ----- TOKENS -----
 KIND                            | SPAN      | LSP       | TEXT
 ----                            | ----      | ---       | ----
@@ -33,5 +33,5 @@ Newline                         | 87..88    | 4:11..12  | \n
 TypeHint(@int)                  | 88..92    | 5:0..4    | @int
 Identifier("42")                | 93..95    | 5:5..7    | 42
 Newline                         | 95..96    | 5:7..8    | \n
-DotEnd                          | 96..100   | 6:0..4    | .end
-Newline                         | 100..101  | 6:4..5    | \n
+DotCodeEnd                      | 96..105   | 6:0..9    | .code_end
+Newline                         | 105..106  | 6:9..10   | \n

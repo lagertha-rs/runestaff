@@ -6,7 +6,7 @@ expression: "&snapshot_content"
 not generated
 ----- INPUT -----
 .
-.end
+.class_end
 ----- STDERR -----
 [E-008] Error: unexpected identifier before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/dot_newline.rns:1:1 ]

@@ -1,4 +1,4 @@
 .class public public final public EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end

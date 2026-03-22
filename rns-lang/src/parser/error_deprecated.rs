@@ -174,7 +174,9 @@ impl ParserErrorDeprecated {
                             token.token_name()
                         )
                     }
-                    RnsToken::DotEnd(_) => {
+                    RnsToken::DotClassEnd(_)
+                    | RnsToken::DotMethodEnd(_)
+                    | RnsToken::DotCodeEnd(_) => {
                         format!("'{}' has no matching start directive", token.token_name())
                     }
                     _ => format!(
@@ -269,8 +271,8 @@ impl ParserErrorDeprecated {
                     "The '.code' directive is only valid inside a method definition. Define a method first using '.method [access_flags] <name> <descriptor>'."
                         .to_string(),
                 ),
-                RnsToken::DotEnd(_) => Some(
-                    "The '.end' directive must match a previous '.method', '.code', or '.class' directive.".to_string(),
+                RnsToken::DotClassEnd(_) | RnsToken::DotMethodEnd(_) | RnsToken::DotCodeEnd(_) => Some(
+                    "End directives must match a previous '.class', '.method', or '.code' directive.".to_string(),
                 ),
                 RnsToken::Identifier(spanned) => Some(
                     format!("Found identifier '{}' before any class was defined. Did you forget to start the class? Try: '.class {}'", spanned.value, spanned.value),
@@ -300,8 +302,8 @@ impl ParserErrorDeprecated {
                         RnsToken::DotCode(_) => {
                             Some("The '.code' directive must be inside a method definition, not directly after the class name.".to_string())
                         }
-                        RnsToken::DotEnd(_) => {
-                            Some("The '.end' directive must match a previous '.method', '.code', or '.class' directive. It cannot appear directly after the class name.".to_string())
+                        RnsToken::DotClassEnd(_) | RnsToken::DotMethodEnd(_) | RnsToken::DotCodeEnd(_) => {
+                            Some("End directives must match a previous '.class', '.method', or '.code' directive. They cannot appear directly after the class name.".to_string())
                         }
                         RnsToken::Identifier(_) => {
                             Some("The class header should end by the class name. Use directives like '.method' or '.field' on the new line for other members.".to_string())
@@ -320,7 +322,7 @@ impl ParserErrorDeprecated {
                 }
             }
             ParserErrorDeprecated::IdentifierExpected(_, kind, context) => match (kind, context) {
-                (RnsToken::DotClass(_) | RnsToken::DotMethod(_) | RnsToken::DotSuper(_) | RnsToken::DotCode(_) | RnsToken::DotEnd(_), IdentifierContextDeprecated::ClassName) => {
+                (RnsToken::DotClass(_) | RnsToken::DotMethod(_) | RnsToken::DotSuper(_) | RnsToken::DotCode(_) | RnsToken::DotClassEnd(_) | RnsToken::DotMethodEnd(_) | RnsToken::DotCodeEnd(_), IdentifierContextDeprecated::ClassName) => {
                     Some("Directives are reserved keywords. If you meant to start a new directive, do so on a new line.".to_string())
                 }
                 (RnsToken::Newline(_) | RnsToken::Eof(_), IdentifierContextDeprecated::ClassName) => {

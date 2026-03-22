@@ -7,16 +7,16 @@ not generated
 ----- INPUT -----
 .method
 
-..end ; not valid
+..class_end ; not valid
 ----- STDERR -----
 [E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_dot_end.rns:3:1 ]
    │
- 3 │ ..end ; not valid
-   │ ──┬──  
-   │   ╰──── '..end' is not a recognized directive
+ 3 │ ..class_end ; not valid
+   │ ─────┬─────  
+   │      ╰─────── '..class_end' is not a recognized directive
    │ 
-   │ Help: Did you mean '.end'?
+   │ Help: Did you mean '.class_end'?
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-002

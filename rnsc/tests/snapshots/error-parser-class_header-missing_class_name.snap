@@ -7,7 +7,7 @@ not generated
 ----- INPUT -----
 .class ; class name is missing
 .super java/lang/Object
-.end
+.class_end
 ----- STDERR -----
 [E-009] Error: unexpected newline where a class name is required
    ╭─[ test_data/integration/error/parser/class_header/missing_class_name.rns:1:1 ]

@@ -1,5 +1,8 @@
 .class
 .super
 .method
-.end
+.annotation
+.class_end
+.method_end
+.code_end
 .code

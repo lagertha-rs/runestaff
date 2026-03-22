@@ -6,8 +6,8 @@
       aload_0
       invokespecial java/lang/Object <init> ()V
       return
-    .end code
-.end method
+    .code_end
+.method_end
 
 .method public static main ([Ljava/lang/String;)V
     .code stack 10 locals 10
@@ -15,6 +15,6 @@
       ldc "Hello World!"
       invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
       return
-    .end code
-.end method
-.end class
+    .code_end
+.method_end
+.class_end

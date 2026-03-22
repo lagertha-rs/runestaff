@@ -4,5 +4,5 @@
     aload_0
     goto_label:
     return
-  .end code
-.end method
+  .code_end
+.method_end

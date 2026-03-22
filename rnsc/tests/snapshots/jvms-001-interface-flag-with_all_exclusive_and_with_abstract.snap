@@ -11,7 +11,7 @@ expression: "&snapshot_content"
 .class abstract interface final super enum module EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end
 ----- STDERR -----
 [JVMS-001] Warning: interface cannot be declared with mutually exclusive flags
    ╭─[ test_data/integration/jvms/001-interface-flag/with_all_exclusive_and_with_abstract.rns:1:17 ]

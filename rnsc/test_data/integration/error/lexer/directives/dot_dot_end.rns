@@ -1,4 +1,4 @@
 .method
 
-..end ; not valid
+..class_end ; not valid
 

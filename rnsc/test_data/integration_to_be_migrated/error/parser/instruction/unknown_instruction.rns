@@ -6,5 +6,5 @@
         aload_0
         invokespeciall java/lang/Object <init> ()V
         return
-    .end
-.end
+    .code_end
+.method_end

@@ -5,16 +5,16 @@ expression: "&snapshot_content"
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
-.end method ; trailing comment
+.method_end ; trailing comment
 .class public HelloWorld
 .super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected directive before class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/dot_end.rns:1:1 ]
    │
- 1 │ .end method ; trailing comment
-   │ ──┬─  
-   │   ╰─── valid contexts for .end directive are: 'class body', 'method body', 'code body'.
+ 1 │ .method_end ; trailing comment
+   │ ─────┬─────  
+   │      ╰─────── valid context for .method_end directive is: 'method body'.
    │ 
    │ Help: Make sure the file starts with a '.class' directive.
    │ 

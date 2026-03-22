@@ -9,8 +9,8 @@ expression: formatted
     aload_0
     goto_label:
     return
-  .end code
-.end method
+  .code_end
+.method_end
 ----- TOKENS -----
 KIND                                  | SPAN      | LSP       | TEXT
 ----                                  | ----      | ---       | ----
@@ -30,8 +30,6 @@ Label("goto_label")                   | 84..95    | 4:4..15   | goto_label:
 Newline                               | 95..96    | 4:15..16  | \n
 Identifier("return")                  | 100..106  | 5:4..10   | return
 Newline                               | 106..107  | 5:10..11  | \n
-DotEnd                                | 109..113  | 6:2..6    | .end
-Identifier("code")                    | 114..118  | 6:7..11   | code
+DotCodeEnd                            | 109..118  | 6:2..11   | .code_end
 Newline                               | 118..119  | 6:11..12  | \n
-DotEnd                                | 119..123  | 7:0..4    | .end
-Identifier("method")                  | 124..130  | 7:5..11   | method
+DotMethodEnd                          | 119..130  | 7:0..11   | .method_end

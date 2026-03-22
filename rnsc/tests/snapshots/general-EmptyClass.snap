@@ -11,7 +11,7 @@ expression: "&snapshot_content"
 .class public EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end
 ----- STDERR -----
 
 ----- HASH -----

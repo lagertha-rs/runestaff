@@ -7,7 +7,7 @@ not generated
 ----- INPUT -----
 .class
 unknown_token ; <- still reported
-.end
+.class_end
 ----- STDERR -----
 [E-009] Error: unexpected newline where a class name is required
    ╭─[ test_data/integration/error/parser/class_header/only_dir_on_line_recovers.rns:1:1 ]

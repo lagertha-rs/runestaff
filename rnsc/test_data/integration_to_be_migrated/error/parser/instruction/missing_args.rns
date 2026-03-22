@@ -4,5 +4,5 @@
 .method public <init> ()V
     .code stack 1 locals 1
         invokespecial
-    .end
-.end
+    .code_end
+.method_end

@@ -8,7 +8,7 @@ not generated
 .method
     ; real comment
     .;not_comment ;this is also a comment
-.end
+.method_end
 ----- STDERR -----
 [E-002] Error: unknown directive
    ╭─[ test_data/integration/error/lexer/directives/dot_semicolon_comment.rns:3:5 ]

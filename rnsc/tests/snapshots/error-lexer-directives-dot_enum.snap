@@ -17,8 +17,6 @@ not generated
    │ ──┬──  
    │   ╰──── '.enum' is not a recognized directive
    │ 
-   │ Help: Did you mean '.end'?
-   │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-002
 ───╯
