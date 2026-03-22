@@ -4,7 +4,7 @@ mod rejection;
 pub(super) use context::{
     AccessFlagContext, OperandErrPosContext, TrailingTokensErrContext, UnexpectedTokenContext,
 };
-pub(super) use rejection::{FloatRejection, SignedIntRejection};
+pub(super) use rejection::{NumericRejection, ParseNumeric};
 
 use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
@@ -28,13 +28,9 @@ pub(super) enum ParserError {
     },
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
-    TypeHintExpectsIntegerOperand {
+    TypeHintExpectsNumericOperand {
         type_hint: Spanned<TypeHintKind>,
-        rejection: SignedIntRejection,
-    },
-    TypeHintExpectsFloatOperand {
-        type_hint: Spanned<TypeHintKind>,
-        rejection: FloatRejection,
+        rejection: NumericRejection,
     },
     InvalidAccessFlag(AccessFlagContext, Spanned<RnsFlag>),
 }
@@ -43,8 +39,7 @@ impl ParserError {
     // TODO: put all codes as consts somewhere, and make sure they are unique across the whole codebase
     fn code(&self) -> &'static str {
         match self {
-            ParserError::TypeHintExpectsIntegerOperand { .. } => "E-003",
-            ParserError::TypeHintExpectsFloatOperand { .. } => "E-003",
+            ParserError::TypeHintExpectsNumericOperand { .. } => "E-003",
             ParserError::EmptyFile(_) => "E-006",
             ParserError::UnexpectedBodyToken(ctx, _) => ctx.error_code(),
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => "E-008",
@@ -84,39 +79,39 @@ impl ParserError {
                 format!("unexpected trailing tokens after {}", ctx)
             }
             ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
-            ParserError::TypeHintExpectsIntegerOperand {
+            ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
             } => {
-                let bit_width = match type_hint.value {
-                    TypeHintKind::Long => "64-bit",
-                    _ => "32-bit",
-                };
+                let numeric_kind = type_hint.value.numeric_kind();
+                let bit_width = type_hint.value.bit_width();
                 match rejection {
-                    SignedIntRejection::NotNumeric(spanned) => {
+                    NumericRejection::NotNumeric(spanned) => {
                         format!(
-                            "'{}' requires a {} integer, but '{}' is not a number",
+                            "'{}' requires a {} {}, but '{}' is not a number",
                             type_hint.value.token_name(),
                             bit_width,
+                            numeric_kind,
                             spanned.value
                         )
                     }
-                    SignedIntRejection::FloatingPoint(spanned) => {
+                    NumericRejection::FloatingPoint(spanned) => {
                         format!(
                             "'{}' requires a whole number, but '{}' has a decimal point",
                             type_hint.value.token_name(),
                             spanned.value
                         )
                     }
-                    SignedIntRejection::Overflow(spanned) => {
+                    NumericRejection::Overflow(spanned) => {
                         format!(
-                            "'{}' requires a {} integer, but '{}' is out of range",
+                            "'{}' requires a {} {}, but '{}' is out of range",
                             type_hint.value.token_name(),
                             bit_width,
+                            numeric_kind,
                             spanned.value
                         )
                     }
-                    SignedIntRejection::Missing(_) => {
+                    NumericRejection::Missing(_) => {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
                 }
@@ -129,36 +124,6 @@ impl ParserError {
                     type_hint.value.token_name(),
                     operand
                 )
-            }
-            ParserError::TypeHintExpectsFloatOperand {
-                type_hint,
-                rejection,
-            } => {
-                let bit_width = match type_hint.value {
-                    TypeHintKind::Double => "64-bit",
-                    _ => "32-bit",
-                };
-                match rejection {
-                    FloatRejection::NotNumeric(spanned) => {
-                        format!(
-                            "'{}' requires a {} float, but '{}' is not a number",
-                            type_hint.value.token_name(),
-                            bit_width,
-                            spanned.value
-                        )
-                    }
-                    FloatRejection::Overflow(spanned) => {
-                        format!(
-                            "'{}' requires a {} float, but '{}' is out of range",
-                            type_hint.value.token_name(),
-                            bit_width,
-                            spanned.value
-                        )
-                    }
-                    FloatRejection::Missing(_) => {
-                        unreachable!("Missing case handled by MissingTypeHintOperand")
-                    }
-                }
             }
             ParserError::InvalidAccessFlag(ctx, flag) => {
                 format!("invalid {} access flag '{}'", ctx, flag.value.token_name())
@@ -271,7 +236,7 @@ impl ParserError {
                 }
                 labels
             }
-            ParserError::TypeHintExpectsIntegerOperand {
+            ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
             } => {
@@ -280,56 +245,19 @@ impl ParserError {
                     type_hint.value.context_label().to_string(),
                 );
                 let error_label = match rejection {
-                    SignedIntRejection::NotNumeric(spanned) => DiagnosticLabel::at(
+                    NumericRejection::NotNumeric(spanned) => DiagnosticLabel::at(
                         spanned.span.as_range(),
                         format!("'{}' is not a number", spanned.value),
                     ),
-                    SignedIntRejection::FloatingPoint(spanned) => DiagnosticLabel::at(
+                    NumericRejection::FloatingPoint(spanned) => DiagnosticLabel::at(
                         spanned.span.as_range(),
-                        format!("must be a whole number without a decimal point"),
+                        "must be a whole number without a decimal point".to_string(),
                     ),
-                    SignedIntRejection::Overflow(spanned) => {
-                        let range_msg = match type_hint.value {
-                            TypeHintKind::Long => {
-                                format!("64-bit integer range is {} to {}", i64::MIN, i64::MAX)
-                            }
-                            _ => {
-                                format!("32-bit integer range is {} to {}", i32::MIN, i32::MAX)
-                            }
-                        };
-                        DiagnosticLabel::at(spanned.span.as_range(), range_msg)
-                    }
-                    SignedIntRejection::Missing(_) => {
-                        unreachable!("Missing case handled by MissingTypeHintOperand")
-                    }
-                };
-                vec![context_label, error_label]
-            }
-            ParserError::TypeHintExpectsFloatOperand {
-                type_hint,
-                rejection,
-            } => {
-                let context_label = DiagnosticLabel::context(
-                    type_hint.span.as_range(),
-                    type_hint.value.context_label().to_string(),
-                );
-                let error_label = match rejection {
-                    FloatRejection::NotNumeric(spanned) => DiagnosticLabel::at(
+                    NumericRejection::Overflow(spanned) => DiagnosticLabel::at(
                         spanned.span.as_range(),
-                        format!("'{}' is not a number", spanned.value),
+                        type_hint.value.range_description(),
                     ),
-                    FloatRejection::Overflow(spanned) => {
-                        let range_msg = match type_hint.value {
-                            TypeHintKind::Double => {
-                                format!("64-bit float range is {} to {}", f64::MIN, f64::MAX)
-                            }
-                            _ => {
-                                format!("32-bit float range is {} to {}", f32::MIN, f32::MAX)
-                            }
-                        };
-                        DiagnosticLabel::at(spanned.span.as_range(), range_msg)
-                    }
-                    FloatRejection::Missing(_) => {
+                    NumericRejection::Missing(_) => {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
                 };
@@ -404,30 +332,28 @@ impl ParserError {
             ParserError::MultipleSuperDefinitions(_) => Some(
                 "A class can only have one .super directive. Remove the duplicates.".to_string(),
             ),
-            ParserError::TypeHintExpectsIntegerOperand {
+            ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
             } => {
-                let operand_name = match type_hint.value {
-                    TypeHintKind::Long => TypeHintOperandName::I64Literal,
-                    _ => TypeHintOperandName::I32Literal,
-                };
+                let operand_name = type_hint.value.operand_names()[0];
                 let syntax = format!(
                     "{} {}",
                     type_hint.value.token_name(),
                     operand_name.placeholder()
                 );
                 let example = type_hint.value.example();
+                let numeric_kind = type_hint.value.numeric_kind();
                 match rejection {
-                    SignedIntRejection::NotNumeric(spanned) => Some(format!(
-                        "'{}' is not a valid integer literal.\n\n\
+                    NumericRejection::NotNumeric(spanned) => Some(format!(
+                        "'{}' is not a valid {} literal.\n\n\
                          Syntax:\n\
                          {}\n\n\
                          For example:\n\
                          {}",
-                        spanned.value, syntax, example
+                        spanned.value, numeric_kind, syntax, example
                     )),
-                    SignedIntRejection::FloatingPoint(spanned) => {
+                    NumericRejection::FloatingPoint(spanned) => {
                         let float_hint = match type_hint.value {
                             TypeHintKind::Long => "@double",
                             _ => "@float",
@@ -438,61 +364,25 @@ impl ParserError {
                             float_hint, float_hint, spanned.value
                         ))
                     }
-                    SignedIntRejection::Overflow(spanned) => match type_hint.value {
-                        TypeHintKind::Long => Some(format!(
-                            "The value '{}' exceeds the 64-bit integer range ({} to {}).",
+                    NumericRejection::Overflow(spanned) => match type_hint.value {
+                        TypeHintKind::Long | TypeHintKind::Double => Some(format!(
+                            "The value '{}' exceeds the {}.",
                             spanned.value,
-                            i64::MIN,
-                            i64::MAX
+                            type_hint.value.range_description(),
                         )),
-                        _ => Some(format!(
+                        TypeHintKind::Integer => Some(format!(
                             "If you need a larger integer, use @long instead:\n\
                              @long {}",
                             spanned.value
                         )),
-                    },
-                    SignedIntRejection::Missing(_) => {
-                        unreachable!("Missing case handled by MissingTypeHintOperand")
-                    }
-                }
-            }
-            ParserError::TypeHintExpectsFloatOperand {
-                type_hint,
-                rejection,
-            } => {
-                let operand_name = match type_hint.value {
-                    TypeHintKind::Double => TypeHintOperandName::F64Literal,
-                    _ => TypeHintOperandName::F32Literal,
-                };
-                let syntax = format!(
-                    "{} {}",
-                    type_hint.value.token_name(),
-                    operand_name.placeholder()
-                );
-                let example = type_hint.value.example();
-                match rejection {
-                    FloatRejection::NotNumeric(spanned) => Some(format!(
-                        "'{}' is not a valid float literal.\n\n\
-                         Syntax:\n\
-                         {}\n\n\
-                         For example:\n\
-                         {}",
-                        spanned.value, syntax, example
-                    )),
-                    FloatRejection::Overflow(spanned) => match type_hint.value {
-                        TypeHintKind::Double => Some(format!(
-                            "The value '{}' exceeds the 64-bit float range ({} to {}).",
-                            spanned.value,
-                            f64::MIN,
-                            f64::MAX
-                        )),
-                        _ => Some(format!(
+                        TypeHintKind::Float => Some(format!(
                             "If you need a larger float, use @double instead:\n\
                              @double {}",
                             spanned.value
                         )),
+                        _ => unreachable!("Overflow on non-numeric type hint"),
                     },
-                    FloatRejection::Missing(_) => {
+                    NumericRejection::Missing(_) => {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
                 }
@@ -529,8 +419,7 @@ impl ParserError {
             ParserError::UnexpectedBodyToken(_, token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
             ParserError::MissingTypeHintOperand { type_hint, .. }
-            | ParserError::TypeHintExpectsIntegerOperand { type_hint, .. }
-            | ParserError::TypeHintExpectsFloatOperand { type_hint, .. } => type_hint.span,
+            | ParserError::TypeHintExpectsNumericOperand { type_hint, .. } => type_hint.span,
             ParserError::InvalidAccessFlag(_, flag) => flag.span,
         }
     }

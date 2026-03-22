@@ -1,5 +1,5 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -244,6 +244,52 @@ impl TypeHintKind {
             Self::InvokeDynamic => TYPE_HINT_AT_INVOKE_DYNAMIC,
             Self::Module => TYPE_HINT_AT_MODULE,
             Self::Package => TYPE_HINT_AT_PACKAGE,
+        }
+    }
+
+    pub fn numeric_kind(&self) -> &'static str {
+        match self {
+            Self::Integer | Self::Long => "integer",
+            Self::Float | Self::Double => "float",
+            _ => unreachable!("numeric_kind() called on non-numeric type hint"),
+        }
+    }
+
+    pub fn bit_width(&self) -> &'static str {
+        match self {
+            Self::Integer | Self::Float => "32-bit",
+            Self::Long | Self::Double => "64-bit",
+            _ => unreachable!("bit_width() called on non-numeric type hint"),
+        }
+    }
+
+    pub fn range_description(&self) -> String {
+        match self {
+            Self::Integer => format!(
+                "{} integer range is {} to {}",
+                self.bit_width(),
+                i32::MIN,
+                i32::MAX
+            ),
+            Self::Long => format!(
+                "{} integer range is {} to {}",
+                self.bit_width(),
+                i64::MIN,
+                i64::MAX
+            ),
+            Self::Float => format!(
+                "{} float range is {:.7e} to {:.7e}",
+                self.bit_width(),
+                f32::MIN,
+                f32::MAX
+            ),
+            Self::Double => format!(
+                "{} float range is {:.15e} to {:.15e}",
+                self.bit_width(),
+                f64::MIN,
+                f64::MAX
+            ),
+            _ => unreachable!("range_description() called on non-numeric type hint"),
         }
     }
 

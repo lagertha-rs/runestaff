@@ -1,6 +1,5 @@
 ---
 source: rns-asm/tests/rns_test.rs
-assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -16,7 +15,7 @@ not generated
    │        ───┬── ────────────────────┬───────────────────  
    │           ╰───────────────────────────────────────────── forces explicit float constant pool type
    │                                   │                     
-   │                                   ╰───────────────────── 32-bit float range is -340282350000000000000000000000000000000 to 340282350000000000000000000000000000000
+   │                                   ╰───────────────────── 32-bit float range is -3.4028235e38 to 3.4028235e38
    │ 
    │ Help: If you need a larger float, use @double instead:
    │       @double 9999999999999999999999999999999999999999

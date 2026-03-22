@@ -17,7 +17,7 @@ unexpected_token ; <- this error should be reported as well
    │                        │           
    │                        ╰─────────── 64-bit integer range is -9223372036854775808 to 9223372036854775807
    │ 
-   │ Help: The value '99999999999999999999' exceeds the 64-bit integer range (-9223372036854775808 to 9223372036854775807).
+   │ Help: The value '99999999999999999999' exceeds the 64-bit integer range is -9223372036854775808 to 9223372036854775807.
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/e-003
