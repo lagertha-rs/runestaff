@@ -662,3 +662,190 @@ mod lsp_msg {
         assert_ne!(diag.asm_msg, diag.lsp_msg);
     }
 }
+
+// =============================================================================
+// Label token — tokenization and properties
+// =============================================================================
+mod label_token {
+    use super::*;
+    use crate::token::RnsTokenKind;
+
+    /// Helper: tokenize and return just the non-newline tokens.
+    fn tokens_without_newlines(input: &str) -> Vec<RnsToken> {
+        let (tokens, diagnostics) = tokenize(input);
+        assert!(
+            diagnostics.is_empty(),
+            "expected no diagnostics, got: {:?}",
+            diagnostics.iter().map(|d| &d.asm_msg).collect::<Vec<_>>()
+        );
+        tokens
+            .into_iter()
+            .filter(|t| !matches!(t, RnsToken::Newline(_)))
+            .collect()
+    }
+
+    #[test]
+    fn simple_label() {
+        let tokens = tokens_without_newlines("loop_start:");
+        assert_eq!(tokens.len(), 1);
+        assert!(matches!(&tokens[0], RnsToken::Label(s) if s.value == "loop_start"));
+    }
+
+    #[test]
+    fn label_value_strips_colon() {
+        let tokens = tokens_without_newlines("my_label:");
+        let RnsToken::Label(ref spanned) = tokens[0] else {
+            panic!("expected Label token, got {:?}", tokens[0]);
+        };
+        assert_eq!(spanned.value, "my_label");
+    }
+
+    #[test]
+    fn label_span_includes_colon() {
+        let tokens = tokens_without_newlines("abc:");
+        let span = tokens[0].span();
+        assert_eq!(span.byte_start, 0);
+        assert_eq!(span.byte_end, 4); // includes the ':'
+        assert_eq!(span.col_start, 0);
+        assert_eq!(span.col_end, 4);
+    }
+
+    #[test]
+    fn label_token_kind() {
+        let tokens = tokens_without_newlines("foo:");
+        assert_eq!(tokens[0].kind(), RnsTokenKind::Label);
+    }
+
+    #[test]
+    fn label_token_type_is_label() {
+        let tokens = tokens_without_newlines("foo:");
+        assert_eq!(tokens[0].token_type(), "label");
+    }
+
+    #[test]
+    fn label_matches_kind() {
+        let tokens = tokens_without_newlines("foo:");
+        assert!(tokens[0].matches_kind(RnsTokenKind::Label));
+    }
+
+    #[test]
+    fn bare_colon_is_identifier_not_label() {
+        // A lone ":" (length 1) should become an Identifier, not a Label
+        let tokens = tokens_without_newlines(":");
+        assert_eq!(tokens.len(), 1);
+        assert!(
+            matches!(&tokens[0], RnsToken::Identifier(s) if s.value == ":"),
+            "expected Identifier(':'), got {:?}",
+            tokens[0]
+        );
+    }
+
+    #[test]
+    fn bare_colon_span() {
+        let tokens = tokens_without_newlines(":");
+        let span = tokens[0].span();
+        assert_eq!(span.byte_start, 0);
+        assert_eq!(span.byte_end, 1);
+        assert_eq!(span.col_start, 0);
+        assert_eq!(span.col_end, 1);
+    }
+
+    #[test]
+    fn bare_colon_no_diagnostics() {
+        let (_, diagnostics) = tokenize(":");
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn bare_colon_token_kind_is_identifier() {
+        let tokens = tokens_without_newlines(":");
+        assert_eq!(tokens[0].kind(), RnsTokenKind::Identifier);
+    }
+
+    #[test]
+    fn double_colon_is_label() {
+        // "::" has length 2, ends with ':', so it becomes Label(":")
+        let tokens = tokens_without_newlines("::");
+        assert_eq!(tokens.len(), 1);
+        assert!(
+            matches!(&tokens[0], RnsToken::Label(s) if s.value == ":"),
+            "expected Label(':'), got {:?}",
+            tokens[0]
+        );
+    }
+
+    #[test]
+    fn bare_colon_followed_by_identifier() {
+        // ": foo" — colon is whitespace-separated so it's its own token
+        let tokens = tokens_without_newlines(": foo");
+        assert_eq!(tokens.len(), 2);
+        assert!(matches!(&tokens[0], RnsToken::Identifier(s) if s.value == ":"));
+        assert!(matches!(&tokens[1], RnsToken::Identifier(s) if s.value == "foo"));
+    }
+
+    #[test]
+    fn bare_colon_after_identifier() {
+        // "foo :" — colon is whitespace-separated, both are individual tokens
+        let tokens = tokens_without_newlines("foo :");
+        assert_eq!(tokens.len(), 2);
+        assert!(matches!(&tokens[0], RnsToken::Identifier(s) if s.value == "foo"));
+        assert!(matches!(&tokens[1], RnsToken::Identifier(s) if s.value == ":"));
+    }
+
+    #[test]
+    fn short_label_two_chars() {
+        // "x:" has length 2 which is > 1, so it should be a Label
+        let tokens = tokens_without_newlines("x:");
+        assert_eq!(tokens.len(), 1);
+        assert!(matches!(&tokens[0], RnsToken::Label(s) if s.value == "x"));
+    }
+
+    #[test]
+    fn label_no_diagnostics() {
+        let (_, diagnostics) = tokenize("loop_start:");
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn label_followed_by_identifier() {
+        let tokens = tokens_without_newlines("start: aload_0");
+        assert_eq!(tokens.len(), 2);
+        assert!(matches!(&tokens[0], RnsToken::Label(s) if s.value == "start"));
+        assert!(matches!(&tokens[1], RnsToken::Identifier(s) if s.value == "aload_0"));
+    }
+
+    #[test]
+    fn multiple_labels_on_separate_lines() {
+        let tokens = tokens_without_newlines("loop:\nend:");
+        assert_eq!(tokens.len(), 2);
+        assert!(matches!(&tokens[0], RnsToken::Label(s) if s.value == "loop"));
+        assert!(matches!(&tokens[1], RnsToken::Label(s) if s.value == "end"));
+    }
+
+    #[test]
+    fn label_after_directive() {
+        let tokens = tokens_without_newlines(".class\nmy_label:");
+        assert_eq!(tokens.len(), 2);
+        assert!(matches!(&tokens[0], RnsToken::DotClass(_)));
+        assert!(matches!(&tokens[1], RnsToken::Label(s) if s.value == "my_label"));
+    }
+
+    #[test]
+    fn label_with_numeric_name() {
+        let tokens = tokens_without_newlines("L0:");
+        assert_eq!(tokens.len(), 1);
+        assert!(matches!(&tokens[0], RnsToken::Label(s) if s.value == "L0"));
+    }
+
+    #[test]
+    fn label_span_on_second_line() {
+        let tokens = tokens_without_newlines(".class\nmy_label:");
+        let label = &tokens[1];
+        let span = label.span();
+        assert_eq!(span.line, 1);
+        assert_eq!(span.col_start, 0);
+        assert_eq!(span.col_end, 9); // "my_label:" is 9 chars
+        assert_eq!(span.byte_start, 7); // after ".class\n"
+        assert_eq!(span.byte_end, 16); // 7 + 9
+    }
+}

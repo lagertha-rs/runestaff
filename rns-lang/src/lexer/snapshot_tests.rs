@@ -17,6 +17,7 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
     for token in tokens {
         let kind_str = match &token {
             RnsToken::Identifier(s) => format!("Identifier({:?})", s.value),
+            RnsToken::Label(s) => format!("Label({:?})", s.value),
             RnsToken::DotCode(_) => "DotCode".to_string(),
             RnsToken::DotClass(_) => "DotClass".to_string(),
             RnsToken::DotEnd(_) => "DotEnd".to_string(),

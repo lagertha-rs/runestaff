@@ -47,6 +47,7 @@ pub const TOKEN_TYPE_IDENTIFIER: &str = "identifier";
 pub const TOKEN_TYPE_NEWLINE: &str = "newline";
 pub const TOKEN_TYPE_EOF: &str = "eof";
 pub const TOKEN_TYPE_TYPE_HINT: &str = "type hint";
+pub const TOKEN_TYPE_LABEL: &str = "label";
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum RnsTokenContext {
@@ -70,6 +71,7 @@ pub enum RnsToken {
     DotEnd(Span),
     DotAnnotation(Span),
 
+    Label(Spanned<String>),
     AccessFlag(Spanned<RnsFlag>),
     TypeHint(Spanned<TypeHintKind>),
 
@@ -105,10 +107,13 @@ impl RnsToken {
             RnsToken::AccessFlag(spanned) => spanned.value.token_name(),
             RnsToken::TypeHint(spanned) => spanned.value.token_name(),
             RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,
+            RnsToken::Label(_) => TOKEN_TYPE_LABEL,
             RnsToken::Newline(_) => TOKEN_TYPE_NEWLINE,
             RnsToken::Eof(_) => TOKEN_TYPE_EOF,
         }
     }
+
+    // TODO: remove? replace? don't like it..
     pub fn can_appear_in(&self) -> &[RnsTokenContext] {
         match self {
             RnsToken::DotClass(_) => &[RnsTokenContext::TopLevel],
@@ -129,6 +134,7 @@ impl RnsToken {
             ],
             RnsToken::Newline(_) | RnsToken::Eof(_) => &[RnsTokenContext::Contextless],
             RnsToken::TypeHint(_) | RnsToken::Identifier(_) => &[RnsTokenContext::Operand],
+            RnsToken::Label(_) => &[RnsTokenContext::CodeBody],
         }
     }
 
@@ -143,6 +149,7 @@ impl RnsToken {
             RnsToken::AccessFlag(spanned) => RnsTokenKind::AccessFlag(spanned.value),
             RnsToken::TypeHint(spanned) => RnsTokenKind::TypeHint(spanned.value),
             RnsToken::Identifier(_) => RnsTokenKind::Identifier,
+            RnsToken::Label(_) => RnsTokenKind::Label,
             RnsToken::Newline(_) => RnsTokenKind::Newline,
             RnsToken::Eof(_) => RnsTokenKind::Eof,
         }
@@ -179,6 +186,7 @@ impl RnsToken {
                 spanned.value == expected_hint
             }
             (RnsToken::Identifier(_), RnsTokenKind::Identifier) => true,
+            (RnsToken::Label(_), RnsTokenKind::Label) => true,
             (RnsToken::Newline(_), RnsTokenKind::Newline) => true,
             (RnsToken::Eof(_), RnsTokenKind::Eof) => true,
             _ => false,
@@ -212,9 +220,12 @@ impl RnsToken {
         }
     }
 
-    pub fn from_identifier(name: String, span: Span) -> Self {
+    pub fn from_identifier(mut name: String, span: Span) -> Self {
         if let Ok(access_flag) = RnsFlag::try_from(name.as_str()) {
             RnsToken::AccessFlag(Spanned::new(access_flag, span))
+        } else if name.ends_with(':') && name.len() > 1 {
+            name.pop(); // remove the trailing ':'
+            RnsToken::Label(Spanned::new(name, span))
         } else {
             RnsToken::Identifier(Spanned::new(name, span))
         }
@@ -230,8 +241,8 @@ impl RnsToken {
             | RnsToken::DotAnnotation(span)
             | RnsToken::Newline(span)
             | RnsToken::Eof(span) => *span,
+            RnsToken::Identifier(spanned) | RnsToken::Label(spanned) => spanned.span,
             RnsToken::AccessFlag(spanned) => spanned.span,
-            RnsToken::Identifier(spanned) => spanned.span,
             RnsToken::TypeHint(spanned) => spanned.span,
         }
     }
@@ -246,6 +257,7 @@ impl RnsToken {
             | RnsToken::DotCode(_) => TOKEN_TYPE_DIRECTIVE,
             RnsToken::AccessFlag(_) => TOKEN_TYPE_ACCESS_FLAG,
             RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,
+            RnsToken::Label(_) => TOKEN_TYPE_LABEL,
             RnsToken::Newline(_) => TOKEN_TYPE_NEWLINE,
             RnsToken::Eof(_) => TOKEN_TYPE_EOF,
             RnsToken::TypeHint(_) => TOKEN_TYPE_TYPE_HINT,

@@ -3,7 +3,7 @@ use crate::token::type_hint::TypeHintKind;
 use crate::token::{
     DIRECTIVE_DOT_ANNOTATION, DIRECTIVE_DOT_CLASS, DIRECTIVE_DOT_CODE, DIRECTIVE_DOT_END,
     DIRECTIVE_DOT_METHOD, DIRECTIVE_DOT_SUPER, TOKEN_TYPE_EOF, TOKEN_TYPE_IDENTIFIER,
-    TOKEN_TYPE_NEWLINE,
+    TOKEN_TYPE_LABEL, TOKEN_TYPE_NEWLINE,
 };
 use std::fmt::{Display, Formatter};
 
@@ -17,6 +17,7 @@ pub enum RnsTokenKind {
     DotAnnotation,
     AccessFlag(RnsFlag),
     TypeHint(TypeHintKind),
+    Label,
     Identifier,
     Newline,
     Eof,
@@ -34,6 +35,7 @@ impl RnsTokenKind {
             RnsTokenKind::AccessFlag(flag) => flag.token_name(),
             RnsTokenKind::TypeHint(type_hint) => type_hint.token_name(),
             RnsTokenKind::Identifier => TOKEN_TYPE_IDENTIFIER,
+            RnsTokenKind::Label => TOKEN_TYPE_LABEL,
             RnsTokenKind::Newline => TOKEN_TYPE_NEWLINE,
             RnsTokenKind::Eof => TOKEN_TYPE_EOF,
         }

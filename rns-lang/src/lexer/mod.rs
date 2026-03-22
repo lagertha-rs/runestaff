@@ -2,7 +2,6 @@ use crate::diagnostic::Diagnostic;
 use crate::lexer::error::LexerError;
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{RnsToken, Span, Spanned};
-use std::str::FromStr;
 
 mod error;
 #[cfg(test)]
@@ -33,10 +32,6 @@ impl<'a> RnsLexer<'a> {
 
     fn peek_char(&mut self) -> Option<char> {
         self.source[self.byte_pos..].chars().next()
-    }
-
-    fn peek_char_at(&mut self, offset: usize) -> Option<char> {
-        self.source[self.byte_pos..].chars().nth(offset)
     }
 
     fn next_char(&mut self) -> Option<char> {
