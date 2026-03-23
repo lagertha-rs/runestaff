@@ -1,5 +1,5 @@
-use crate::token::Spanned;
 use crate::token::type_hint::TypeHintKind;
+use crate::token::Spanned;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -50,10 +50,14 @@ impl UnexpectedTokenContext {
     }
 }
 
+// TODO: Rename because not only about operands, for example instruction name...
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub(in crate::parser) enum OperandErrPosContext {
     ClassName,
     SuperName,
+    MethodName,
+    MethodDescriptor,
+    InstructionName,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]

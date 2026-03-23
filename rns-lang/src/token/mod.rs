@@ -65,6 +65,7 @@ pub enum RnsTokenContext {
     Contextless,
 }
 
+// TODO: for all strings I can use str instead of String or just a span
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum RnsToken {
     // directives

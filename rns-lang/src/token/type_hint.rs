@@ -1,5 +1,5 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -326,16 +326,26 @@ impl Display for TypeHintKind {
 #[derive(Debug, PartialEq, Clone)]
 pub enum TypeHint {
     ZeroIndex(Span),
-    Utf8(Span, Spanned<String>),
-    Integer(Span, Spanned<i32>),
-    String(Span, Spanned<String>),
+    Utf8(Option<Span>, Spanned<String>),
+    Integer(Option<Span>, Spanned<i32>),
+    String(Option<Span>, Spanned<String>),
     Class(Option<Span>, Spanned<String>),
-    Methodref(Span, Spanned<String>, Spanned<String>, Spanned<String>),
-    Fieldref(Span, Spanned<String>, Spanned<String>, Spanned<String>),
+    Methodref(
+        Option<Span>,
+        Spanned<String>,
+        Spanned<String>,
+        Spanned<String>,
+    ),
+    Fieldref(
+        Option<Span>,
+        Spanned<String>,
+        Spanned<String>,
+        Spanned<String>,
+    ),
     InterfaceMethodref,
-    Float(Span, Spanned<f32>),
-    Long(Span, Spanned<i64>),
-    Double(Span, Spanned<f64>),
+    Float(Option<Span>, Spanned<f32>),
+    Long(Option<Span>, Spanned<i64>),
+    Double(Option<Span>, Spanned<f64>),
     NameAndType,
     MethodHandle,
     MethodType,

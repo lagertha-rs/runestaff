@@ -1,5 +1,5 @@
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
-use crate::ast::{ClassDirective, CodeDirective, MethodDirective, RnsModule, SuperDirective};
+use crate::ast::{ClassDirective, CodeDirective, MethodDirective, RnsInstruction, RnsModule, SuperDirective};
 use crate::diagnostic::Diagnostic;
 use crate::parser::error::{
     AccessFlagContext, NumericRejection, OperandErrPosContext, ParseNumeric, ParserError,
@@ -9,10 +9,11 @@ use crate::parser::error_deprecated::{NonNegativeIntegerContextDeprecated, Parse
 use crate::parser::warning::ParserWarning;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::iter::Peekable;
 use std::str::FromStr;
 use std::vec::IntoIter;
+use crate::instruction::{InstructionOperand, INSTRUCTION_SPECS};
 
 mod error;
 mod error_deprecated;
@@ -114,7 +115,7 @@ impl RnsParser {
                             flag: rns_flag,
                             spans,
                         }
-                        .into(),
+                            .into(),
                     );
                 }
                 (k, first_span)
@@ -273,6 +274,12 @@ impl RnsParser {
             })
     }
 
+
+    // TODO: should be able not take spanned type hint, but parse it for instructions
+    // and return correct error messages. for example getstatic opcode takes fieldref.
+    // when the getstatic operand is not a type hint, it should try to treat its operands
+    // as it is fieldref type hint, and report a similar error
+    // this fn should be reusable
     fn resolve_type_hint(&mut self, th: Spanned<TypeHintKind>) -> Result<TypeHint, Diagnostic> {
         let kind_span = th.span;
         let res = match th.value {
@@ -420,17 +427,13 @@ impl RnsParser {
         }
     }
 
-    fn parse_instruction(&mut self, code: &mut Vec<u8>) -> Result<(), ParserError> {
-        /*
-        let (instruction_name, _) =
-            self.expect_next_identifier(IdentifierContext::InstructionName, self.last_span.end)?;
-        let instruction_pos = self.last_span;
-        let instruction_spec = INSTRUCTION_SPECS
-            .get(instruction_name.as_str())
-            .ok_or_else(|| {
-                ParserError::UnknownInstruction(instruction_pos, instruction_name.clone())
-            })?;
-        code.push(instruction_spec.opcode as u8);
+    fn parse_instruction(&mut self) -> Result<RnsInstruction, Diagnostic> {
+        let raw_instruction = self.parse_identifier(
+            OperandErrPosContext::InstructionName
+        )?;
+        let instruction_spec = *INSTRUCTION_SPECS
+            .get(raw_instruction.value.as_str())
+            .ok_or_else(|| { todo!() })?;
         match instruction_spec.operand {
             InstructionOperand::None => {}
             InstructionOperand::MethodRef => {
@@ -491,8 +494,6 @@ impl RnsParser {
             }
         }
         Ok(())
-         */
-        todo!()
     }
 
     /* TODO: doesn't handle errors. In the closest future I want to calculate stack and locals and make it optional.
@@ -522,9 +523,11 @@ impl RnsParser {
         (stack.unwrap(), locals.unwrap())
     }
 
-    fn parse_code_directive(&mut self) -> Result<CodeDirective, ParserError> {
-        /*
+    fn parse_code_directive(&mut self) -> Option<CodeDirective> {
         self.next_token(); // consume .code token
+        let mut has_fatal_error = false;
+        let mut labels = HashMap::new();
+        let mut instructions = Vec::new();
 
         let (stack, locals) = self.parse_code_header();
         self.skip_newlines();
@@ -537,6 +540,7 @@ impl RnsParser {
                 break;
             }
             self.skip_newlines();
+            // TODO: ANTON, DON'T FORGET TO ANCHOR THE NEWLINE TOMORROW
             self.parse_instruction(&mut code)?;
         }
 
@@ -565,20 +569,27 @@ impl RnsParser {
             exception_table: vec![],
             attributes: vec![],
         })
-         */
-
-        todo!()
     }
 
     fn parse_method(&mut self) -> Result<MethodDirective, Diagnostic> {
-        /*
         let dot_method = self.next_token(); // consume .method token
         let access_flags = self.parse_method_access_flags();
-        let method_name = self.try_next_identifier().map_err(|token| todo!()).ok();
-        // TODO: don't check if no method name
-        let method_descriptor = self.try_next_identifier().map_err(|token| todo!()).ok();
-        self.verify_trailing_tokens(TrailingTokensErrContext::Class);
-        let mut code_dirs = vec![];
+        let mut method = MethodDirective::new(dot_method.span(), access_flags);
+        method.name = self.parse_operand_or_type_hint(
+            OperandErrPosContext::MethodName,
+            |spanned| TypeHint::Utf8(None, spanned),
+        ).map_err(|e| self.diagnostic.push(e)).ok();
+        // when there is no method name, it doesn't make sense to expect anything else
+        if method.name.is_some() {
+            method.descriptor = self.parse_operand_or_type_hint(
+                OperandErrPosContext::MethodDescriptor,
+                |spanned| TypeHint::Utf8(None, spanned),
+            ).map_err(|e| self.diagnostic.push(e)).ok();
+        }
+        // trailing tokens can be only when descriptor is present
+        if method.descriptor.is_some() {
+            self.verify_trailing_tokens(TrailingTokensErrContext::Method);
+        }
 
         while let Some(token) = self.tokens.peek() {
             match token {
@@ -586,19 +597,21 @@ impl RnsParser {
                     self.next_token();
                 }
                 RnsToken::DotCode(_) => {
-                    code_dirs.push(self.parse_code_directive().unwrap());
-                }
-                RnsToken::DotEnd(_) => {
-                    self.next_token(); // consume .end
-                    if let Some(token) = self.tokens.peek() {
-                        if let RnsToken::Identifier(s) = token {
-                            // TODO: handle error and recover
-                            if s.value == "method" {
-                                self.next_token(); // consume "class"
-                                break; // .end class - finish parsing
-                            }
-                        }
+                    if let Some(code_dir) = &method.code_dir {
+                        self.diagnostic.push(ParserError::MultipleCodeBlocks {
+                            method_name: method.name.clone(),
+                            method_span: method.dir_span,
+                            first_code_span: code_dir.dir_span,
+                            duplicate: token.span(),
+                        }.into());
+                        // TODO: decide final strategy
+                        self.anchor(&[RnsTokenKind::DotCodeEnd]);
+                    } else {
+                        method.code_dir = self.parse_code_directive();
                     }
+                }
+                RnsToken::DotMethodEnd(_) => {
+                    self.next_token(); // consume .method_end
                 }
                 // TODO: decide strategy, allow not closed?
                 RnsToken::Eof(_) => break,
@@ -613,7 +626,6 @@ impl RnsParser {
                 }
             }
         }
-         */
 
         todo!()
     }
@@ -725,7 +737,7 @@ impl RnsParser {
                             class_dir_pos: self.class_dir_span,
                             default: JAVA_LANG_OBJECT,
                         }
-                        .into(),
+                            .into(),
                     );
                 }
                 Some(SuperDirective {

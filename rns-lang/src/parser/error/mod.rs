@@ -6,12 +6,14 @@ pub(super) use context::{
 };
 pub(super) use rejection::{NumericRejection, ParseNumeric};
 
-use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
 use std::vec;
+
+// TODO: should actually take ownership when converting to Diagnostic
 
 #[derive(Debug, PartialEq, Clone)]
 pub(super) enum ParserError {
@@ -33,6 +35,12 @@ pub(super) enum ParserError {
         rejection: NumericRejection,
     },
     InvalidAccessFlag(AccessFlagContext, Spanned<RnsFlag>),
+    MultipleCodeBlocks {
+        method_name: Option<TypeHint>,
+        method_span: Span,
+        first_code_span: Span,
+        duplicate: Span,
+    },
 }
 
 impl ParserError {
@@ -52,6 +60,7 @@ impl ParserError {
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
             ParserError::MissingTypeHintOperand { .. } => "E-014",
+            ParserError::MultipleCodeBlocks { .. } => "E-019",
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
         }
     }
@@ -127,6 +136,14 @@ impl ParserError {
             }
             ParserError::InvalidAccessFlag(ctx, flag) => {
                 format!("invalid {} access flag '{}'", ctx, flag.value.token_name())
+            }
+            ParserError::MultipleCodeBlocks { method_name, .. } => {
+                let method = if let Some(name_hint) = method_name {
+                    format!("method '{}'", name_hint.value())
+                } else {
+                    "method".to_string()
+                };
+                format!("multiple code blocks defined for {}", method,)
             }
         }
     }
@@ -289,6 +306,32 @@ impl ParserError {
                     ),
                 )]
             }
+            ParserError::MultipleCodeBlocks {
+                method_span,
+                first_code_span,
+                duplicate,
+                method_name,
+            } => {
+                let method = if let Some(name_hint) = method_name {
+                    format!("method '{}'", name_hint.value())
+                } else {
+                    "method".to_string()
+                };
+                vec![
+                    DiagnosticLabel::context(
+                        method_span.as_range(),
+                        format!("{} defined here has multiple code blocks", method),
+                    ),
+                    DiagnosticLabel::context(
+                        first_code_span.as_range(),
+                        "first code block defined here".to_string(),
+                    ),
+                    DiagnosticLabel::at(
+                        duplicate.as_range(),
+                        "but another code block defined here".to_string(),
+                    ),
+                ]
+            }
         }
     }
 
@@ -406,6 +449,9 @@ impl ParserError {
                 ))
             }
             ParserError::InvalidAccessFlag(_, _) => None,
+            ParserError::MultipleCodeBlocks { .. } => {
+                Some("Each method can only have one code block. Remove the duplicates or merge them into one.".to_string())
+            }
         }
     }
 
@@ -416,6 +462,7 @@ impl ParserError {
             }
             ParserError::MultipleSuperDefinitions(defs) => defs[1].0,
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
+            ParserError::MultipleCodeBlocks { duplicate, .. } => *duplicate,
             ParserError::UnexpectedBodyToken(_, token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
             ParserError::MissingTypeHintOperand { type_hint, .. }
