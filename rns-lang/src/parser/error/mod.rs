@@ -6,11 +6,11 @@ pub(super) use context::{
 };
 pub(super) use rejection::{NumericRejection, ParseNumeric};
 
+use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
-use crate::ERROR_DOCS_BASE_URL;
 use std::vec;
 
 // TODO: should actually take ownership when converting to Diagnostic
@@ -35,6 +35,12 @@ pub(super) enum ParserError {
         rejection: NumericRejection,
     },
     InvalidAccessFlag(AccessFlagContext, Spanned<RnsFlag>),
+    MissingImplicitTypeHintOperand {
+        err_ctx: OperandErrPosContext,
+        implicit_kind: TypeHintKind,
+        operand: TypeHintOperandName,
+        after_span: Span,
+    },
     MultipleCodeBlocks {
         method_name: Option<TypeHint>,
         method_span: Span,
@@ -60,6 +66,7 @@ impl ParserError {
             },
             ParserError::MultipleSuperDefinitions(_) => "E-011",
             ParserError::MissingTypeHintOperand { .. } => "E-014",
+            ParserError::MissingImplicitTypeHintOperand { .. } => "E-020",
             ParserError::MultipleCodeBlocks { .. } => "E-019",
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
         }
@@ -136,6 +143,11 @@ impl ParserError {
             }
             ParserError::InvalidAccessFlag(ctx, flag) => {
                 format!("invalid {} access flag '{}'", ctx, flag.value.token_name())
+            }
+            ParserError::MissingImplicitTypeHintOperand {
+                err_ctx, operand, ..
+            } => {
+                format!("missing {} after '{}'", operand, err_ctx.directive_name(),)
             }
             ParserError::MultipleCodeBlocks { method_name, .. } => {
                 let method = if let Some(name_hint) = method_name {
@@ -296,6 +308,27 @@ impl ParserError {
                     ),
                 ]
             }
+            ParserError::MissingImplicitTypeHintOperand {
+                err_ctx,
+                operand,
+                after_span,
+                ..
+            } => {
+                vec![
+                    DiagnosticLabel::context(
+                        after_span.as_range(),
+                        format!(
+                            "the '{}' directive requires a {} as operand",
+                            err_ctx.directive_name(),
+                            err_ctx,
+                        ),
+                    ),
+                    DiagnosticLabel::at(
+                        after_span.byte_end..after_span.byte_end,
+                        format!("but {} is missing", operand),
+                    ),
+                ]
+            }
             ParserError::InvalidAccessFlag(ctx, flag) => {
                 vec![DiagnosticLabel::at(
                     flag.span.as_range(),
@@ -449,6 +482,26 @@ impl ParserError {
                 ))
             }
             ParserError::InvalidAccessFlag(_, _) => None,
+            ParserError::MissingImplicitTypeHintOperand {
+                err_ctx,
+                implicit_kind,
+                ..
+            } => {
+                let syntax = implicit_kind
+                    .operand_names()
+                    .iter()
+                    .map(|op| op.placeholder())
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                Some(format!(
+                    "Provide a {} after the '{}' directive, e.g.:\n\
+                     {} {}",
+                    err_ctx,
+                    err_ctx.directive_name(),
+                    err_ctx.directive_name(),
+                    syntax,
+                ))
+            }
             ParserError::MultipleCodeBlocks { .. } => {
                 Some("Each method can only have one code block. Remove the duplicates or merge them into one.".to_string())
             }
@@ -468,6 +521,7 @@ impl ParserError {
             ParserError::MissingTypeHintOperand { type_hint, .. }
             | ParserError::TypeHintExpectsNumericOperand { type_hint, .. } => type_hint.span,
             ParserError::InvalidAccessFlag(_, flag) => flag.span,
+            ParserError::MissingImplicitTypeHintOperand { after_span, .. } => *after_span,
         }
     }
 

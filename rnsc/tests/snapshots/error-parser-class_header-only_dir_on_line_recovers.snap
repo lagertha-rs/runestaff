@@ -9,20 +9,20 @@ not generated
 unknown_token ; <- still reported
 .class_end
 ----- STDERR -----
-[E-009] Error: unexpected newline where a class name is required
+[E-020] Error: missing class name after '.class'
    ╭─[ test_data/integration/error/parser/class_header/only_dir_on_line_recovers.rns:1:1 ]
    │
  1 │ .class
    │ ───┬──│ 
    │    ╰──── the '.class' directive requires a class name as operand
    │       │ 
-   │       ╰─ but nothing was provided
+   │       ╰─ but class name is missing
    │ 
    │ Help: Provide a class name after the '.class' directive, e.g.:
-   │       .class MyClassName
+   │       .class <class_name>
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-009
+   │       https://rune.lagertha-vm.com/errors/e-020
 ───╯
 [E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unknown_token", span: Span { byte_start: 7, byte_end: 20, line: 1, col_start: 0, col_end: 13 } })'
    ╭─[ test_data/integration/error/parser/class_header/only_dir_on_line_recovers.rns:2:1 ]

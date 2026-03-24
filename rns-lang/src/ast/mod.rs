@@ -3,8 +3,8 @@ pub mod flag;
 use crate::ast::flag::RnsMethodFlag;
 use crate::diagnostic::Diagnostic;
 use crate::instruction::InstructionSpec;
-use crate::token::type_hint::TypeHint;
 use crate::token::Span;
+use crate::token::type_hint::TypeHint;
 use flag::RnsClassFlag;
 use std::collections::BTreeMap;
 
@@ -41,6 +41,7 @@ impl MethodDirective {
             flags,
             name: None,
             descriptor: None,
+            code_dir: None,
         }
     }
 }
@@ -48,7 +49,7 @@ impl MethodDirective {
 pub struct RnsInstruction {
     pub ins_span: Span,
     pub spec: InstructionSpec,
-    pub operand: TypeHint,
+    pub operand: Option<TypeHint>,
 }
 
 pub struct CodeDirective {

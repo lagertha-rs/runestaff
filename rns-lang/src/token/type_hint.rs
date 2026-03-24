@@ -1,5 +1,5 @@
-use crate::token::span::Spanned;
 use crate::token::Span;
+use crate::token::span::Spanned;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]

@@ -1,5 +1,6 @@
-use crate::token::type_hint::TypeHintKind;
+use crate::instruction::InstructionSpec;
 use crate::token::Spanned;
+use crate::token::type_hint::TypeHintKind;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -58,6 +59,7 @@ pub(in crate::parser) enum OperandErrPosContext {
     MethodName,
     MethodDescriptor,
     InstructionName,
+    InstructionOperand(InstructionSpec),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -86,24 +88,29 @@ impl Display for OperandErrPosContext {
         match self {
             OperandErrPosContext::ClassName => write!(f, "class name"),
             OperandErrPosContext::SuperName => write!(f, "super class name"),
+            OperandErrPosContext::MethodName => write!(f, "method name"),
+            OperandErrPosContext::MethodDescriptor => write!(f, "method descriptor"),
+            OperandErrPosContext::InstructionName => write!(f, "instruction name"),
+            OperandErrPosContext::InstructionOperand(spec) => {
+                write!(f, "instruction '{}' operand", spec.opcode)
+            }
         }
     }
 }
 
 impl OperandErrPosContext {
-    pub(in crate::parser) fn expected_type_hint_kinds(&self) -> Vec<TypeHintKind> {
-        match self {
-            OperandErrPosContext::ClassName | OperandErrPosContext::SuperName => {
-                vec![TypeHintKind::Class]
-            }
-        }
-    }
-
-    pub(in crate::parser) fn directive_name(&self) -> &'static str {
+    pub(in crate::parser) fn directive_name(&self) -> String {
         match self {
             //TODO: use something like TokenKind::DotClass.name() to not hardcode here
-            OperandErrPosContext::ClassName => ".class",
-            OperandErrPosContext::SuperName => ".super",
+            OperandErrPosContext::ClassName => ".class".to_string(),
+            OperandErrPosContext::SuperName => ".super".to_string(),
+            OperandErrPosContext::MethodName | OperandErrPosContext::MethodDescriptor => {
+                ".method".to_string()
+            }
+            OperandErrPosContext::InstructionName => "instruction".to_string(),
+            OperandErrPosContext::InstructionOperand(spec) => {
+                format!("{}", spec.opcode)
+            }
         }
     }
 }

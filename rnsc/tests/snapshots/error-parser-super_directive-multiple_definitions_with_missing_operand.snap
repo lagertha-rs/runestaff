@@ -10,20 +10,20 @@ not generated
 .super
 .super secondClass
 ----- STDERR -----
-[E-009] Error: unexpected newline where a super class name is required
+[E-020] Error: missing class name after '.super'
    ╭─[ test_data/integration/error/parser/super_directive/multiple_definitions_with_missing_operand.rns:3:1 ]
    │
  3 │ .super
    │ ───┬──│ 
    │    ╰──── the '.super' directive requires a super class name as operand
    │       │ 
-   │       ╰─ but nothing was provided
+   │       ╰─ but class name is missing
    │ 
    │ Help: Provide a super class name after the '.super' directive, e.g.:
-   │       .super MyClassName
+   │       .super <class_name>
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-009
+   │       https://rune.lagertha-vm.com/errors/e-020
 ───╯
 ----- HASH -----
 not generated
