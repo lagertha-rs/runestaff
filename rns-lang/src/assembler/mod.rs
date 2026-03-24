@@ -1,11 +1,14 @@
 use crate::assembler::jvm_warning::JvmWarning;
-use crate::ast::RnsModule;
-use crate::ast::flag::RnsClassFlag;
+use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
+use crate::ast::{MethodDirective, RnsModule};
 use crate::diagnostic::Diagnostic;
 use crate::token::type_hint::TypeHint;
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
-use jclass::prelude::{ClassFileBuilder, ConstantPoolBuilder};
+use jclass::prelude::{
+    AttributeKind, AttributeNameMap, ClassFileBuilder, CodeAttribute, ConstantPoolBuilder,
+    MethodAttribute, MethodFlags, MethodInfo,
+};
 
 mod jvm_warning;
 
@@ -65,10 +68,45 @@ impl RnsModule {
         res
     }
 
+    fn build_method_flags(&mut self, method_dir: &MethodDirective) -> u16 {
+        let mut res = 0;
+        for (flag, span) in &method_dir.flags {
+            match flag {
+                RnsMethodFlag::Public => res |= 0x0001,
+                RnsMethodFlag::Private => res |= 0x0002,
+                RnsMethodFlag::Protected => res |= 0x0004,
+                RnsMethodFlag::Static => res |= 0x0008,
+                RnsMethodFlag::Final => res |= 0x0010,
+                RnsMethodFlag::Synchronized => res |= 0x0020,
+                RnsMethodFlag::Bridge => res |= 0x0040,
+                RnsMethodFlag::Varargs => res |= 0x0080,
+                RnsMethodFlag::Native => res |= 0x0100,
+                RnsMethodFlag::Abstract => res |= 0x0400,
+                RnsMethodFlag::Strict => res |= 0x0800,
+                RnsMethodFlag::Synthetic => res |= 0x1000,
+            }
+        }
+        res
+    }
+
     fn add_type_hint_to_cp(cp_builder: &mut ConstantPoolBuilder, hint: TypeHint) -> u16 {
         match hint {
+            TypeHint::Utf8(_, utf8_value) => cp_builder.add_utf8(&utf8_value.value),
             TypeHint::Class(_, class_name) => cp_builder.add_class(&class_name.value),
             TypeHint::Integer(_, int_value) => cp_builder.add_integer(int_value.value),
+            TypeHint::Methodref(_, class_name, method_name, method_descriptor) => cp_builder
+                .add_methodref(
+                    &class_name.value,
+                    &method_name.value,
+                    &method_descriptor.value,
+                ),
+            TypeHint::Fieldref(_, class_name, field_name, field_descriptor) => cp_builder
+                .add_fieldref(
+                    &class_name.value,
+                    &field_name.value,
+                    &field_descriptor.value,
+                ),
+            TypeHint::String(_, string_value) => cp_builder.add_string(&string_value.value),
             _ => unimplemented!(),
         }
     }
@@ -76,6 +114,46 @@ impl RnsModule {
     fn build_super_class(&mut self, cp_builder: &mut ConstantPoolBuilder) -> Option<u16> {
         let name = self.super_dir.take()?.name;
         Some(Self::add_type_hint_to_cp(cp_builder, name))
+    }
+
+    fn build_method_directive(
+        &mut self,
+        cp_builder: &mut ConstantPoolBuilder,
+        method_dir: MethodDirective,
+    ) -> MethodInfo {
+        let access_flags = MethodFlags::new(self.build_method_flags(&method_dir));
+        let name_index = Self::add_type_hint_to_cp(cp_builder, method_dir.name.unwrap());
+        let descriptor_index =
+            Self::add_type_hint_to_cp(cp_builder, method_dir.descriptor.unwrap());
+        let code_dir = method_dir.code_dir.unwrap(); // TODO: handle missing code directive
+        let mut code = Vec::new();
+        for ins in code_dir.instructions {
+            let opcode = ins.spec.opcode;
+            let operand = ins
+                .operand
+                .map(|hint| Self::add_type_hint_to_cp(cp_builder, hint));
+            code.push(opcode as u8);
+            if let Some(operand) = operand {
+                match opcode.operand_size() {
+                    1 => code.push(operand as u8),
+                    2 => code.extend(operand.to_be_bytes()),
+                    _ => unimplemented!(),
+                }
+            }
+        }
+        let code_attribute = MethodAttribute::Code(CodeAttribute {
+            max_stack: code_dir.max_stack,
+            max_locals: code_dir.max_locals,
+            code,
+            exception_table: vec![],
+            attributes: vec![],
+        });
+        MethodInfo {
+            access_flags,
+            name_index,
+            descriptor_index,
+            attributes: vec![code_attribute],
+        }
     }
 
     // TODO: need to test that I build exactly same CP as javac, or not?
@@ -87,12 +165,26 @@ impl RnsModule {
         let this_cp_id = self
             .class_dir
             .name
+            .take()
             .map(|name| Self::add_type_hint_to_cp(&mut cp_builder, name));
+
+        let rns_methods = std::mem::take(&mut self.methods);
+        let methods = rns_methods
+            .into_iter()
+            .map(|method_dir| self.build_method_directive(&mut cp_builder, method_dir))
+            .collect();
+
+        let mut attribute_names = AttributeNameMap::new();
+        // TODO: only when at least one code is actually present
+        let code_name_idx = cp_builder.add_utf8(AttributeKind::Code.as_str());
+        attribute_names.insert(AttributeKind::Code, code_name_idx);
 
         let class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
             .access_flags(class_flags) // TODO: set access flags based on parsed flags
             .this_class(this_cp_id)
             .super_class(super_cp_id)
+            .methods(methods)
+            .attribute_names(attribute_names)
             .build();
 
         (class_file, self.diagnostics)

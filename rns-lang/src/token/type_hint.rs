@@ -325,6 +325,7 @@ impl Display for TypeHintKind {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TypeHint {
+    // TODO: should be just index, that take an explicit cp index
     ZeroIndex(Span),
     Utf8(Option<Span>, Spanned<String>),
     Integer(Option<Span>, Spanned<i32>),

@@ -12,6 +12,7 @@ pub struct RnsModule {
     pub class_dir: ClassDirective,
     pub super_dir: Option<SuperDirective>,
     pub diagnostics: Vec<Diagnostic>,
+    pub methods: Vec<MethodDirective>,
 }
 
 pub struct SuperDirective {
@@ -52,6 +53,27 @@ pub struct RnsInstruction {
     pub operand: Option<TypeHint>,
 }
 
+impl RnsInstruction {
+    pub fn new(ins_span: Span, spec: InstructionSpec, operand: TypeHint) -> Self {
+        Self {
+            ins_span,
+            spec,
+            operand: Some(operand),
+        }
+    }
+
+    pub fn new_without_operand(ins_span: Span, spec: InstructionSpec) -> Self {
+        Self {
+            ins_span,
+            spec,
+            operand: None,
+        }
+    }
+}
+
 pub struct CodeDirective {
     pub dir_span: Span,
+    pub instructions: Vec<RnsInstruction>,
+    pub max_stack: u16,
+    pub max_locals: u16,
 }

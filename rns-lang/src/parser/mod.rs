@@ -3,6 +3,7 @@ use crate::ast::{
     ClassDirective, CodeDirective, MethodDirective, RnsInstruction, RnsModule, SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
+use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
 use crate::parser::error::{
     AccessFlagContext, NumericRejection, OperandErrPosContext, ParseNumeric, ParserError,
     TrailingTokensErrContext, UnexpectedTokenContext,
@@ -439,75 +440,40 @@ impl RnsParser {
     }
 
     fn parse_instruction(&mut self) -> Result<RnsInstruction, Diagnostic> {
-        /*
-        let raw_instruction = self.parse_identifier(
-            OperandErrPosContext::InstructionName
-        )?;
+        let raw_instruction = self.parse_identifier(OperandErrPosContext::InstructionName)?;
         let instruction_spec = *INSTRUCTION_SPECS
             .get(raw_instruction.value.as_str())
-            .ok_or_else(|| { todo!() })?;
-        match instruction_spec.operand {
-            InstructionOperand::None => {}
+            .unwrap();
+        let instruction = match instruction_spec.operand {
+            InstructionOperand::None => {
+                RnsInstruction::new_without_operand(raw_instruction.span, instruction_spec)
+            }
             InstructionOperand::MethodRef => {
-                let (class_name, _) = self.expect_next_identifier(
-                    IdentifierContext::ClassNameInstructionArg,
-                    instruction_pos.end,
+                let operand = self.parse_operand_or_type_hint(
+                    OperandErrPosContext::InstructionOperand(instruction_spec),
+                    TypeHintKind::Methodref,
                 )?;
-                let (method_name, _) = self.expect_next_identifier(
-                    IdentifierContext::MethodNameInstructionArg,
-                    self.last_span.end,
-                )?;
-                todo!("Method descriptor is deleted")
-                /*
-                let method_descriptor = self.expect_next_method_descriptor(
-                    MethodDescriptorContext::Instruction,
-                    self.last_span.end,
-                )?;
-                let idx =
-                    self.cp_builder
-                        .add_methodref(&class_name, &method_name, &method_descriptor);
-                code.extend_from_slice(&idx.to_be_bytes());
-                 */
+                RnsInstruction::new(raw_instruction.span, instruction_spec, operand)
             }
             InstructionOperand::FieldRef => {
-                let (class_name, _) = self.expect_next_identifier(
-                    IdentifierContext::ClassNameInstructionArg,
-                    instruction_pos.end,
+                let operand = self.parse_operand_or_type_hint(
+                    OperandErrPosContext::InstructionOperand(instruction_spec),
+                    TypeHintKind::Fieldref,
                 )?;
-                let (field_name, _) = self.expect_next_identifier(
-                    IdentifierContext::FieldNameInstructionArg,
-                    self.last_span.end,
-                )?;
-                let (field_descriptor, _) = self.expect_next_identifier(
-                    IdentifierContext::FieldDescriptorInstructionArg,
-                    self.last_span.end,
-                )?;
-                let idx = self
-                    .cp_builder
-                    .add_fieldref(&class_name, &field_name, &field_descriptor);
-                code.extend_from_slice(&idx.to_be_bytes());
+                RnsInstruction::new(raw_instruction.span, instruction_spec, operand)
             }
             // TODO: it is still stub here for ldc, need to handle properly
             InstructionOperand::StringLiteral => {
-                let token = self.next_token()?;
-                let value = match token.kind {
-                    JasmTokenKind::StringLiteral(value) => value,
-                    _ => {
-                        // TODO: error is wrong
-                        return Err(ParserError::IdentifierExpected(
-                            token.span,
-                            token.kind,
-                            IdentifierContext::InstructionName,
-                        ));
-                    }
-                };
-                let idx = self.cp_builder.add_string(&value);
-                code.push(idx as u8);
+                let operand = self.parse_operand_or_type_hint(
+                    OperandErrPosContext::InstructionOperand(instruction_spec),
+                    TypeHintKind::String,
+                )?;
+                RnsInstruction::new(raw_instruction.span, instruction_spec, operand)
             }
-        }
-        Ok(())
-         */
-        todo!()
+        };
+
+        // TODO: verify no trailing tokens
+        Ok(instruction)
     }
 
     /* TODO: doesn't handle errors. In the closest future I want to calculate stack and locals and make it optional.
@@ -538,54 +504,40 @@ impl RnsParser {
     }
 
     fn parse_code_directive(&mut self) -> Option<CodeDirective> {
-        /*
-        self.next_token(); // consume .code token
-        let mut has_fatal_error = false;
-        let mut labels = HashMap::new();
+        let dir_span = self.next_token().span(); // consume .code token
+        //let mut labels = HashMap::new();
         let mut instructions = Vec::new();
 
         let (stack, locals) = self.parse_code_header();
-        self.skip_newlines();
 
         while let Some(token) = self.tokens.peek() {
             match token {
-                RnsToken::Eof(_) |
+                RnsToken::Newline(_) => {
+                    self.next_token();
+                }
+                RnsToken::Label(label) => {
+                    todo!()
+                }
+                RnsToken::DotCodeEnd(_) | RnsToken::Eof(_) => {
+                    self.next_token(); // consume .code_end or EOF
+                    break;
+                }
+                _ => match self.parse_instruction() {
+                    Ok(instruction) => instructions.push(instruction),
+                    Err(e) => {
+                        self.anchor(&[RnsTokenKind::Newline]);
+                        self.diagnostic.push(e);
+                    }
+                },
             }
-            if matches!(token, RnsToken::DotEnd(_) | RnsToken::Eof(_)) {
-                break;
-            }
-            self.skip_newlines();
-            // TODO: ANTON, DON'T FORGET TO ANCHOR THE NEWLINE TOMORROW
-            self.parse_instruction(&mut code)?;
         }
 
-        // TODO: move end check with new enum(with all possible end directives) to a separate function and use it for method and class end checks as well
-        let next_token = self.next_token()?;
-        if !matches!(next_token.kind, JasmTokenKind::DotEnd) {
-            return Err(ParserError::Internal(format!(
-                "Expected .end after code block, found {}",
-                next_token.kind.as_string_token_type()
-            )));
-        }
-        let next_token = self.next_token()?;
-        if !matches!(next_token.kind, JasmTokenKind::Identifier(ref s) if s == "code") {
-            return Err(ParserError::Internal(format!(
-                "Expected .end code after code block, found {}",
-                next_token.kind.as_string_token_type()
-            )));
-        }
-        // TODO: assert no more tokens on the line after .end code
-        self.skip_newlines()?;
-
-        Ok(CodeAttribute {
-            max_stack: stack.unwrap() as u16, // TODO: proper error and u16 conversion check
-            max_locals: locals.unwrap() as u16, // TODO: proper error and u16 conversion check
-            code,
-            exception_table: vec![],
-            attributes: vec![],
+        Some(CodeDirective {
+            dir_span,
+            instructions,
+            max_stack: stack,
+            max_locals: locals,
         })
-         */
-        todo!()
     }
 
     fn parse_method(&mut self) -> Result<MethodDirective, Diagnostic> {
@@ -635,6 +587,7 @@ impl RnsParser {
                 }
                 RnsToken::DotMethodEnd(_) => {
                     self.next_token(); // consume .method_end
+                    break;
                 }
                 // TODO: decide strategy, allow not closed?
                 RnsToken::Eof(_) => break,
@@ -650,7 +603,13 @@ impl RnsParser {
             }
         }
 
-        todo!()
+        Ok(MethodDirective {
+            dir_span: method.dir_span,
+            name: method.name,
+            descriptor: method.descriptor,
+            flags: method.flags,
+            code_dir: method.code_dir,
+        })
     }
 
     fn parse_super_directive(&mut self) {
@@ -814,5 +773,6 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         class_dir,
         super_dir,
         diagnostics: instance.diagnostic,
+        methods: instance.method_dirs,
     })
 }
