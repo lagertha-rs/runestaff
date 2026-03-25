@@ -47,6 +47,7 @@ pub(super) enum ParserError {
         first_code_span: Span,
         duplicate: Span,
     },
+    UnknownInstruction(Spanned<String>),
 }
 
 impl ParserError {
@@ -68,12 +69,16 @@ impl ParserError {
             ParserError::MissingTypeHintOperand { .. } => "E-014",
             ParserError::MissingImplicitTypeHintOperand { .. } => "E-020",
             ParserError::MultipleCodeBlocks { .. } => "E-019",
+            ParserError::UnknownInstruction { .. } => "E-021",
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
         }
     }
 
     fn asm_msg(&self) -> String {
         match self {
+            ParserError::UnknownInstruction(instruction) => {
+                format!("invalid instruction '{}'", instruction.value)
+            }
             ParserError::EmptyFile(_) => "file contains no class definition".to_string(),
             ParserError::UnexpectedBodyToken(ctx, token) => {
                 format!("unexpected token in {}: '{token:?}'", ctx)
@@ -365,6 +370,12 @@ impl ParserError {
                     ),
                 ]
             }
+            ParserError::UnknownInstruction(instruction) => {
+                vec![DiagnosticLabel::at(
+                    instruction.span.as_range(),
+                    format!("'{}' is not a valid instruction", instruction.value),
+                )]
+            }
         }
     }
 
@@ -505,6 +516,7 @@ impl ParserError {
             ParserError::MultipleCodeBlocks { .. } => {
                 Some("Each method can only have one code block. Remove the duplicates or merge them into one.".to_string())
             }
+            ParserError::UnknownInstruction { .. } => None,
         }
     }
 
@@ -522,6 +534,7 @@ impl ParserError {
             | ParserError::TypeHintExpectsNumericOperand { type_hint, .. } => type_hint.span,
             ParserError::InvalidAccessFlag(_, flag) => flag.span,
             ParserError::MissingImplicitTypeHintOperand { after_span, .. } => *after_span,
+            ParserError::UnknownInstruction(instruction) => instruction.span,
         }
     }
 

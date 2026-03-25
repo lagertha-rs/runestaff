@@ -1,6 +1,7 @@
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::ast::{
-    ClassDirective, CodeDirective, MethodDirective, RnsInstruction, RnsModule, SuperDirective,
+    ClassDirective, CodeDirective, MethodDirective, RnsInstruction, RnsModule, RnsOperand,
+    SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
 use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
@@ -12,7 +13,7 @@ use crate::parser::error_deprecated::{NonNegativeIntegerContextDeprecated, Parse
 use crate::parser::warning::ParserWarning;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::iter::Peekable;
 use std::str::FromStr;
 use std::vec::IntoIter;
@@ -443,7 +444,7 @@ impl RnsParser {
         let raw_instruction = self.parse_identifier(OperandErrPosContext::InstructionName)?;
         let instruction_spec = *INSTRUCTION_SPECS
             .get(raw_instruction.value.as_str())
-            .unwrap();
+            .ok_or_else(|| ParserError::UnknownInstruction(raw_instruction.clone()))?;
         let instruction = match instruction_spec.operand {
             InstructionOperand::None => {
                 RnsInstruction::new_without_operand(raw_instruction.span, instruction_spec)
@@ -453,22 +454,53 @@ impl RnsParser {
                     OperandErrPosContext::InstructionOperand(instruction_spec),
                     TypeHintKind::Methodref,
                 )?;
-                RnsInstruction::new(raw_instruction.span, instruction_spec, operand)
+                RnsInstruction::new(
+                    raw_instruction.span,
+                    instruction_spec,
+                    RnsOperand::CpRef(operand),
+                )
             }
             InstructionOperand::FieldRef => {
                 let operand = self.parse_operand_or_type_hint(
                     OperandErrPosContext::InstructionOperand(instruction_spec),
                     TypeHintKind::Fieldref,
                 )?;
-                RnsInstruction::new(raw_instruction.span, instruction_spec, operand)
+                RnsInstruction::new(
+                    raw_instruction.span,
+                    instruction_spec,
+                    RnsOperand::CpRef(operand),
+                )
             }
-            // TODO: it is still stub here for ldc, need to handle properly
-            InstructionOperand::StringLiteral => {
-                let operand = self.parse_operand_or_type_hint(
-                    OperandErrPosContext::InstructionOperand(instruction_spec),
-                    TypeHintKind::String,
-                )?;
-                RnsInstruction::new(raw_instruction.span, instruction_spec, operand)
+            InstructionOperand::TypeHint => {
+                if let Some(RnsToken::TypeHint(th)) = self.peek_token() {
+                    let th = th.clone();
+                    self.next_token();
+                    let operand = self.resolve_explicit_type_hint(th)?;
+                    RnsInstruction::new(
+                        raw_instruction.span,
+                        instruction_spec,
+                        RnsOperand::CpRef(operand),
+                    )
+                } else {
+                    todo!("error: ldc requires an explicit type hint (e.g. @string, @int, @float)")
+                }
+            }
+            InstructionOperand::Byte => {
+                let value = self.try_next_numeric::<u8>().unwrap(); // TODO: proper error handling
+                RnsInstruction::new(
+                    raw_instruction.span,
+                    instruction_spec,
+                    RnsOperand::Byte(value),
+                )
+            }
+            InstructionOperand::Label => {
+                let label = self
+                    .parse_identifier(OperandErrPosContext::InstructionOperand(instruction_spec))?;
+                RnsInstruction::new(
+                    raw_instruction.span,
+                    instruction_spec,
+                    RnsOperand::Label(label),
+                )
             }
         };
 
@@ -505,25 +537,39 @@ impl RnsParser {
 
     fn parse_code_directive(&mut self) -> Option<CodeDirective> {
         let dir_span = self.next_token().span(); // consume .code token
-        //let mut labels = HashMap::new();
+        let mut labels: HashMap<String, u32> = HashMap::new();
         let mut instructions = Vec::new();
+        let mut cur_pc = 0u32;
 
         let (stack, locals) = self.parse_code_header();
 
-        while let Some(token) = self.tokens.peek() {
+        while let Some(token) = self.peek_token() {
             match token {
                 RnsToken::Newline(_) => {
                     self.next_token();
                 }
-                RnsToken::Label(label) => {
-                    todo!()
+                RnsToken::Label(_) => {
+                    if let RnsToken::Label(label) = self.next_token() {
+                        // TODO: check trailing tokens after label
+                        labels.insert(label.value, cur_pc);
+                        self.skip_newlines();
+                        if matches!(self.peek_token(), Some(RnsToken::DotCodeEnd(_))) {
+                            todo!("Special error for label should be followed by instruction")
+                        }
+                        let instruction = self.parse_instruction().unwrap();
+                        cur_pc += instruction.spec.opcode.pc_size().unwrap() as u32;
+                        instructions.push(instruction);
+                    }
                 }
                 RnsToken::DotCodeEnd(_) | RnsToken::Eof(_) => {
                     self.next_token(); // consume .code_end or EOF
                     break;
                 }
                 _ => match self.parse_instruction() {
-                    Ok(instruction) => instructions.push(instruction),
+                    Ok(instruction) => {
+                        cur_pc += instruction.spec.opcode.pc_size().unwrap() as u32;
+                        instructions.push(instruction);
+                    }
                     Err(e) => {
                         self.anchor(&[RnsTokenKind::Newline]);
                         self.diagnostic.push(e);
@@ -535,6 +581,7 @@ impl RnsParser {
         Some(CodeDirective {
             dir_span,
             instructions,
+            labels,
             max_stack: stack,
             max_locals: locals,
         })

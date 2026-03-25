@@ -35,6 +35,26 @@ impl ParseNumeric for i32 {
     }
 }
 
+impl ParseNumeric for u8 {
+    fn parse_and_classify(raw: &str, spanned: &Spanned<String>) -> Result<Self, NumericRejection> {
+        match u8::from_str(raw) {
+            Ok(value) => Ok(value),
+            Err(e) => {
+                if raw.contains('.') || looks_like_scientific_notation(raw) {
+                    Err(NumericRejection::FloatingPoint(spanned.clone()))
+                } else if matches!(
+                    e.kind(),
+                    std::num::IntErrorKind::PosOverflow | std::num::IntErrorKind::NegOverflow
+                ) {
+                    Err(NumericRejection::Overflow(spanned.clone()))
+                } else {
+                    Err(NumericRejection::NotNumeric(spanned.clone()))
+                }
+            }
+        }
+    }
+}
+
 impl ParseNumeric for i64 {
     fn parse_and_classify(raw: &str, spanned: &Spanned<String>) -> Result<Self, NumericRejection> {
         match i64::from_str(raw) {

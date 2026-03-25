@@ -1,6 +1,6 @@
 use crate::assembler::jvm_warning::JvmWarning;
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
-use crate::ast::{MethodDirective, RnsModule};
+use crate::ast::{MethodDirective, RnsModule, RnsOperand};
 use crate::diagnostic::Diagnostic;
 use crate::token::type_hint::TypeHint;
 use jclass::ClassFile;
@@ -129,15 +129,28 @@ impl RnsModule {
         let mut code = Vec::new();
         for ins in code_dir.instructions {
             let opcode = ins.spec.opcode;
-            let operand = ins
-                .operand
-                .map(|hint| Self::add_type_hint_to_cp(cp_builder, hint));
             code.push(opcode as u8);
-            if let Some(operand) = operand {
-                match opcode.operand_size() {
-                    1 => code.push(operand as u8),
-                    2 => code.extend(operand.to_be_bytes()),
-                    _ => unimplemented!(),
+            match ins.operand {
+                None => {}
+                Some(RnsOperand::CpRef(hint)) => {
+                    let cp_index = Self::add_type_hint_to_cp(cp_builder, hint);
+                    match opcode.operand_size() {
+                        1 => code.push(cp_index as u8),
+                        2 => code.extend(cp_index.to_be_bytes()),
+                        _ => unimplemented!(),
+                    }
+                }
+                Some(RnsOperand::Byte(v)) => code.push(v.value),
+                Some(RnsOperand::Label(label)) => {
+                    // TODO: resolve label to branch offset
+                    let target_pc = code_dir.labels.get(&label.value).expect("unknown label"); // TODO: proper error
+                    let current_pc = (code.len() - 1) as u32; // pc of opcode
+                    let offset = (*target_pc as i32) - (current_pc as i32);
+                    match opcode.operand_size() {
+                        2 => code.extend((offset as i16).to_be_bytes()),
+                        4 => code.extend(offset.to_be_bytes()),
+                        _ => unimplemented!(),
+                    }
                 }
             }
         }

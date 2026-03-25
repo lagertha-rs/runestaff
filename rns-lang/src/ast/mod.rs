@@ -3,10 +3,10 @@ pub mod flag;
 use crate::ast::flag::RnsMethodFlag;
 use crate::diagnostic::Diagnostic;
 use crate::instruction::InstructionSpec;
-use crate::token::Span;
 use crate::token::type_hint::TypeHint;
+use crate::token::{Span, Spanned};
 use flag::RnsClassFlag;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 pub struct RnsModule {
     pub class_dir: ClassDirective,
@@ -47,14 +47,20 @@ impl MethodDirective {
     }
 }
 
+pub enum RnsOperand {
+    CpRef(TypeHint),
+    Byte(Spanned<u8>),
+    Label(Spanned<String>),
+}
+
 pub struct RnsInstruction {
     pub ins_span: Span,
     pub spec: InstructionSpec,
-    pub operand: Option<TypeHint>,
+    pub operand: Option<RnsOperand>,
 }
 
 impl RnsInstruction {
-    pub fn new(ins_span: Span, spec: InstructionSpec, operand: TypeHint) -> Self {
+    pub fn new(ins_span: Span, spec: InstructionSpec, operand: RnsOperand) -> Self {
         Self {
             ins_span,
             spec,
@@ -74,6 +80,7 @@ impl RnsInstruction {
 pub struct CodeDirective {
     pub dir_span: Span,
     pub instructions: Vec<RnsInstruction>,
+    pub labels: HashMap<String, u32>,
     pub max_stack: u16,
     pub max_locals: u16,
 }
