@@ -4,7 +4,7 @@ use crate::ast::{
     SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
-use crate::instruction::{InstructionOperand, INSTRUCTION_SPECS};
+use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
 use crate::parser::error::{
     AccessFlagContext, NumericRejection, OperandErrPosContext, ParseNumeric, ParserError,
     TrailingTokensErrContext, UnexpectedTokenContext,

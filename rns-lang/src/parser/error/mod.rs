@@ -6,11 +6,11 @@ pub(super) use context::{
 };
 pub(super) use rejection::{NumericRejection, ParseNumeric};
 
+use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
-use crate::ERROR_DOCS_BASE_URL;
 use std::vec;
 
 // TODO: should actually take ownership when converting to Diagnostic
