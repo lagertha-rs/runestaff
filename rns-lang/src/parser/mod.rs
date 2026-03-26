@@ -4,7 +4,7 @@ use crate::ast::{
     SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
-use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
+use crate::instruction::{InstructionOperand, INSTRUCTION_SPECS};
 use crate::parser::error::{
     AccessFlagContext, NumericRejection, OperandErrPosContext, ParseNumeric, ParserError,
     TrailingTokensErrContext, UnexpectedTokenContext,
@@ -524,7 +524,9 @@ impl RnsParser {
                 RnsToken::Identifier(ref name) if name.value == "locals" => {
                     locals = Some(self.try_next_numeric().unwrap().value);
                 }
-                other => panic!("Unexpected code directive argument {other:?}"),
+                other => self
+                    .diagnostic
+                    .push(ParserError::UnknownCodeDirectiveAttribute(other).into()),
             }
         }
 

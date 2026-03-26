@@ -6,11 +6,11 @@ pub(super) use context::{
 };
 pub(super) use rejection::{NumericRejection, ParseNumeric};
 
-use crate::ERROR_DOCS_BASE_URL;
 use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
+use crate::ERROR_DOCS_BASE_URL;
 use std::vec;
 
 // TODO: should actually take ownership when converting to Diagnostic
@@ -48,6 +48,7 @@ pub(super) enum ParserError {
         duplicate: Span,
     },
     UnknownInstruction(Spanned<String>),
+    UnknownCodeDirectiveAttribute(RnsToken),
 }
 
 impl ParserError {
@@ -70,12 +71,19 @@ impl ParserError {
             ParserError::MissingImplicitTypeHintOperand { .. } => "E-020",
             ParserError::MultipleCodeBlocks { .. } => "E-019",
             ParserError::UnknownInstruction { .. } => "E-021",
+            ParserError::UnknownCodeDirectiveAttribute(_) => "E-022",
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
         }
     }
 
     fn asm_msg(&self) -> String {
         match self {
+            ParserError::UnknownCodeDirectiveAttribute(token) => {
+                format!(
+                    "'{}' is not a valid code directive attribute",
+                    token.token_name()
+                )
+            }
             ParserError::UnknownInstruction(instruction) => {
                 format!("invalid instruction '{}'", instruction.value)
             }
@@ -167,6 +175,15 @@ impl ParserError {
 
     fn labels(&self) -> Vec<DiagnosticLabel> {
         match self {
+            ParserError::UnknownCodeDirectiveAttribute(token) => {
+                vec![DiagnosticLabel::at(
+                    token.span().as_range(),
+                    format!(
+                        "'{}' is not a valid code directive attribute",
+                        token.token_name()
+                    ),
+                )]
+            }
             ParserError::EmptyFile(_) => {
                 vec![DiagnosticLabel::at(0..0, "expected a '.class' directive")]
             }
@@ -389,6 +406,7 @@ impl ParserError {
 
     fn help(&self) -> Option<String> {
         match self {
+            ParserError::UnknownCodeDirectiveAttribute(_) => None,
             ParserError::EmptyFile(_) => {
                 Some("Make sure the file contains a valid class definition.".to_string())
             }
@@ -529,6 +547,7 @@ impl ParserError {
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::MultipleCodeBlocks { duplicate, .. } => *duplicate,
             ParserError::UnexpectedBodyToken(_, token)
+            | ParserError::UnknownCodeDirectiveAttribute(token)
             | ParserError::UnexpectedTokenBeforeClassDefinition(token) => token.span(),
             ParserError::MissingTypeHintOperand { type_hint, .. }
             | ParserError::TypeHintExpectsNumericOperand { type_hint, .. } => type_hint.span,
