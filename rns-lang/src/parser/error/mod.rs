@@ -6,12 +6,11 @@ pub(super) use context::{
 };
 pub(super) use rejection::{NumericRejection, ParseNumeric};
 
-use crate::ERROR_DOCS_BASE_URL;
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier, IntoDiagnostic, docs_note};
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
-use std::vec;
+use std::borrow::Cow;
 
 // TODO: should actually take ownership when converting to Diagnostic
 
@@ -51,7 +50,7 @@ pub(super) enum ParserError {
     UnknownCodeDirectiveAttribute(RnsToken),
 }
 
-impl ParserError {
+impl IntoDiagnostic for ParserError {
     // TODO: put all codes as consts somewhere, and make sure they are unique across the whole codebase
     fn code(&self) -> &'static str {
         match self {
@@ -76,38 +75,35 @@ impl ParserError {
         }
     }
 
-    fn asm_msg(&self) -> String {
+    fn asm_msg(&self) -> Cow<'static, str> {
         match self {
-            ParserError::UnknownCodeDirectiveAttribute(token) => {
-                format!(
-                    "'{}' is not a valid code directive attribute",
-                    token.token_name()
-                )
-            }
+            ParserError::UnknownCodeDirectiveAttribute(token) => format!(
+                "'{}' is not a valid code directive attribute",
+                token.token_name()
+            )
+            .into(),
             ParserError::UnknownInstruction(instruction) => {
-                format!("invalid instruction '{}'", instruction.value)
+                format!("invalid instruction '{}'", instruction.value).into()
             }
-            ParserError::EmptyFile(_) => "file contains no class definition".to_string(),
+            ParserError::EmptyFile(_) => "file contains no class definition".into(),
             ParserError::UnexpectedBodyToken(ctx, token) => {
-                format!("unexpected token in {}: '{token:?}'", ctx)
+                format!("unexpected token in {}: '{token:?}'", ctx).into()
             }
-            ParserError::UnexpectedTokenBeforeClassDefinition(unexpected) => {
-                format!(
-                    "unexpected {} before class definition",
-                    unexpected.token_type()
-                )
-            }
-            ParserError::IdentifierOrHintExpected(_, token, ctx) => {
-                format!(
-                    "unexpected {} where a {} is required",
-                    token.token_type(),
-                    ctx
-                )
-            }
+            ParserError::UnexpectedTokenBeforeClassDefinition(unexpected) => format!(
+                "unexpected {} before class definition",
+                unexpected.token_type()
+            )
+            .into(),
+            ParserError::IdentifierOrHintExpected(_, token, ctx) => format!(
+                "unexpected {} where a {} is required",
+                token.token_type(),
+                ctx
+            )
+            .into(),
             ParserError::TrailingTokens(_, _, ctx) => {
-                format!("unexpected trailing tokens after {}", ctx)
+                format!("unexpected trailing tokens after {}", ctx).into()
             }
-            ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".to_string(),
+            ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".into(),
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
@@ -115,31 +111,28 @@ impl ParserError {
                 let numeric_kind = type_hint.value.numeric_kind();
                 let bit_width = type_hint.value.bit_width();
                 match rejection {
-                    NumericRejection::NotNumeric(spanned) => {
-                        format!(
-                            "'{}' requires a {} {}, but '{}' is not a number",
-                            type_hint.value.token_name(),
-                            bit_width,
-                            numeric_kind,
-                            spanned.value
-                        )
-                    }
-                    NumericRejection::FloatingPoint(spanned) => {
-                        format!(
-                            "'{}' requires a whole number, but '{}' has a decimal point",
-                            type_hint.value.token_name(),
-                            spanned.value
-                        )
-                    }
-                    NumericRejection::Overflow(spanned) => {
-                        format!(
-                            "'{}' requires a {} {}, but '{}' is out of range",
-                            type_hint.value.token_name(),
-                            bit_width,
-                            numeric_kind,
-                            spanned.value
-                        )
-                    }
+                    NumericRejection::NotNumeric(spanned) => format!(
+                        "'{}' requires a {} {}, but '{}' is not a number",
+                        type_hint.value.token_name(),
+                        bit_width,
+                        numeric_kind,
+                        spanned.value
+                    )
+                    .into(),
+                    NumericRejection::FloatingPoint(spanned) => format!(
+                        "'{}' requires a whole number, but '{}' has a decimal point",
+                        type_hint.value.token_name(),
+                        spanned.value
+                    )
+                    .into(),
+                    NumericRejection::Overflow(spanned) => format!(
+                        "'{}' requires a {} {}, but '{}' is out of range",
+                        type_hint.value.token_name(),
+                        bit_width,
+                        numeric_kind,
+                        spanned.value
+                    )
+                    .into(),
                     NumericRejection::Missing(_) => {
                         unreachable!("Missing case handled by MissingTypeHintOperand")
                     }
@@ -147,28 +140,25 @@ impl ParserError {
             }
             ParserError::MissingTypeHintOperand {
                 type_hint, operand, ..
-            } => {
-                format!(
-                    "'{}' type hint is missing its {}",
-                    type_hint.value.token_name(),
-                    operand
-                )
-            }
+            } => format!(
+                "'{}' type hint is missing its {}",
+                type_hint.value.token_name(),
+                operand
+            )
+            .into(),
             ParserError::InvalidAccessFlag(ctx, flag) => {
-                format!("invalid {} access flag '{}'", ctx, flag.value.token_name())
+                format!("invalid {} access flag '{}'", ctx, flag.value.token_name()).into()
             }
             ParserError::MissingImplicitTypeHintOperand {
                 err_ctx, operand, ..
-            } => {
-                format!("missing {} after '{}'", operand, err_ctx.directive_name(),)
-            }
+            } => format!("missing {} after '{}'", operand, err_ctx.directive_name()).into(),
             ParserError::MultipleCodeBlocks { method_name, .. } => {
                 let method = if let Some(name_hint) = method_name {
                     format!("method '{}'", name_hint.value())
                 } else {
                     "method".to_string()
                 };
-                format!("multiple code blocks defined for {}", method,)
+                format!("multiple code blocks defined for {}", method).into()
             }
         }
     }
@@ -219,10 +209,7 @@ impl ParserError {
                     ),
                 );
                 let error_label = if token.is_line_terminator() {
-                    DiagnosticLabel::at(
-                        span.byte_end..span.byte_end,
-                        "but nothing was provided".to_string(),
-                    )
+                    DiagnosticLabel::at(span.byte_end..span.byte_end, "but nothing was provided")
                 } else {
                     DiagnosticLabel::at(
                         token.span().as_range(),
@@ -293,7 +280,7 @@ impl ParserError {
             } => {
                 let context_label = DiagnosticLabel::context(
                     type_hint.span.as_range(),
-                    type_hint.value.context_label().to_string(),
+                    type_hint.value.context_label(),
                 );
                 let error_label = match rejection {
                     NumericRejection::NotNumeric(spanned) => DiagnosticLabel::at(
@@ -302,7 +289,7 @@ impl ParserError {
                     ),
                     NumericRejection::FloatingPoint(spanned) => DiagnosticLabel::at(
                         spanned.span.as_range(),
-                        "must be a whole number without a decimal point".to_string(),
+                        "must be a whole number without a decimal point",
                     ),
                     NumericRejection::Overflow(spanned) => DiagnosticLabel::at(
                         spanned.span.as_range(),
@@ -322,7 +309,7 @@ impl ParserError {
                 vec![
                     DiagnosticLabel::context(
                         type_hint.span.as_range(),
-                        type_hint.value.context_label().to_string(),
+                        type_hint.value.context_label(),
                     ),
                     DiagnosticLabel::at(
                         after_span.byte_end..after_span.byte_end,
@@ -379,11 +366,11 @@ impl ParserError {
                     ),
                     DiagnosticLabel::context(
                         first_code_span.as_range(),
-                        "first code block defined here".to_string(),
+                        "first code block defined here",
                     ),
                     DiagnosticLabel::at(
                         duplicate.as_range(),
-                        "but another code block defined here".to_string(),
+                        "but another code block defined here",
                     ),
                 ]
             }
@@ -396,46 +383,53 @@ impl ParserError {
         }
     }
 
-    fn note(&self) -> String {
-        format!(
-            "For more details see:\n{}{}",
-            ERROR_DOCS_BASE_URL,
-            self.code().to_ascii_lowercase()
-        )
+    fn note(&self) -> Option<Cow<'static, str>> {
+        Some(docs_note(self.code()))
     }
 
-    fn help(&self) -> Option<String> {
+    fn help(&self) -> Option<Cow<'static, str>> {
         match self {
             ParserError::UnknownCodeDirectiveAttribute(_) => None,
             ParserError::EmptyFile(_) => {
-                Some("Make sure the file contains a valid class definition.".to_string())
+                Some("Make sure the file contains a valid class definition.".into())
             }
-            ParserError::UnexpectedBodyToken(ctx, _) => Some(format!(
-                "Check the syntax of the {} and ensure all tokens are valid.",
-                ctx
-            )),
+            ParserError::UnexpectedBodyToken(ctx, _) => Some(
+                format!(
+                    "Check the syntax of the {} and ensure all tokens are valid.",
+                    ctx
+                )
+                .into(),
+            ),
             ParserError::UnexpectedTokenBeforeClassDefinition(_) => {
-                Some("Make sure the file starts with a '.class' directive.".to_string())
+                Some("Make sure the file starts with a '.class' directive.".into())
             }
-            ParserError::IdentifierOrHintExpected(_, _token, ctx) => Some(format!(
-                "Provide a {} after the '{}' directive, e.g.:\n\
+            ParserError::IdentifierOrHintExpected(_, _token, ctx) => Some(
+                format!(
+                    "Provide a {} after the '{}' directive, e.g.:\n\
                      {} MyClassName",
-                ctx,
-                ctx.directive_name(),
-                ctx.directive_name()
-            )),
+                    ctx,
+                    ctx.directive_name(),
+                    ctx.directive_name()
+                )
+                .into(),
+            ),
             ParserError::TrailingTokens(_, tokens, _) => {
                 if tokens[0].is_directive() {
-                    Some(format!(
-                        "If you are trying to declare a new '{}' directive, try to put it on a new line.",
-                        tokens[0].token_name()
-                    ))
+                    Some(
+                        format!(
+                            "If you are trying to declare a new '{}' directive, try to put it on a new line.",
+                            tokens[0].token_name()
+                        )
+                        .into(),
+                    )
                 } else {
-                    Some("Remove the trailing tokens or move them to a valid context.".to_string())
+                    Some(
+                        "Remove the trailing tokens or move them to a valid context.".into(),
+                    )
                 }
             }
             ParserError::MultipleSuperDefinitions(_) => Some(
-                "A class can only have one .super directive. Remove the duplicates.".to_string(),
+                "A class can only have one .super directive. Remove the duplicates.".into(),
             ),
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
@@ -450,41 +444,56 @@ impl ParserError {
                 let example = type_hint.value.example();
                 let numeric_kind = type_hint.value.numeric_kind();
                 match rejection {
-                    NumericRejection::NotNumeric(spanned) => Some(format!(
-                        "'{}' is not a valid {} literal.\n\n\
-                         Syntax:\n\
-                         {}\n\n\
-                         For example:\n\
-                         {}",
-                        spanned.value, numeric_kind, syntax, example
-                    )),
+                    NumericRejection::NotNumeric(spanned) => Some(
+                        format!(
+                            "'{}' is not a valid {} literal.\n\n\
+                             Syntax:\n\
+                             {}\n\n\
+                             For example:\n\
+                             {}",
+                            spanned.value, numeric_kind, syntax, example
+                        )
+                        .into(),
+                    ),
                     NumericRejection::FloatingPoint(spanned) => {
                         let float_hint = match type_hint.value {
                             TypeHintKind::Long => "@double",
                             _ => "@float",
                         };
-                        Some(format!(
-                            "If you need a fractional value, use {} instead:\n\
-                             {} {}",
-                            float_hint, float_hint, spanned.value
-                        ))
+                        Some(
+                            format!(
+                                "If you need a fractional value, use {} instead:\n\
+                                 {} {}",
+                                float_hint, float_hint, spanned.value
+                            )
+                            .into(),
+                        )
                     }
                     NumericRejection::Overflow(spanned) => match type_hint.value {
-                        TypeHintKind::Long | TypeHintKind::Double => Some(format!(
-                            "The value '{}' exceeds the {}.",
-                            spanned.value,
-                            type_hint.value.range_description(),
-                        )),
-                        TypeHintKind::Integer => Some(format!(
-                            "If you need a larger integer, use @long instead:\n\
-                             @long {}",
-                            spanned.value
-                        )),
-                        TypeHintKind::Float => Some(format!(
-                            "If you need a larger float, use @double instead:\n\
-                             @double {}",
-                            spanned.value
-                        )),
+                        TypeHintKind::Long | TypeHintKind::Double => Some(
+                            format!(
+                                "The value '{}' exceeds the {}.",
+                                spanned.value,
+                                type_hint.value.range_description(),
+                            )
+                            .into(),
+                        ),
+                        TypeHintKind::Integer => Some(
+                            format!(
+                                "If you need a larger integer, use @long instead:\n\
+                                 @long {}",
+                                spanned.value
+                            )
+                            .into(),
+                        ),
+                        TypeHintKind::Float => Some(
+                            format!(
+                                "If you need a larger float, use @double instead:\n\
+                                 @double {}",
+                                spanned.value
+                            )
+                            .into(),
+                        ),
                         _ => unreachable!("Overflow on non-numeric type hint"),
                     },
                     NumericRejection::Missing(_) => {
@@ -500,15 +509,18 @@ impl ParserError {
                     .map(|op| op.placeholder())
                     .collect::<Vec<_>>()
                     .join(" ");
-                Some(format!(
-                    "Provide the value immediately after the hint:\n\
-                     {} {}\n\n\
-                     For example:\n\
-                     {}",
-                    type_hint.value.token_name(),
-                    syntax,
-                    type_hint.value.example()
-                ))
+                Some(
+                    format!(
+                        "Provide the value immediately after the hint:\n\
+                         {} {}\n\n\
+                         For example:\n\
+                         {}",
+                        type_hint.value.token_name(),
+                        syntax,
+                        type_hint.value.example()
+                    )
+                    .into(),
+                )
             }
             ParserError::InvalidAccessFlag(_, _) => None,
             ParserError::MissingImplicitTypeHintOperand {
@@ -522,17 +534,20 @@ impl ParserError {
                     .map(|op| op.placeholder())
                     .collect::<Vec<_>>()
                     .join(" ");
-                Some(format!(
-                    "Provide a {} after the '{}' directive, e.g.:\n\
-                     {} {}",
-                    err_ctx,
-                    err_ctx.directive_name(),
-                    err_ctx.directive_name(),
-                    syntax,
-                ))
+                Some(
+                    format!(
+                        "Provide a {} after the '{}' directive, e.g.:\n\
+                         {} {}",
+                        err_ctx,
+                        err_ctx.directive_name(),
+                        err_ctx.directive_name(),
+                        syntax,
+                    )
+                    .into(),
+                )
             }
             ParserError::MultipleCodeBlocks { .. } => {
-                Some("Each method can only have one code block. Remove the duplicates or merge them into one.".to_string())
+                Some("Each method can only have one code block. Remove the duplicates or merge them into one.".into())
             }
             ParserError::UnknownInstruction { .. } => None,
         }
@@ -557,24 +572,8 @@ impl ParserError {
         }
     }
 
-    fn lsp_message(&self) -> String {
-        // TODO: stub
-        self.asm_msg()
-    }
-}
-
-impl From<ParserError> for Diagnostic {
-    fn from(value: ParserError) -> Self {
-        Diagnostic {
-            asm_msg: value.asm_msg(),
-            lsp_msg: value.lsp_message(),
-            code: Some(value.code()),
-            primary_location: value.primary_location(),
-            note: Some(value.note()),
-            help: value.help(),
-            tier: DiagnosticTier::SyntaxError,
-            labels: value.labels(),
-        }
+    fn tier(&self) -> DiagnosticTier {
+        DiagnosticTier::SyntaxError
     }
 }
 

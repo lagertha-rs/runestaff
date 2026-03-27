@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -17,7 +18,7 @@ not generated
    │ Help: Did you mean '@int'?
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-005
+   │       https://rune.lagertha-vm.com/errors/E-005
 ───╯
 ----- HASH -----
 not generated

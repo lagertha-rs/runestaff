@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -16,7 +17,7 @@ not generated
    │         ╰── '\u' is not a valid escape sequence
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-004
+   │       https://rune.lagertha-vm.com/errors/E-004
 ───╯
 ----- HASH -----
 not generated

@@ -1,8 +1,9 @@
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::diagnostic::{DiagnosticLabel, DiagnosticTier, IntoDiagnostic};
 use crate::parser::error::AccessFlagContext;
 use crate::token::Span;
 use crate::token::flag::RnsFlag;
 use crate::token::type_hint::TypeHint;
+use std::borrow::Cow;
 
 #[derive(Debug)]
 pub(super) enum ParserWarning {
@@ -19,7 +20,7 @@ pub(super) enum ParserWarning {
     ReservedLikeIdentifierTodoName,
 }
 
-impl ParserWarning {
+impl IntoDiagnostic for ParserWarning {
     fn code(&self) -> &'static str {
         match self {
             ParserWarning::MissingSuperClass { .. } => "W-001",
@@ -27,18 +28,18 @@ impl ParserWarning {
             ParserWarning::ReservedLikeIdentifierTodoName => "TODO",
         }
     }
-    fn asm_msg(&self) -> String {
+
+    fn asm_msg(&self) -> Cow<'static, str> {
         match self {
-            ParserWarning::MissingSuperClass { .. } => "missing super directive".to_string(),
-            ParserWarning::DuplicateAccessFlag { ctx, flag, .. } => {
-                format!(
-                    "duplicate access flag '{}' in {} definition",
-                    flag.name(),
-                    ctx
-                )
-            }
+            ParserWarning::MissingSuperClass { .. } => "missing super directive".into(),
+            ParserWarning::DuplicateAccessFlag { ctx, flag, .. } => format!(
+                "duplicate access flag '{}' in {} definition",
+                flag.name(),
+                ctx
+            )
+            .into(),
             ParserWarning::ReservedLikeIdentifierTodoName => {
-                "TODO: reserved-like identifier used as name".to_string()
+                "TODO: reserved-like identifier used as name".into()
             }
         }
     }
@@ -56,19 +57,25 @@ impl ParserWarning {
         }
     }
 
-    fn note(&self) -> Option<String> {
+    fn note(&self) -> Option<Cow<'static, str>> {
         match self {
-            ParserWarning::MissingSuperClass { default, .. } => Some(format!(
-                "The .super directive is required to specify the superclass. \
-                 Defaulting to '{}'.",
-                default
-            )),
-            ParserWarning::DuplicateAccessFlag { flag, .. } => Some(format!(
-                "The `{}` flag was already specified. You only need to declare it once.",
-                flag.name()
-            )),
+            ParserWarning::MissingSuperClass { default, .. } => Some(
+                format!(
+                    "The .super directive is required to specify the superclass. \
+                     Defaulting to '{}'.",
+                    default
+                )
+                .into(),
+            ),
+            ParserWarning::DuplicateAccessFlag { flag, .. } => Some(
+                format!(
+                    "The `{}` flag was already specified. You only need to declare it once.",
+                    flag.name()
+                )
+                .into(),
+            ),
             ParserWarning::ReservedLikeIdentifierTodoName => {
-                Some("TODO: reserved-like identifier used as name".to_string())
+                Some("TODO: reserved-like identifier used as name".into())
             }
         }
     }
@@ -101,23 +108,11 @@ impl ParserWarning {
         }
     }
 
-    fn lsp_msg(&self) -> String {
-        //TODO: stub
-        self.asm_msg()
+    fn help(&self) -> Option<Cow<'static, str>> {
+        None
     }
-}
 
-impl From<ParserWarning> for Diagnostic {
-    fn from(value: ParserWarning) -> Self {
-        Diagnostic {
-            asm_msg: value.asm_msg(),
-            lsp_msg: value.lsp_msg(),
-            code: Some(value.code()),
-            primary_location: value.primary_location(),
-            note: value.note(),
-            help: None,
-            tier: DiagnosticTier::AssemblerWarn,
-            labels: value.labels(),
-        }
+    fn tier(&self) -> DiagnosticTier {
+        DiagnosticTier::AssemblerWarn
     }
 }

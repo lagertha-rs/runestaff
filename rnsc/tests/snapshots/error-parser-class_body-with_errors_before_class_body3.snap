@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -23,7 +24,7 @@ unexpected
    │ Help: Remove the trailing tokens or move them to a valid context.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-010
+   │       https://rune.lagertha-vm.com/errors/E-010
 ───╯
 [E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unexpected", span: Span { byte_start: 57, byte_end: 67, line: 4, col_start: 0, col_end: 10 } })'
    ╭─[ test_data/integration/error/parser/class_body/with_errors_before_class_body3.rns:5:1 ]
@@ -35,7 +36,7 @@ unexpected
    │ Help: Check the syntax of the class body and ensure all tokens are valid.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-007
+   │       https://rune.lagertha-vm.com/errors/E-007
 ───╯
 ----- HASH -----
 not generated

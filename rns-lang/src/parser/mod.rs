@@ -9,17 +9,14 @@ use crate::parser::error::{
     AccessFlagContext, NumericRejection, OperandErrPosContext, ParseNumeric, ParserError,
     TrailingTokensErrContext, UnexpectedTokenContext,
 };
-use crate::parser::error_deprecated::{NonNegativeIntegerContextDeprecated, ParserErrorDeprecated};
 use crate::parser::warning::ParserWarning;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::{BTreeMap, HashMap};
 use std::iter::Peekable;
-use std::str::FromStr;
 use std::vec::IntoIter;
 
 mod error;
-mod error_deprecated;
 #[cfg(test)]
 mod tests;
 mod warning;
@@ -405,38 +402,6 @@ impl RnsParser {
             self.diagnostic.push(
                 ParserError::TrailingTokens(end_of_previous_token, trailing_tokens, context).into(),
             );
-        }
-    }
-
-    // TODO: this is wrong.. also need to review integer token.. it is i32
-    // TODO: why I need here prev token info? I can just use current token info for error
-    fn expect_next_non_negative_integer(
-        &mut self,
-        context: NonNegativeIntegerContextDeprecated,
-        prev_token_byte_end: usize,
-        prev_token_col_end: usize,
-    ) -> Result<u32, ParserErrorDeprecated> {
-        let token = self.next_token();
-        match token {
-            RnsToken::Identifier(spanned) => Ok(u32::from_str(&spanned.value).unwrap()),
-            RnsToken::Eof(t) | RnsToken::Newline(t) => {
-                Err(ParserErrorDeprecated::NonNegativeIntegerExpected(
-                    Span {
-                        byte_start: prev_token_byte_end,
-                        byte_end: prev_token_byte_end,
-                        line: t.line,
-                        col_start: prev_token_col_end,
-                        col_end: prev_token_col_end,
-                    },
-                    token,
-                    context,
-                ))
-            }
-            _ => Err(ParserErrorDeprecated::NonNegativeIntegerExpected(
-                token.span(),
-                token,
-                context,
-            )),
         }
     }
 

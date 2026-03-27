@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -19,7 +20,7 @@ not generated
    │ Help: Multiline identifiers are not supported yet, but are planned for the future.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-004
+   │       https://rune.lagertha-vm.com/errors/E-004
 ───╯
 ----- HASH -----
 not generated

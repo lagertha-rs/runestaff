@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -19,7 +20,7 @@ unexpected
    │ Help: Check the syntax of the class body and ensure all tokens are valid.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-007
+   │       https://rune.lagertha-vm.com/errors/E-007
 ───╯
 ----- HASH -----
 not generated

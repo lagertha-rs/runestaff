@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -18,7 +19,7 @@ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- Ext
    │ Help: Make sure the file starts with a '.class' directive.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-008
+   │       https://rune.lagertha-vm.com/errors/E-008
 ───╯
 [E-010] Error: unexpected trailing tokens after class definition
    ╭─[ test_data/integration/error/parser/outside_class_directive/recovery2.rns:1:62 ]
@@ -32,7 +33,7 @@ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- Ext
    │ Help: Remove the trailing tokens or move them to a valid context.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-010
+   │       https://rune.lagertha-vm.com/errors/E-010
 ───╯
 [W-001] Warning: missing super directive
    ╭─[ test_data/integration/error/parser/outside_class_directive/recovery2.rns:1:47 ]

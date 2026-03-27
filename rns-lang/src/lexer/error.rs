@@ -1,7 +1,7 @@
-use crate::ERROR_DOCS_BASE_URL;
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::diagnostic::{DiagnosticLabel, DiagnosticTier, IntoDiagnostic, docs_note};
 use crate::suggestion;
 use crate::token::Span;
+use std::borrow::Cow;
 
 //TODO: same error code for all lexer, try to categorize later if needed
 
@@ -13,7 +13,7 @@ pub(super) enum LexerError {
     InvalidEscape(Span, char),
 }
 
-impl LexerError {
+impl IntoDiagnostic for LexerError {
     fn code(&self) -> &'static str {
         match self {
             LexerError::UnterminatedQuotedIdentifier(_) => "E-001",
@@ -23,23 +23,25 @@ impl LexerError {
         }
     }
 
-    fn asm_msg(&self) -> String {
+    fn asm_msg(&self) -> Cow<'static, str> {
         match self {
-            LexerError::UnknownDirective(_, _) => "unknown directive".to_string(),
-            LexerError::UnterminatedQuotedIdentifier(_) => {
-                "unterminated quoted identifier".to_string()
-            }
-            LexerError::InvalidEscape(_, _) => "invalid escape sequence".to_string(),
-            LexerError::UnknownTypeHint(_, _) => "unknown type hint".to_string(),
+            LexerError::UnknownDirective(_, _) => "unknown directive".into(),
+            LexerError::UnterminatedQuotedIdentifier(_) => "unterminated quoted identifier".into(),
+            LexerError::InvalidEscape(_, _) => "invalid escape sequence".into(),
+            LexerError::UnknownTypeHint(_, _) => "unknown type hint".into(),
         }
     }
 
-    fn note(&self) -> String {
-        format!(
-            "For more details see:\n{}{}",
-            ERROR_DOCS_BASE_URL,
-            self.code().to_ascii_lowercase()
-        )
+    fn lsp_msg(&self) -> Cow<'static, str> {
+        match self {
+            LexerError::UnknownDirective(_, name) => format!("unknown directive '{name}'").into(),
+            LexerError::UnknownTypeHint(_, name) => format!("unknown type hint '{name}'").into(),
+            _ => self.asm_msg(),
+        }
+    }
+
+    fn note(&self) -> Option<Cow<'static, str>> {
+        Some(docs_note(self.code()))
     }
 
     fn labels(&self) -> Vec<DiagnosticLabel> {
@@ -59,16 +61,16 @@ impl LexerError {
             LexerError::UnterminatedQuotedIdentifier(_) => {
                 vec![DiagnosticLabel::at(
                     self.primary_location().as_range(),
-                    "this identifier is not terminated".to_string(),
+                    "this identifier is not terminated",
                 )]
             }
             LexerError::InvalidEscape(_, c) if *c == '\n' => vec![DiagnosticLabel::at(
                 self.primary_location().as_range(),
-                "newline characters cannot be escaped".to_string(),
+                "newline characters cannot be escaped",
             )],
             LexerError::InvalidEscape(_, c) if *c == '\r' => vec![DiagnosticLabel::at(
                 self.primary_location().as_range(),
-                "carriage return characters cannot be escaped".to_string(),
+                "carriage return characters cannot be escaped",
             )],
             LexerError::InvalidEscape(_, c) => vec![DiagnosticLabel::at(
                 self.primary_location().as_range(),
@@ -77,22 +79,22 @@ impl LexerError {
         }
     }
 
-    fn help(&self) -> Option<String> {
+    fn help(&self) -> Option<Cow<'static, str>> {
         match self {
             LexerError::UnknownDirective(_, name) => suggestion::closest_directive(name)
-                .map(|closest| format!("Did you mean '{}'?", closest)),
+                .map(|closest| format!("Did you mean '{}'?", closest).into()),
             LexerError::UnknownTypeHint(_, name) => {
                 let bare = name.strip_prefix('@').unwrap_or(name);
                 suggestion::closest_type_hint(bare)
-                    .map(|closest| format!("Did you mean '@{}'?", closest))
+                    .map(|closest| format!("Did you mean '@{}'?", closest).into())
             }
             LexerError::InvalidEscape(_, c) if *c == '\n' || *c == '\r' => Some(
                 "Multiline identifiers are not supported yet, but are planned for the future."
-                    .to_string(),
+                    .into(),
             ),
             LexerError::InvalidEscape(_, _) => None,
             LexerError::UnterminatedQuotedIdentifier(_) => {
-                Some("Close the identifier with a '\"' on the same line.".to_string())
+                Some("Close the identifier with a '\"' on the same line.".into())
             }
         }
     }
@@ -106,33 +108,7 @@ impl LexerError {
         }
     }
 
-    fn lsp_msg(&self) -> String {
-        match self {
-            LexerError::UnknownDirective(_, name) => {
-                format!("unknown directive '{name}'")
-            }
-            LexerError::UnterminatedQuotedIdentifier(_) => {
-                "unterminated quoted identifier".to_string()
-            }
-            LexerError::UnknownTypeHint(_, name) => {
-                format!("unknown type hint '{name}'")
-            }
-            _ => self.asm_msg(),
-        }
-    }
-}
-
-impl From<LexerError> for Diagnostic {
-    fn from(value: LexerError) -> Self {
-        Diagnostic {
-            asm_msg: value.asm_msg(),
-            lsp_msg: value.lsp_msg(),
-            code: Some(value.code()),
-            primary_location: value.primary_location(),
-            note: Some(value.note()),
-            help: value.help(),
-            tier: DiagnosticTier::SyntaxError,
-            labels: value.labels(),
-        }
+    fn tier(&self) -> DiagnosticTier {
+        DiagnosticTier::SyntaxError
     }
 }

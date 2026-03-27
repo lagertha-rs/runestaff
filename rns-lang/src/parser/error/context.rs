@@ -99,18 +99,14 @@ impl Display for OperandErrPosContext {
 }
 
 impl OperandErrPosContext {
-    pub(in crate::parser) fn directive_name(&self) -> String {
+    pub(in crate::parser) fn directive_name(&self) -> &'static str {
         match self {
             //TODO: use something like TokenKind::DotClass.name() to not hardcode here
-            OperandErrPosContext::ClassName => ".class".to_string(),
-            OperandErrPosContext::SuperName => ".super".to_string(),
-            OperandErrPosContext::MethodName | OperandErrPosContext::MethodDescriptor => {
-                ".method".to_string()
-            }
-            OperandErrPosContext::InstructionName => "instruction".to_string(),
-            OperandErrPosContext::InstructionOperand(spec) => {
-                format!("{}", spec.opcode)
-            }
+            OperandErrPosContext::ClassName => ".class",
+            OperandErrPosContext::SuperName => ".super",
+            OperandErrPosContext::MethodName | OperandErrPosContext::MethodDescriptor => ".method",
+            OperandErrPosContext::InstructionName => "instruction",
+            OperandErrPosContext::InstructionOperand(spec) => spec.opcode.as_str(),
         }
     }
 }

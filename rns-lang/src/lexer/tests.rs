@@ -420,7 +420,7 @@ mod help {
     #[test]
     fn unknown_directive_with_close_match_suggests() {
         let diag = expect_one_diagnostic(".clazz");
-        assert_eq!(diag.help, Some("Did you mean '.class'?".to_string()));
+        assert_eq!(diag.help, Some("Did you mean '.class'?".into()));
     }
 
     #[test]
@@ -432,7 +432,7 @@ mod help {
     #[test]
     fn unknown_directive_super_typo() {
         let diag = expect_one_diagnostic(".supr");
-        assert_eq!(diag.help, Some("Did you mean '.super'?".to_string()));
+        assert_eq!(diag.help, Some("Did you mean '.super'?".into()));
     }
 
     // -- UnknownTypeHint --
@@ -440,7 +440,7 @@ mod help {
     #[test]
     fn unknown_type_hint_with_close_match_suggests() {
         let diag = expect_one_diagnostic("@dubble");
-        assert_eq!(diag.help, Some("Did you mean '@double'?".to_string()));
+        assert_eq!(diag.help, Some("Did you mean '@double'?".into()));
     }
 
     #[test]
@@ -453,7 +453,7 @@ mod help {
     fn unknown_type_hint_case_sensitive_suggests() {
         // "@Utf8" is 1 edit from "utf8"
         let diag = expect_one_diagnostic("@Utf8");
-        assert_eq!(diag.help, Some("Did you mean '@utf8'?".to_string()));
+        assert_eq!(diag.help, Some("Did you mean '@utf8'?".into()));
     }
 
     // -- InvalidEscape --
@@ -465,7 +465,7 @@ mod help {
             diag.help,
             Some(
                 "Multiline identifiers are not supported yet, but are planned for the future."
-                    .to_string()
+                    .into()
             )
         );
     }
@@ -477,7 +477,7 @@ mod help {
             diag.help,
             Some(
                 "Multiline identifiers are not supported yet, but are planned for the future."
-                    .to_string()
+                    .into()
             )
         );
     }
@@ -495,7 +495,7 @@ mod help {
         let diag = expect_one_diagnostic("\"hello");
         assert_eq!(
             diag.help,
-            Some("Close the identifier with a '\"' on the same line.".to_string())
+            Some("Close the identifier with a '\"' on the same line.".into())
         );
     }
 }
@@ -581,7 +581,7 @@ mod note {
         let diag = expect_one_diagnostic("\"hello");
         assert_eq!(
             diag.note,
-            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-001".to_string())
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/E-001".into())
         );
     }
 
@@ -590,7 +590,7 @@ mod note {
         let diag = expect_one_diagnostic(".foobar");
         assert_eq!(
             diag.note,
-            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-002".to_string())
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/E-002".into())
         );
     }
 
@@ -599,7 +599,7 @@ mod note {
         let diag = expect_one_diagnostic("\"\\q\"");
         assert_eq!(
             diag.note,
-            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-004".to_string())
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/E-004".into())
         );
     }
 
@@ -608,7 +608,7 @@ mod note {
         let diag = expect_one_diagnostic("@foobar");
         assert_eq!(
             diag.note,
-            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/e-005".to_string())
+            Some("For more details see:\nhttps://rune.lagertha-vm.com/errors/E-005".into())
         );
     }
 }

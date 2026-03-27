@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -23,7 +24,7 @@ expression: "&snapshot_content"
    │ Help: Add the 'abstract' access flag to the class definition.
    │ 
    │ Note: If this violation isn't intentional, see details at:
-   │       https://rune.lagertha-vm.com/errors/jvms-001
+   │       https://rune.lagertha-vm.com/errors/JVMS-001
 ───╯
 [JVMS-001] Warning: interface cannot be declared with mutually exclusive flags
    ╭─[ test_data/integration/jvms/001-interface-flag/with_all_exclusive_and_no_abstract.rns:1:8 ]
@@ -43,7 +44,7 @@ expression: "&snapshot_content"
    │ Help: Consider removing: 'ACC_FINAL', 'ACC_SUPER', 'ACC_ENUM', 'ACC_MODULE'.
    │ 
    │ Note: If this violation isn't intentional, see details at:
-   │       https://rune.lagertha-vm.com/errors/jvms-001
+   │       https://rune.lagertha-vm.com/errors/JVMS-001
 ───╯
 ----- HASH -----
 d80e704759647b042b655f49bf5d15fbe9ac3cc8294c57197bdbeeb7bbab78c0

@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -20,7 +21,7 @@ unexpected_token ; <- this error should be reported as well
    │ Help: The value '99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999' exceeds the 64-bit float range is -1.797693134862316e308 to 1.797693134862316e308.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-003
+   │       https://rune.lagertha-vm.com/errors/E-003
 ───╯
 [E-007] Error: unexpected token in class body: 'Identifier(Spanned { value: "unexpected_token", span: Span { byte_start: 327, byte_end: 343, line: 1, col_start: 0, col_end: 16 } })'
    ╭─[ test_data/integration/error/parser/type_hints/double/overflow_recovers.rns:2:1 ]
@@ -32,7 +33,7 @@ unexpected_token ; <- this error should be reported as well
    │ Help: Check the syntax of the class body and ensure all tokens are valid.
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-007
+   │       https://rune.lagertha-vm.com/errors/E-007
 ───╯
 ----- HASH -----
 not generated

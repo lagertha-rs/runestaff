@@ -1,7 +1,7 @@
-use crate::ERROR_DOCS_BASE_URL;
 use crate::ast::flag::RnsClassFlag;
-use crate::diagnostic::{Diagnostic, DiagnosticLabel, DiagnosticTier};
+use crate::diagnostic::{DiagnosticLabel, DiagnosticTier, IntoDiagnostic, jvms_docs_note};
 use crate::token::{RnsFlag, Span};
+use std::borrow::Cow;
 
 #[derive(Debug)]
 pub(super) enum JvmWarning {
@@ -14,20 +14,21 @@ pub(super) enum JvmWarning {
     },
 }
 
-impl JvmWarning {
+impl IntoDiagnostic for JvmWarning {
     fn code(&self) -> &'static str {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. }
             | JvmWarning::InterfaceMutuallyExclusive { .. } => "JVMS-001",
         }
     }
-    fn message(&self) -> String {
+
+    fn asm_msg(&self) -> Cow<'static, str> {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. } => {
-                "interface must also be declared as 'abstract'".to_string()
+                "interface must also be declared as 'abstract'".into()
             }
             JvmWarning::InterfaceMutuallyExclusive { .. } => {
-                "interface cannot be declared with mutually exclusive flags".to_string()
+                "interface cannot be declared with mutually exclusive flags".into()
             }
         }
     }
@@ -39,18 +40,14 @@ impl JvmWarning {
         }
     }
 
-    fn note(&self) -> String {
-        format!(
-            "If this violation isn't intentional, see details at:\n{}{}",
-            ERROR_DOCS_BASE_URL,
-            self.code().to_ascii_lowercase()
-        )
+    fn note(&self) -> Option<Cow<'static, str>> {
+        Some(jvms_docs_note(self.code()))
     }
 
-    fn help(&self) -> Option<String> {
+    fn help(&self) -> Option<Cow<'static, str>> {
         match self {
             JvmWarning::InterfaceFlagWithMissingAbstract { .. } => {
-                Some("Add the 'abstract' access flag to the class definition.".to_string())
+                Some("Add the 'abstract' access flag to the class definition.".into())
             }
             JvmWarning::InterfaceMutuallyExclusive {
                 exclusive_flags, ..
@@ -60,7 +57,7 @@ impl JvmWarning {
                     .map(|(flag, _)| format!("'{}'", flag.jvm_spec_name()))
                     .collect::<Vec<_>>()
                     .join(", ");
-                Some(format!("Consider removing: {}.", flags_list))
+                Some(format!("Consider removing: {}.", flags_list).into())
             }
         }
     }
@@ -83,7 +80,7 @@ impl JvmWarning {
             } => {
                 let mut labels = vec![DiagnosticLabel::context(
                     interface_span.as_range(),
-                    format!("'{}' is declared here", RnsFlag::Interface.jvm_spec_name(),),
+                    format!("'{}' is declared here", RnsFlag::Interface.jvm_spec_name()),
                 )];
                 for (flag, span) in exclusive_flags {
                     labels.push(DiagnosticLabel::at(
@@ -96,23 +93,7 @@ impl JvmWarning {
         }
     }
 
-    fn lsp_msg(&self) -> String {
-        // TODO: stub
-        self.message()
-    }
-}
-
-impl From<JvmWarning> for Diagnostic {
-    fn from(value: JvmWarning) -> Self {
-        Diagnostic {
-            asm_msg: value.message(),
-            lsp_msg: value.lsp_msg(),
-            code: Some(value.code()),
-            primary_location: value.primary_location(),
-            note: Some(value.note()),
-            help: value.help(),
-            tier: DiagnosticTier::JvmSpecWarn,
-            labels: value.labels(),
-        }
+    fn tier(&self) -> DiagnosticTier {
+        DiagnosticTier::JvmSpecWarn
     }
 }

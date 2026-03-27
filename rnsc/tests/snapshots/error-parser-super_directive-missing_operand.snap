@@ -1,5 +1,6 @@
 ---
 source: rns-asm/tests/rns_test.rs
+assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -21,7 +22,7 @@ not generated
    │       .super <class_name>
    │ 
    │ Note: For more details see:
-   │       https://rune.lagertha-vm.com/errors/e-020
+   │       https://rune.lagertha-vm.com/errors/E-020
 ───╯
 ----- HASH -----
 not generated
