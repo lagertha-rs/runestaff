@@ -58,7 +58,28 @@ struct RnsParser {
     method_dirs: Vec<MethodDirective>,
 
     super_directives: Vec<(Span, TypeHint)>,
-    super_err_present: bool,
+    reported_errs: ReportedErrs,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+enum ErrKind {
+    Super = 0,
+    CodeStack = 1,
+    CodeLocals = 2,
+}
+
+#[derive(Default, Clone, Copy)]
+struct ReportedErrs(u32);
+
+impl ReportedErrs {
+    fn insert(&mut self, kind: ErrKind) {
+        self.0 |= 1 << kind as u8;
+    }
+
+    fn contains(self, kind: ErrKind) -> bool {
+        self.0 & (1 << kind as u8) != 0
+    }
 }
 
 impl RnsParser {
@@ -633,7 +654,7 @@ impl RnsParser {
         {
             Ok(super_name) => self.super_directives.push((super_token.span(), super_name)),
             Err(e) => {
-                self.super_err_present = true;
+                self.reported_errs.insert(ErrKind::Super);
                 self.diagnostic.push(e);
             }
         }
@@ -723,7 +744,7 @@ impl RnsParser {
             0 => {
                 // If no class name is defined, doesn't make sense to report missing superclass
                 // If problem with super is already report, don't report missing superclass to avoid duplicate errors
-                if self.class_name.is_some() && !self.super_err_present {
+                if self.class_name.is_some() && !self.reported_errs.contains(ErrKind::Super) {
                     self.diagnostic.push(
                         ParserWarning::MissingSuperClass {
                             class_name: self.class_name.clone(),
@@ -769,7 +790,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         class_name: None,
         method_dirs: Vec::new(),
         super_directives: Vec::new(),
-        super_err_present: false,
+        reported_errs: ReportedErrs::default(),
         access_flags: Default::default(),
     };
 
