@@ -10,7 +10,7 @@ use crate::parser::error::{
     TrailingTokensErrContext, UnexpectedTokenContext,
 };
 use crate::parser::warning::ParserWarning;
-use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
+use crate::token::type_hint::{RefTypeHint, TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
 use std::collections::{BTreeMap, HashMap};
 use std::iter::Peekable;
@@ -343,29 +343,28 @@ impl RnsParser {
                 self.parse_hint_identifier(origin, TypeHintOperandName::ClassName)?,
             )),
             TypeHintKind::Methodref => {
-                let class_name =
-                    self.parse_hint_identifier(origin, TypeHintOperandName::ClassName)?;
-                let method_name =
-                    self.parse_hint_identifier(origin, TypeHintOperandName::MethodName)?;
+                let class = self.parse_hint_identifier(origin, TypeHintOperandName::ClassName)?;
+                let name = self.parse_hint_identifier(origin, TypeHintOperandName::MethodName)?;
                 let descriptor =
                     self.parse_hint_identifier(origin, TypeHintOperandName::MethodDescriptor)?;
-                Ok(TypeHint::Methodref(
-                    kind_span,
-                    class_name,
-                    method_name,
+                Ok(TypeHint::Methodref(Box::new(RefTypeHint {
+                    hint_span: kind_span,
+                    class,
+                    name,
                     descriptor,
-                ))
+                })))
             }
             TypeHintKind::Fieldref => {
-                let class_name =
-                    self.parse_hint_identifier(origin, TypeHintOperandName::ClassName)?;
-                let field_name =
-                    self.parse_hint_identifier(origin, TypeHintOperandName::FieldName)?;
+                let class = self.parse_hint_identifier(origin, TypeHintOperandName::ClassName)?;
+                let name = self.parse_hint_identifier(origin, TypeHintOperandName::FieldName)?;
                 let descriptor =
                     self.parse_hint_identifier(origin, TypeHintOperandName::FieldDescriptor)?;
-                Ok(TypeHint::Fieldref(
-                    kind_span, class_name, field_name, descriptor,
-                ))
+                Ok(TypeHint::Fieldref(Box::new(RefTypeHint {
+                    hint_span: kind_span,
+                    class,
+                    name,
+                    descriptor,
+                })))
             }
             _ => unimplemented!(),
         }

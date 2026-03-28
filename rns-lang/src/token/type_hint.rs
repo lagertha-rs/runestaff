@@ -1,5 +1,5 @@
-use crate::token::Span;
 use crate::token::span::Spanned;
+use crate::token::Span;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -324,6 +324,14 @@ impl Display for TypeHintKind {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct RefTypeHint {
+    pub hint_span: Option<Span>,
+    pub class: Spanned<String>,
+    pub name: Spanned<String>,
+    pub descriptor: Spanned<String>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum TypeHint {
     // TODO: should be just index, that take an explicit cp index
     ZeroIndex(Span),
@@ -331,18 +339,8 @@ pub enum TypeHint {
     Integer(Option<Span>, Spanned<i32>),
     String(Option<Span>, Spanned<String>),
     Class(Option<Span>, Spanned<String>),
-    Methodref(
-        Option<Span>,
-        Spanned<String>,
-        Spanned<String>,
-        Spanned<String>,
-    ),
-    Fieldref(
-        Option<Span>,
-        Spanned<String>,
-        Spanned<String>,
-        Spanned<String>,
-    ),
+    Methodref(Box<RefTypeHint>),
+    Fieldref(Box<RefTypeHint>),
     InterfaceMethodref,
     Float(Option<Span>, Spanned<f32>),
     Long(Option<Span>, Spanned<i64>),
@@ -363,13 +361,13 @@ impl TypeHint {
             Self::Integer(_, value) => format!("{} {}", TYPE_HINT_AT_INTEGER, value.value),
             Self::String(_, value) => format!("{} {}", TYPE_HINT_AT_STRING, value.value),
             Self::Class(_, value) => format!("{} {}", TYPE_HINT_AT_CLASS, value.value),
-            Self::Methodref(_, class, name, descriptor) => format!(
+            Self::Methodref(r) => format!(
                 "{} class: {}, name: {}, descriptor: {}",
-                TYPE_HINT_AT_METHODREF, class.value, name.value, descriptor.value
+                TYPE_HINT_AT_METHODREF, r.class.value, r.name.value, r.descriptor.value
             ),
-            Self::Fieldref(_, class, name, descriptor) => format!(
+            Self::Fieldref(r) => format!(
                 "{} class: {}, name: {}, descriptor: {}",
-                TYPE_HINT_AT_FIELDREF, class.value, name.value, descriptor.value
+                TYPE_HINT_AT_FIELDREF, r.class.value, r.name.value, r.descriptor.value
             ),
             Self::Long(_, value) => format!("{} {}", TYPE_HINT_AT_LONG, value.value),
             Self::Float(_, value) => format!("{} {}", TYPE_HINT_AT_FLOAT, value.value),
@@ -387,9 +385,8 @@ impl TypeHint {
             Self::Utf8(_, value) | Self::String(_, value) | Self::Class(_, value) => {
                 value.value.to_string()
             }
-            Self::Methodref(_, class, name, descriptor)
-            | Self::Fieldref(_, class, name, descriptor) => {
-                format!("{} {} {}", class.value, name.value, descriptor.value)
+            Self::Methodref(r) | Self::Fieldref(r) => {
+                format!("{} {} {}", r.class.value, r.name.value, r.descriptor.value)
             }
             _ => unimplemented!(),
         }

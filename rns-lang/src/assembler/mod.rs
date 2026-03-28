@@ -94,18 +94,12 @@ impl RnsModule {
             TypeHint::Utf8(_, utf8_value) => cp_builder.add_utf8(&utf8_value.value),
             TypeHint::Class(_, class_name) => cp_builder.add_class(&class_name.value),
             TypeHint::Integer(_, int_value) => cp_builder.add_integer(int_value.value),
-            TypeHint::Methodref(_, class_name, method_name, method_descriptor) => cp_builder
-                .add_methodref(
-                    &class_name.value,
-                    &method_name.value,
-                    &method_descriptor.value,
-                ),
-            TypeHint::Fieldref(_, class_name, field_name, field_descriptor) => cp_builder
-                .add_fieldref(
-                    &class_name.value,
-                    &field_name.value,
-                    &field_descriptor.value,
-                ),
+            TypeHint::Methodref(r) => {
+                cp_builder.add_methodref(&r.class.value, &r.name.value, &r.descriptor.value)
+            }
+            TypeHint::Fieldref(r) => {
+                cp_builder.add_fieldref(&r.class.value, &r.name.value, &r.descriptor.value)
+            }
             TypeHint::String(_, string_value) => cp_builder.add_string(&string_value.value),
             _ => unimplemented!(),
         }

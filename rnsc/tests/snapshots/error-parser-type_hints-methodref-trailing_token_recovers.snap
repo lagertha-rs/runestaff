@@ -1,6 +1,5 @@
 ---
 source: rns-asm/tests/rns_test.rs
-assertion_line: 210
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -27,7 +26,7 @@ not generated
    │
  1 │ .class @methodref MyClass methodName (I)V trailing
    │ ───┬──  
-   │    ╰──── class 'Some(Methodref(Some(Span { byte_start: 7, byte_end: 17, line: 0, col_start: 7, col_end: 17 }), Spanned { value: "MyClass", span: Span { byte_start: 18, byte_end: 25, line: 0, col_start: 18, col_end: 25 } }, Spanned { value: "methodName", span: Span { byte_start: 26, byte_end: 36, line: 0, col_start: 26, col_end: 36 } }, Spanned { value: "(I)V", span: Span { byte_start: 37, byte_end: 41, line: 0, col_start: 37, col_end: 41 } }))' is missing a '.super' directive
+   │    ╰──── class 'Some(Methodref(RefTypeHint { hint_span: Some(Span { byte_start: 7, byte_end: 17, line: 0, col_start: 7, col_end: 17 }), class: Spanned { value: "MyClass", span: Span { byte_start: 18, byte_end: 25, line: 0, col_start: 18, col_end: 25 } }, name: Spanned { value: "methodName", span: Span { byte_start: 26, byte_end: 36, line: 0, col_start: 26, col_end: 36 } }, descriptor: Spanned { value: "(I)V", span: Span { byte_start: 37, byte_end: 41, line: 0, col_start: 37, col_end: 41 } } }))' is missing a '.super' directive
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
