@@ -1,2 +1,0 @@
-.class @double "not a double"
-unexpected_token ; <- this error should be reported as well

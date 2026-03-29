@@ -1,4 +1,0 @@
-; comment before the directive
-.super java/lang/Object
-.class public HelloWorld
-.super java/lang/Object

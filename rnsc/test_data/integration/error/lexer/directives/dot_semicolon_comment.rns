@@ -1,4 +1,0 @@
-.method
-    ; real comment
-    .;not_comment ;this is also a comment
-.method_end

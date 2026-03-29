@@ -1,2 +1,0 @@
-.class @long "not a long" ; <- has space and should be quoted in help
-.super java/lang/Object

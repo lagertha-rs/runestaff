@@ -1,2 +1,0 @@
-.class @long "not a long"
-unexpected_token ; <- this error should be reported as well

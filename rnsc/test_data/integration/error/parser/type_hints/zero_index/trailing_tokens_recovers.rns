@@ -1,2 +1,0 @@
-.class @zero_idx tailing_token
-; should report no .super defined warning

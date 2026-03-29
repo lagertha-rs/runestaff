@@ -1,2 +1,0 @@
-.class   @class       ; no operand provided
-yahoooooo ; <- should be still reported as an error

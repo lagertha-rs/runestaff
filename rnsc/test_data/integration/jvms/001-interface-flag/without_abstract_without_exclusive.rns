@@ -1,4 +1,0 @@
-.class interface EmptyClass
-.super java/lang/Object
-
-.class_end

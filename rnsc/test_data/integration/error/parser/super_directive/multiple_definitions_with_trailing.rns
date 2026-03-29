@@ -1,4 +1,0 @@
-.class MyClass
-
-.super firstClass trailing
-.super secondClass

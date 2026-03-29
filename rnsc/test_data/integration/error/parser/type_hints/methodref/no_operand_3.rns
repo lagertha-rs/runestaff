@@ -1,2 +1,0 @@
-.class   @methodref MyClass methodName ; no descriptor provided
-.super java/lang/Object

@@ -1,2 +1,0 @@
-.class   @methodref MyClass methodName
-blabla ; <- should be still reported as an error

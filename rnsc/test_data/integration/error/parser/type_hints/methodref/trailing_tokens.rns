@@ -1,2 +1,0 @@
-.class @methodref MyClass methodName (I)V trailing
-.super java/lang/Object

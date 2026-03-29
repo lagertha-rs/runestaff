@@ -1,2 +1,0 @@
-.class @float
-unexpected_token ; <- this error should be reported as well

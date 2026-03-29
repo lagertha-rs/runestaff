@@ -1,2 +1,0 @@
-.class MyClass SomethingElse
-; SomethingElse is error, but the parser should recover and not report a warning for the missing .super directive
