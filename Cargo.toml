@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "rns-lang",
+    "rnsc",
+    "rns-lsp",
+]
+
+[workspace.dependencies]
+jclass = { git = "https://github.com/lagertha-rs/lagertha", branch = "refactor_rns_related_code", package = "lvm-class" }
+common = { git = "https://github.com/lagertha-rs/lagertha", branch = "refactor_rns_related_code", package = "lvm-common" }
+rns = { path = "rns-lang", package = "rns-lang" }
