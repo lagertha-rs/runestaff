@@ -8,6 +8,6 @@ members = [
 ]
 
 [workspace.dependencies]
-jclass = { git = "https://github.com/lagertha-rs/lagertha", branch = "main", package = "lvm-class" }
-common = { git = "https://github.com/lagertha-rs/lagertha", branch = "main", package = "lvm-common" }
+jclass = { version = "0.2.0", package = "lvm-class", features = ["write"] }
+common = { version = "0.2.0", package = "lvm-common" }
 rns = { path = "rns-lang", package = "rns-lang" }
