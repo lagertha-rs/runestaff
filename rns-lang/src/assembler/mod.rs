@@ -6,8 +6,7 @@ use crate::token::type_hint::TypeHint;
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
 use jclass::prelude::{
-    AttributeKind, AttributeNameMap, ClassFileBuilder, CodeAttribute, ConstantPoolBuilder,
-    MethodAttribute, MethodFlags, MethodInfo,
+    ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
 };
 
 mod jvm_warning;
@@ -164,7 +163,13 @@ impl RnsModule {
         }
     }
 
-    // TODO: need to test that I build exactly same CP as javac, or not?
+    pub fn into_bytes(self) -> (Option<Vec<u8>>, Vec<Diagnostic>) {
+        let (class_file, diagnostics) = self.into_class_file();
+        let bytes = class_file.map(|cf| cf.to_bytes());
+        (bytes, diagnostics)
+    }
+
+    // TODO: why tuple but not Result?
     pub fn into_class_file(mut self) -> (Option<ClassFile>, Vec<Diagnostic>) {
         let mut cp_builder = ConstantPoolBuilder::new();
         let super_cp_id = self.build_super_class(&mut cp_builder);
@@ -182,17 +187,14 @@ impl RnsModule {
             .map(|method_dir| self.build_method_directive(&mut cp_builder, method_dir))
             .collect();
 
-        let mut attribute_names = AttributeNameMap::new();
         // TODO: only when at least one code is actually present
-        let code_name_idx = cp_builder.add_utf8(AttributeKind::Code.as_str());
-        attribute_names.insert(AttributeKind::Code, code_name_idx);
+        cp_builder.add_utf8("Code");
 
         let class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
             .access_flags(class_flags) // TODO: set access flags based on parsed flags
             .this_class(this_cp_id)
             .super_class(super_cp_id)
             .methods(methods)
-            .attribute_names(attribute_names)
             .build();
 
         (class_file, self.diagnostics)
