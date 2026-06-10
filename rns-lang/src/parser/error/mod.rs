@@ -632,3 +632,15 @@ impl From<ParserError> for Vec<Diagnostic> {
         vec![Diagnostic::from(value)]
     }
 }
+
+impl From<ParserError> for Box<Diagnostic> {
+    fn from(e: ParserError) -> Self {
+        Box::new(Diagnostic::from(e))
+    }
+}
+
+impl From<Box<ParserError>> for Box<Diagnostic> {
+    fn from(e: Box<ParserError>) -> Self {
+        Box::new(Diagnostic::from(*e))
+    }
+}

@@ -117,7 +117,7 @@ pub enum TypeHintKind {
 }
 
 impl TypeHintKind {
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s {
             TYPE_HINT_CP_IDX => Some(Self::CpIndex),
             TYPE_HINT_UTF8 => Some(Self::Utf8),

@@ -61,6 +61,7 @@ struct RnsParser {
     reported_errs: ReportedErrs,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 enum ErrKind {
@@ -219,7 +220,7 @@ impl RnsParser {
     fn parse_identifier(
         &mut self,
         err_ctx: OperandErrPosContext,
-    ) -> Result<Spanned<String>, Diagnostic> {
+    ) -> Result<Spanned<String>, Box<Diagnostic>> {
         let prev_token_span = self.last_span;
         self.try_next_identifier().map_err(|token| {
             ParserError::IdentifierOrHintExpected(prev_token_span, token, err_ctx).into()
@@ -230,30 +231,34 @@ impl RnsParser {
         &mut self,
         origin: &TypeHintOrigin,
         operand: TypeHintOperandName,
-    ) -> Result<Spanned<String>, ParserError> {
+    ) -> Result<Spanned<String>, Box<ParserError>> {
         let after_span = self.last_span;
-        self.try_next_identifier().map_err(|_| match origin {
-            TypeHintOrigin::Explicit(th) => ParserError::MissingTypeHintOperand {
-                type_hint: th.clone(),
-                operand,
-                after_span,
-            },
-            TypeHintOrigin::Implicit(ctx, kind) => ParserError::MissingImplicitTypeHintOperand {
-                err_ctx: ctx.clone(),
-                implicit_kind: *kind,
-                operand,
-                after_span,
-            },
+        self.try_next_identifier().map_err(|_| {
+            Box::new(match origin {
+                TypeHintOrigin::Explicit(th) => ParserError::MissingTypeHintOperand {
+                    type_hint: th.clone(),
+                    operand,
+                    after_span,
+                },
+                TypeHintOrigin::Implicit(ctx, kind) => {
+                    ParserError::MissingImplicitTypeHintOperand {
+                        err_ctx: ctx.clone(),
+                        implicit_kind: *kind,
+                        operand,
+                        after_span,
+                    }
+                }
+            })
         })
     }
 
     fn parse_type_hint_u16(
         &mut self,
         type_hint: Spanned<TypeHintKind>,
-    ) -> Result<Spanned<u16>, ParserError> {
+    ) -> Result<Spanned<u16>, Box<ParserError>> {
         let after_span = self.last_span;
-        self.try_next_numeric::<u16>()
-            .map_err(|rejection| match rejection {
+        self.try_next_numeric::<u16>().map_err(|rejection| {
+            Box::new(match rejection {
                 NumericRejection::Missing(_) => ParserError::MissingTypeHintOperand {
                     type_hint,
                     operand: TypeHintOperandName::U16Literal,
@@ -264,15 +269,16 @@ impl RnsParser {
                     rejection: other,
                 },
             })
+        })
     }
 
     fn parse_type_hint_i32(
         &mut self,
         type_hint: Spanned<TypeHintKind>,
-    ) -> Result<Spanned<i32>, ParserError> {
+    ) -> Result<Spanned<i32>, Box<ParserError>> {
         let after_span = self.last_span;
-        self.try_next_numeric::<i32>()
-            .map_err(|rejection| match rejection {
+        self.try_next_numeric::<i32>().map_err(|rejection| {
+            Box::new(match rejection {
                 NumericRejection::Missing(_) => ParserError::MissingTypeHintOperand {
                     type_hint,
                     operand: TypeHintOperandName::I32Literal,
@@ -283,15 +289,16 @@ impl RnsParser {
                     rejection: other,
                 },
             })
+        })
     }
 
     fn parse_type_hint_i64(
         &mut self,
         type_hint: Spanned<TypeHintKind>,
-    ) -> Result<Spanned<i64>, ParserError> {
+    ) -> Result<Spanned<i64>, Box<ParserError>> {
         let after_span = self.last_span;
-        self.try_next_numeric::<i64>()
-            .map_err(|rejection| match rejection {
+        self.try_next_numeric::<i64>().map_err(|rejection| {
+            Box::new(match rejection {
                 NumericRejection::Missing(_) => ParserError::MissingTypeHintOperand {
                     type_hint,
                     operand: TypeHintOperandName::I64Literal,
@@ -302,15 +309,16 @@ impl RnsParser {
                     rejection: other,
                 },
             })
+        })
     }
 
     fn parse_type_hint_f32(
         &mut self,
         type_hint: Spanned<TypeHintKind>,
-    ) -> Result<Spanned<f32>, ParserError> {
+    ) -> Result<Spanned<f32>, Box<ParserError>> {
         let after_span = self.last_span;
-        self.try_next_numeric::<f32>()
-            .map_err(|rejection| match rejection {
+        self.try_next_numeric::<f32>().map_err(|rejection| {
+            Box::new(match rejection {
                 NumericRejection::Missing(_) => ParserError::MissingTypeHintOperand {
                     type_hint,
                     operand: TypeHintOperandName::F32Literal,
@@ -321,15 +329,16 @@ impl RnsParser {
                     rejection: other,
                 },
             })
+        })
     }
 
     fn parse_type_hint_f64(
         &mut self,
         type_hint: Spanned<TypeHintKind>,
-    ) -> Result<Spanned<f64>, ParserError> {
+    ) -> Result<Spanned<f64>, Box<ParserError>> {
         let after_span = self.last_span;
-        self.try_next_numeric::<f64>()
-            .map_err(|rejection| match rejection {
+        self.try_next_numeric::<f64>().map_err(|rejection| {
+            Box::new(match rejection {
                 NumericRejection::Missing(_) => ParserError::MissingTypeHintOperand {
                     type_hint,
                     operand: TypeHintOperandName::F64Literal,
@@ -340,12 +349,13 @@ impl RnsParser {
                     rejection: other,
                 },
             })
+        })
     }
 
     fn resolve_identifier_type_hint(
         &mut self,
         origin: &TypeHintOrigin,
-    ) -> Result<TypeHint, Diagnostic> {
+    ) -> Result<TypeHint, Box<Diagnostic>> {
         let kind = origin.kind();
         let kind_span = origin.kind_span();
         match kind {
@@ -392,7 +402,7 @@ impl RnsParser {
     fn resolve_explicit_type_hint(
         &mut self,
         th: Spanned<TypeHintKind>,
-    ) -> Result<TypeHint, Diagnostic> {
+    ) -> Result<TypeHint, Box<Diagnostic>> {
         let th_for_trailing = th.clone();
         let res = match th.value {
             TypeHintKind::CpIndex => Ok(TypeHint::CpIndex(th.span, self.parse_type_hint_u16(th)?)),
@@ -422,7 +432,7 @@ impl RnsParser {
         &mut self,
         err_ctx: OperandErrPosContext,
         implicit_kind: TypeHintKind,
-    ) -> Result<TypeHint, Diagnostic> {
+    ) -> Result<TypeHint, Box<Diagnostic>> {
         if let Some(RnsToken::TypeHint(th)) = self.peek_token() {
             let th = th.clone();
             self.next_token();
@@ -444,7 +454,7 @@ impl RnsParser {
         }
     }
 
-    fn parse_instruction(&mut self) -> Result<RnsInstruction, Diagnostic> {
+    fn parse_instruction(&mut self) -> Result<RnsInstruction, Box<Diagnostic>> {
         let raw_instruction = self.parse_identifier(OperandErrPosContext::InstructionName)?;
         let instruction_spec = *INSTRUCTION_SPECS
             .get(raw_instruction.value.as_str())
@@ -578,7 +588,7 @@ impl RnsParser {
                     }
                     Err(e) => {
                         self.anchor(&[RnsTokenKind::Newline]);
-                        self.diagnostic.push(e);
+                        self.diagnostic.push(*e);
                     }
                 },
             }
@@ -593,13 +603,13 @@ impl RnsParser {
         })
     }
 
-    fn parse_method(&mut self) -> Result<MethodDirective, Diagnostic> {
+    fn parse_method(&mut self) -> Result<MethodDirective, Box<Diagnostic>> {
         let dot_method = self.next_token(); // consume .method token
         let access_flags = self.parse_method_access_flags();
         let mut method = MethodDirective::new(dot_method.span(), access_flags);
         method.name = self
             .parse_operand_or_type_hint(OperandErrPosContext::MethodName, TypeHintKind::Utf8)
-            .map_err(|e| self.diagnostic.push(e))
+            .map_err(|e| self.diagnostic.push(*e))
             .ok();
         // when there is no method name, it doesn't make sense to expect anything else
         if method.name.is_some() {
@@ -608,7 +618,7 @@ impl RnsParser {
                     OperandErrPosContext::MethodDescriptor,
                     TypeHintKind::Utf8,
                 )
-                .map_err(|e| self.diagnostic.push(e))
+                .map_err(|e| self.diagnostic.push(*e))
                 .ok();
         }
         // trailing tokens can be only when descriptor is present
@@ -673,13 +683,13 @@ impl RnsParser {
             Ok(super_name) => self.super_directives.push((super_token.span(), super_name)),
             Err(e) => {
                 self.reported_errs.insert(ErrKind::Super);
-                self.diagnostic.push(e);
+                self.diagnostic.push(*e);
             }
         }
         self.verify_trailing_tokens(TrailingTokensErrContext::Super)
     }
 
-    fn anchor_class_directive(&mut self) -> Result<Span, Diagnostic> {
+    fn anchor_class_directive(&mut self) -> Result<Span, Box<Diagnostic>> {
         self.skip_newlines();
         let next_token = self.next_token();
 
@@ -698,7 +708,7 @@ impl RnsParser {
         // first token is not `.class` — try to recover by finding the next `.class`
         if !self.anchor(&[RnsTokenKind::DotClass]) {
             // can't recover - fail here
-            return Err(error);
+            return Err(Box::new(error));
         }
 
         // recovered - report error and continue parsing
@@ -706,13 +716,13 @@ impl RnsParser {
         Ok(self.next_token().span())
     }
 
-    fn parse_class(&mut self) -> Result<(), Diagnostic> {
+    fn parse_class(&mut self) -> Result<(), Box<Diagnostic>> {
         self.class_dir_span = self.anchor_class_directive()?;
         self.access_flags = self.parse_class_access_flags();
 
         self.class_name = self
             .parse_operand_or_type_hint(OperandErrPosContext::ClassName, TypeHintKind::Class)
-            .map_err(|e| self.diagnostic.push(e))
+            .map_err(|e| self.diagnostic.push(*e))
             .ok();
 
         self.verify_trailing_tokens(TrailingTokensErrContext::Class);
@@ -827,7 +837,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
     };
 
     if let Err(e) = instance.parse_class() {
-        instance.diagnostic.push(e);
+        instance.diagnostic.push(*e);
         return Err(instance.diagnostic);
     }
     let super_dir = instance.take_super_directive();

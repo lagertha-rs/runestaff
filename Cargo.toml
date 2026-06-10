@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "rns-lang",
+    "rnsc",
+    "rns-lsp",
+]
+
+[workspace.dependencies]
+jclass = { version = "0.2.0", package = "lvm-class", features = ["write"] }
+common = { version = "0.2.0", package = "lvm-common" }
+rns = { path = "rns-lang", package = "rns-lang" }

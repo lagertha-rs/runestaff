@@ -217,7 +217,7 @@ impl<'a> RnsLexer<'a> {
             )));
         }
 
-        TypeHintKind::from_str(&type_hint_str)
+        TypeHintKind::parse(&type_hint_str)
             .map(|kind| RnsToken::TypeHint(Spanned::new(kind, type_hint_span)))
             .ok_or(LexerError::UnknownTypeHint(
                 type_hint_span,
@@ -225,7 +225,7 @@ impl<'a> RnsLexer<'a> {
             ))
     }
 
-    fn next_token(&mut self) -> Result<RnsToken, Diagnostic> {
+    fn next_token(&mut self) -> Result<RnsToken, Box<Diagnostic>> {
         self.skip_whitespaces_and_comments();
 
         let byte_start = self.byte_pos;
@@ -283,7 +283,7 @@ impl<'a> RnsLexer<'a> {
                     tokens.push(token);
                 }
                 Err(e) => {
-                    diagnostics.push(e);
+                    diagnostics.push(*e);
                     self.skip_to_end_of_line();
                 }
             }

@@ -69,7 +69,7 @@ impl RnsModule {
 
     fn build_method_flags(&mut self, method_dir: &MethodDirective) -> u16 {
         let mut res = 0;
-        for (flag, span) in &method_dir.flags {
+        for flag in method_dir.flags.keys() {
             match flag {
                 RnsMethodFlag::Public => res |= 0x0001,
                 RnsMethodFlag::Private => res |= 0x0002,

@@ -1,6 +1,7 @@
 use crate::diagnostic::{
-    DiagnosticLabel, DiagnosticTier, ERR_CODE_INVALID_ESCAPE, ERR_CODE_INVALID_TYPE_HINT,
-    ERR_CODE_UNCLOSED_IDENT, ERR_CODE_UNKNOWN_DIR, IntoDiagnostic, docs_note,
+    Diagnostic, DiagnosticLabel, DiagnosticTier, ERR_CODE_INVALID_ESCAPE,
+    ERR_CODE_INVALID_TYPE_HINT, ERR_CODE_UNCLOSED_IDENT, ERR_CODE_UNKNOWN_DIR, IntoDiagnostic,
+    docs_note,
 };
 use crate::suggestion;
 use crate::token::Span;
@@ -113,5 +114,11 @@ impl IntoDiagnostic for LexerError {
 
     fn tier(&self) -> DiagnosticTier {
         DiagnosticTier::SyntaxError
+    }
+}
+
+impl From<LexerError> for Box<Diagnostic> {
+    fn from(e: LexerError) -> Self {
+        Box::new(Diagnostic::from(e))
     }
 }
