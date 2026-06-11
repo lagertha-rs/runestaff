@@ -3,6 +3,7 @@ use crate::disassembler::constant_pool::fmt_cp_entry_rns;
 use crate::disassembler::flags::fmt_class_flags_rns;
 use crate::disassembler::indent_write::Indented;
 use crate::disassembler::method::fmt_method_rns;
+use crate::token::{DIRECTIVE_DOT_CLASS_END, DIRECTIVE_DOT_SUPER};
 use jclass::ClassFile;
 use std::fmt::Write as _;
 
@@ -18,7 +19,7 @@ fn fmt_super_class(class: &ClassFile, ind: &mut Indented) -> DisasmResult<()> {
         return Ok(());
     }
 
-    write!(ind, ".super ")?;
+    write!(ind, "{} ", DIRECTIVE_DOT_SUPER)?;
     fmt_cp_entry_rns(ind, &class.cp, class.super_class)?;
     writeln!(ind)?;
     Ok(())
@@ -38,6 +39,6 @@ pub(crate) fn fmt_rns(class: &ClassFile) -> DisasmResult<String> {
         }
     }
 
-    writeln!(ind, ".end class")?;
+    writeln!(ind, "{}", DIRECTIVE_DOT_CLASS_END)?;
     Ok(out)
 }

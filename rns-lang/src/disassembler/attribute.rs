@@ -1,6 +1,7 @@
 use crate::disassembler::indent_write::Indented;
 use crate::disassembler::instruction::fmt_instruction_rns;
 use crate::disassembler::{DisasmError, DisasmResult};
+use crate::token::{DIRECTIVE_DOT_CODE, DIRECTIVE_DOT_CODE_END};
 use jclass::attribute::{CodeAttribute, MethodAttribute};
 use jclass::bytecode::Instruction;
 use jclass::constant_pool::ConstantPool;
@@ -29,8 +30,8 @@ fn fmt_code_attribute_rns(
 ) -> DisasmResult<()> {
     writeln!(
         ind,
-        ".code stack {} locals {}",
-        code.max_stack, code.max_locals
+        "{} stack {} locals {}",
+        DIRECTIVE_DOT_CODE, code.max_stack, code.max_locals
     )?;
     ind.with_indent(|ind| {
         let mut pc = 0;
@@ -62,7 +63,7 @@ fn fmt_code_attribute_rns(
         });
     }
 
-    writeln!(ind, ".end code")?;
+    writeln!(ind, "{}", DIRECTIVE_DOT_CODE_END)?;
     Ok(())
 }
 

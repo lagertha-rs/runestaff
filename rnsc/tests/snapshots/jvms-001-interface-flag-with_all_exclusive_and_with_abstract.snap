@@ -1,13 +1,12 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
-.class module interface abstract final enum module super EmptyClass
+.class module interface abstract final enum super EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end
 ----- INPUT -----
 .class abstract interface final super enum module EmptyClass
 .super java/lang/Object

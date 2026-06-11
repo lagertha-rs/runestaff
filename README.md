@@ -103,7 +103,7 @@ Originally created to test the [Lagertha VM](https://github.com/lagertha-rs/lage
 - [ ] Add `.field` directive for class fields
 - [ ] Replace all `unimplemented!()` with proper error messages
 - [ ] Replace production `.unwrap()` with error handling
-- [ ] Fix disassembler output to match assembler syntax (`.end class` → `.class_end`, `strictfp` → `strict`)
+- [x] Fix disassembler output to match assembler syntax (`.end class` → `.class_end`, `strictfp` → `strict`)
 - [ ] Restore parser unit tests (uncomment and update to current API)
 - [ ] Fix `ldc` without type hint (currently `todo!()`)
 

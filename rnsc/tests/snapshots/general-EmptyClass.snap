@@ -1,12 +1,12 @@
 ---
-source: rns-asm/tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
 .class public EmptyClass
 .super java/lang/Object
 
-.end class
+.class_end
 ----- INPUT -----
 .class public EmptyClass
 .super java/lang/Object
