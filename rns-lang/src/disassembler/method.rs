@@ -3,12 +3,13 @@ use crate::disassembler::attribute::fmt_method_attribute_rns;
 use crate::disassembler::constant_pool::fmt_cp_entry_rns;
 use crate::disassembler::flags::fmt_method_flags_rns;
 use crate::disassembler::indent_write::Indented;
+use crate::token::{DIRECTIVE_DOT_METHOD, DIRECTIVE_DOT_METHOD_END};
 use jclass::constant_pool::ConstantPool;
 use jclass::member::MethodInfo;
 use std::fmt::Write as _;
 
 fn fmt_signature(method: &MethodInfo, ind: &mut Indented, cp: &ConstantPool) -> DisasmResult<()> {
-    write!(ind, ".method ")?;
+    write!(ind, "{} ", DIRECTIVE_DOT_METHOD)?;
     fmt_method_flags_rns(&method.access_flags, ind)?;
     fmt_cp_entry_rns(ind, cp, method.name_index)?;
     write!(ind, " ")?;
@@ -34,6 +35,6 @@ pub(crate) fn fmt_method_rns(
         }
         Ok(())
     })?;
-    writeln!(ind, ".end method")?;
+    writeln!(ind, "{}", DIRECTIVE_DOT_METHOD_END)?;
     Ok(())
 }

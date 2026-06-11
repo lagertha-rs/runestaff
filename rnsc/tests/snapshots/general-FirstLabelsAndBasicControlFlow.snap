@@ -1,5 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -11,8 +11,8 @@ expression: "&snapshot_content"
       aload_0
       invokespecial java/lang/Object <init> ()V
       return
-    .end code
-.end method
+    .code_end
+.method_end
 
 .method static basicIfElse (I)V
     .code stack 2 locals 1
@@ -27,8 +27,8 @@ expression: "&snapshot_content"
       ldc "Branch 2"
       invokevirtual java/io/PrintStream println (Ljava/lang/String;)V
       return
-    .end code
-.end method
+    .code_end
+.method_end
 
 .method static main ([Ljava/lang/String;)V
     .code stack 1 locals 1
@@ -37,9 +37,9 @@ expression: "&snapshot_content"
       iconst_0
       invokestatic
       return
-    .end code
-.end method
-.end class
+    .code_end
+.method_end
+.class_end
 ----- INPUT -----
 .class public FirstLabelsAndBasicControlFlow
 .super java/lang/Object
