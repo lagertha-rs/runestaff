@@ -32,6 +32,8 @@ pub const ERR_CODE_MISSING_TH_IMPLICIT_OP: &str = "E-020";
 pub const ERR_CODE_UNKNOWN_INSTRUCTION: &str = "E-021";
 pub const ERR_CODE_DIR_ATTR: &str = "E-022";
 pub const ERR_CODE_CLASS_END_TRAILING_TOK: &str = "E-023";
+pub const ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH: &str = "E-024";
+pub const ERR_CODE_INSTR_TRAILING_TOK: &str = "E-025";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {

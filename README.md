@@ -105,7 +105,7 @@ Originally created to test the [Lagertha VM](https://github.com/lagertha-rs/lage
 - [ ] Replace production `.unwrap()` with error handling
 - [x] Fix disassembler output to match assembler syntax (`.end class` → `.class_end`, `strictfp` → `strict`)
 - [ ] Restore parser unit tests (uncomment and update to current API)
-- [ ] Fix `ldc` without type hint (currently `todo!()`)
+- [x] Fix `ldc` without type hint (currently `todo!()`)
 
 ### v0.3 — Complete JVM Coverage
 

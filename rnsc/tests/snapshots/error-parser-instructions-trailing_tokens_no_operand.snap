@@ -1,0 +1,33 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class TrailingTokensNoOperand
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    return extra_token
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-025] Error: unexpected trailing tokens after instruction 'return'
+   ╭─[ test_data/integration/error/parser/instructions/trailing_tokens_no_operand.rns:6:12 ]
+   │
+ 6 │     return extra_token
+   │           │─────┬─────  
+   │           ╰───────────── expected end of instruction 'return' here
+   │                 │       
+   │                 ╰─────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-025
+───╯
+----- HASH -----
+not generated

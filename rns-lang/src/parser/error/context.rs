@@ -1,8 +1,8 @@
 use crate::diagnostic::{
-    ERR_CODE_CLASS_DEF_TRAILING_TOK, ERR_CODE_CLASS_END_TRAILING_TOK, ERR_CODE_INVALID_CLASS_FLAG,
-    ERR_CODE_INVALID_METHOD_FLAG, ERR_CODE_METHOD_TRAILING_TOK, ERR_CODE_SUPER_TRAILING_TOK,
-    ERR_CODE_TH_TRAILING_TOK, ERR_CODE_TOKEN_OUTSIDE_CLASS, ERR_CODE_UNEXPECTED_TOKEN_IN_CLASS,
-    ERR_CODE_UNEXPECTED_TOKEN_IN_METHOD,
+    ERR_CODE_CLASS_DEF_TRAILING_TOK, ERR_CODE_CLASS_END_TRAILING_TOK, ERR_CODE_INSTR_TRAILING_TOK,
+    ERR_CODE_INVALID_CLASS_FLAG, ERR_CODE_INVALID_METHOD_FLAG, ERR_CODE_METHOD_TRAILING_TOK,
+    ERR_CODE_SUPER_TRAILING_TOK, ERR_CODE_TH_TRAILING_TOK, ERR_CODE_TOKEN_OUTSIDE_CLASS,
+    ERR_CODE_UNEXPECTED_TOKEN_IN_CLASS, ERR_CODE_UNEXPECTED_TOKEN_IN_METHOD,
 };
 use crate::instruction::InstructionSpec;
 use crate::token::Spanned;
@@ -85,6 +85,7 @@ pub(in crate::parser) enum TrailingTokensErrContext {
     Method,
     TypeHint(Spanned<TypeHintKind>),
     ClassEnd,
+    Instruction(Spanned<String>),
 }
 
 impl Display for TrailingTokensErrContext {
@@ -97,6 +98,9 @@ impl Display for TrailingTokensErrContext {
                 write!(f, "type hint '{}'", kind.value.token_name())
             }
             TrailingTokensErrContext::ClassEnd => write!(f, "class definition end"),
+            TrailingTokensErrContext::Instruction(name) => {
+                write!(f, "instruction '{}'", name.value)
+            }
         }
     }
 }
@@ -109,6 +113,7 @@ impl TrailingTokensErrContext {
             TrailingTokensErrContext::TypeHint(_) => ERR_CODE_TH_TRAILING_TOK,
             TrailingTokensErrContext::Method => ERR_CODE_METHOD_TRAILING_TOK,
             TrailingTokensErrContext::ClassEnd => ERR_CODE_CLASS_END_TRAILING_TOK,
+            TrailingTokensErrContext::Instruction(_) => ERR_CODE_INSTR_TRAILING_TOK,
         }
     }
 }

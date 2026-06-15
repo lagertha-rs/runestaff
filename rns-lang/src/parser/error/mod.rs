@@ -8,9 +8,10 @@ pub(super) use rejection::{NumericRejection, ParseNumeric};
 
 use crate::diagnostic::{
     Diagnostic, DiagnosticLabel, DiagnosticTier, ERR_CODE_DIR_ATTR, ERR_CODE_EMPTY_FILE,
-    ERR_CODE_IDENT_OF_TH_EXPECTED, ERR_CODE_MISSING_TH_IMPLICIT_OP, ERR_CODE_MISSING_TH_OPERAND,
-    ERR_CODE_MULTIPLE_CODE_DIR, ERR_CODE_MULTIPLE_SUPER, ERR_CODE_TH_EXPECTS_NUM,
-    ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic, docs_note,
+    ERR_CODE_IDENT_OF_TH_EXPECTED, ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH,
+    ERR_CODE_MISSING_TH_IMPLICIT_OP, ERR_CODE_MISSING_TH_OPERAND, ERR_CODE_MULTIPLE_CODE_DIR,
+    ERR_CODE_MULTIPLE_SUPER, ERR_CODE_TH_EXPECTS_NUM, ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic,
+    docs_note,
 };
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
@@ -49,6 +50,10 @@ pub(super) enum ParserError {
         first_code_span: Span,
         duplicate: Span,
     },
+    InstructionRequiresExplicitTypeHint {
+        raw_instruction: Spanned<String>,
+        found: RnsToken,
+    },
     UnknownInstruction(Spanned<String>),
     UnknownCodeDirectiveAttribute(RnsToken),
 }
@@ -68,6 +73,9 @@ impl IntoDiagnostic for ParserError {
             ParserError::MultipleCodeBlocks { .. } => ERR_CODE_MULTIPLE_CODE_DIR,
             ParserError::UnknownInstruction { .. } => ERR_CODE_UNKNOWN_INSTRUCTION,
             ParserError::UnknownCodeDirectiveAttribute(_) => ERR_CODE_DIR_ATTR,
+            ParserError::InstructionRequiresExplicitTypeHint { .. } => {
+                ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH
+            }
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
         }
     }
@@ -169,6 +177,13 @@ impl IntoDiagnostic for ParserError {
                 };
                 format!("multiple code blocks defined for {}", method).into()
             }
+            ParserError::InstructionRequiresExplicitTypeHint {
+                raw_instruction, ..
+            } => format!(
+                "instruction '{}' requires an explicit type hint",
+                raw_instruction.value
+            )
+            .into(),
         }
     }
 
@@ -405,6 +420,24 @@ impl IntoDiagnostic for ParserError {
                     format!("'{}' is not a valid instruction", instruction.value),
                 )]
             }
+            ParserError::InstructionRequiresExplicitTypeHint {
+                raw_instruction,
+                found,
+            } => {
+                vec![
+                    DiagnosticLabel::context(
+                        raw_instruction.span.as_range(),
+                        format!(
+                            "the instruction '{}' requires an explicit type hint as operand",
+                            raw_instruction.value
+                        ),
+                    ),
+                    DiagnosticLabel::at(
+                        found.span().as_range(),
+                        format!("but found {}", found.token_type()),
+                    ),
+                ]
+            }
         }
     }
 
@@ -601,6 +634,9 @@ impl IntoDiagnostic for ParserError {
                 Some("Each method can only have one code block. Remove the duplicates or merge them into one.".into())
             }
             ParserError::UnknownInstruction { .. } => None,
+            ParserError::InstructionRequiresExplicitTypeHint {raw_instruction, ..} => Some(
+                format!("Please add an explicit type to the operand, for example:\n{} @string \"Hello World!\"", raw_instruction.value).into(),
+            )
         }
     }
 
@@ -619,6 +655,7 @@ impl IntoDiagnostic for ParserError {
             ParserError::InvalidAccessFlag(_, flag) => flag.span,
             ParserError::MissingImplicitTypeHintOperand { after_span, .. } => *after_span,
             ParserError::UnknownInstruction(instruction) => instruction.span,
+            ParserError::InstructionRequiresExplicitTypeHint { found, .. } => found.span(),
         }
     }
 
