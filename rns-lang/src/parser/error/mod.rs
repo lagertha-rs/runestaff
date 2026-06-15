@@ -424,6 +424,17 @@ impl IntoDiagnostic for ParserError {
                 raw_instruction,
                 found,
             } => {
+                let (span, message) = if matches!(found, RnsToken::Newline(_) | RnsToken::Eof(_)) {
+                    (
+                        raw_instruction.span.byte_end..raw_instruction.span.byte_end,
+                        "but found end of line".to_string(),
+                    )
+                } else {
+                    (
+                        found.span().as_range(),
+                        format!("but found {}", found.token_type()),
+                    )
+                };
                 vec![
                     DiagnosticLabel::context(
                         raw_instruction.span.as_range(),
@@ -432,10 +443,7 @@ impl IntoDiagnostic for ParserError {
                             raw_instruction.value
                         ),
                     ),
-                    DiagnosticLabel::at(
-                        found.span().as_range(),
-                        format!("but found {}", found.token_type()),
-                    ),
+                    DiagnosticLabel::at(span, message),
                 ]
             }
         }

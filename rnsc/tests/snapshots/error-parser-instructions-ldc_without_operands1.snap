@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class LdcWithoutOperand
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    ldc              ; new lines
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-024] Error: instruction 'ldc' requires an explicit type hint
+   ╭─[ test_data/integration/error/parser/instructions/ldc_without_operands1.rns:6:33 ]
+   │
+ 6 │     ldc              ; new lines
+   │     ─┬─│ 
+   │      ╰─── the instruction 'ldc' requires an explicit type hint as operand
+   │        │ 
+   │        ╰─ but found end of line
+   │ 
+   │ Help: Please add an explicit type to the operand, for example:
+   │       ldc @string "Hello World!"
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-024
+───╯
+----- HASH -----
+not generated
