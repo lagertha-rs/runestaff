@@ -84,6 +84,23 @@ impl ReportedErrs {
 }
 
 impl RnsParser {
+    fn from_tokens(tokens: Peekable<IntoIter<RnsToken>>, eof_span: Span) -> Self {
+        Self {
+            tokens,
+            eof_span,
+            last_span: Span::default(),
+            last_kind: RnsTokenKind::Eof,
+            diagnostic: Vec::new(),
+
+            class_dir_span: Span::default(),
+            class_name: None,
+            method_dirs: Vec::new(),
+            super_directives: Vec::new(),
+            reported_errs: ReportedErrs::default(),
+            access_flags: Default::default(),
+        }
+    }
+
     fn peek_token(&mut self) -> Option<&RnsToken> {
         self.tokens.peek()
     }
@@ -824,20 +841,7 @@ impl RnsParser {
 }
 
 pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Diagnostic>> {
-    let mut instance = RnsParser {
-        tokens: tokens.into_iter().peekable(),
-        eof_span,
-        last_span: Span::default(),
-        last_kind: RnsTokenKind::Eof,
-        diagnostic: Vec::new(),
-
-        class_dir_span: Span::default(),
-        class_name: None,
-        method_dirs: Vec::new(),
-        super_directives: Vec::new(),
-        reported_errs: ReportedErrs::default(),
-        access_flags: Default::default(),
-    };
+    let mut instance = RnsParser::from_tokens(tokens.into_iter().peekable(), eof_span);
 
     if let Err(e) = instance.parse_class() {
         instance.diagnostic.push(*e);
