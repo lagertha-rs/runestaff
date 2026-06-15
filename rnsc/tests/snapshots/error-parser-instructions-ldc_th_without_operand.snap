@@ -1,0 +1,38 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class LdcThWithoutOperand
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    ldc @string
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-014] Error: '@string' type hint is missing its string literal
+   ╭─[ test_data/integration/error/parser/instructions/ldc_th_without_operand.rns:6:9 ]
+   │
+ 6 │     ldc @string
+   │         ───┬───│ 
+   │            ╰───── forces explicit string constant pool type
+   │                │ 
+   │                ╰─ but string literal is missing
+   │ 
+   │ Help: Provide the value immediately after the hint:
+   │       @string "<string>"
+   │       
+   │       For example:
+   │       @string "Hello, World!"
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-014
+───╯
+----- HASH -----
+not generated

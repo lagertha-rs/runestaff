@@ -1,0 +1,10 @@
+.class LdcThWithoutOperand
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    ldc @string
+    return
+  .code_end
+.method_end
+.class_end

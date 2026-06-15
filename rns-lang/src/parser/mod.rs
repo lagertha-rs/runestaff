@@ -485,20 +485,23 @@ impl RnsParser {
                     RnsOperand::CpRef(operand),
                 )
             }
-            InstructionOperand::TypeHint => {
-                if let Some(RnsToken::TypeHint(th)) = self.peek_token() {
-                    let th = th.clone();
-                    self.next_token();
+            InstructionOperand::TypeHint => match self.next_token() {
+                RnsToken::TypeHint(th) => {
                     let operand = self.resolve_explicit_type_hint(th)?;
                     RnsInstruction::new(
                         raw_instruction.span,
                         instruction_spec,
                         RnsOperand::CpRef(operand),
                     )
-                } else {
-                    todo!("error: ldc requires an explicit type hint (e.g. @string, @int, @float)")
                 }
-            }
+                found => {
+                    return Err(ParserError::InstructionRequiresExplicitTypeHint {
+                        raw_instruction,
+                        found,
+                    }
+                    .into());
+                }
+            },
             InstructionOperand::Byte => {
                 let value = self.try_next_numeric::<u8>().unwrap(); // TODO: proper error handling
                 RnsInstruction::new(
@@ -518,7 +521,7 @@ impl RnsParser {
             }
         };
 
-        // TODO: verify no trailing tokens
+        self.verify_trailing_tokens(TrailingTokensErrContext::Instruction(raw_instruction));
         Ok(instruction)
     }
 

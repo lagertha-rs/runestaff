@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class LdcLabel
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    ldc my_label:
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-024] Error: instruction 'ldc' requires an explicit type hint
+   ╭─[ test_data/integration/error/parser/instructions/ldc_label.rns:6:9 ]
+   │
+ 6 │     ldc my_label:
+   │     ─┬─ ────┬────  
+   │      ╰───────────── the instruction 'ldc' requires an explicit type hint as operand
+   │             │      
+   │             ╰────── but found label
+   │ 
+   │ Help: Please add an explicit type to the operand, for example:
+   │       ldc @string "Hello World!"
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-024
+───╯
+----- HASH -----
+not generated
