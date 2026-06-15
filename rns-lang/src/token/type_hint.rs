@@ -156,25 +156,6 @@ impl TypeHintKind {
         }
     }
 
-    pub fn expected_argument_types(&self) -> &'static [&'static str] {
-        match self {
-            Self::CpIndex => &["unsigned 16-bit integer"],
-            Self::Utf8 => &["identifier"],
-            Self::Integer => &["integer"],
-            Self::Long => &["integer"],
-            Self::Float => &["float"],
-            Self::Double => &["double"],
-            Self::String => &["string literal"],
-            Self::Class => &["identifier"],
-            Self::Methodref => &[
-                "identifier (class name)",
-                "identifier (method name)",
-                "identifier (method descriptor)",
-            ],
-            _ => unimplemented!(),
-        }
-    }
-
     pub fn operand_names(&self) -> &'static [TypeHintOperandName] {
         match self {
             Self::CpIndex => &[TypeHintOperandName::U16Literal],
@@ -304,29 +285,6 @@ impl TypeHintKind {
                 f64::MAX
             ),
             _ => unreachable!("range_description() called on non-numeric type hint"),
-        }
-    }
-
-    pub fn name(&self) -> &'static str {
-        match self {
-            Self::CpIndex => TYPE_HINT_CP_IDX,
-            Self::Utf8 => TYPE_HINT_UTF8,
-            Self::Integer => TYPE_HINT_INTEGER,
-            Self::String => TYPE_HINT_STRING,
-            Self::Class => TYPE_HINT_CLASS,
-            Self::Methodref => TYPE_HINT_METHODREF,
-            Self::Fieldref => TYPE_HINT_FIELDREF,
-            Self::InterfaceMethodref => TYPE_HINT_INTERFACE_METHODREF,
-            Self::Float => TYPE_HINT_FLOAT,
-            Self::Long => TYPE_HINT_LONG,
-            Self::Double => TYPE_HINT_DOUBLE,
-            Self::NameAndType => TYPE_HINT_NAME_AND_TYPE,
-            Self::MethodHandle => TYPE_HINT_METHOD_HANDLE,
-            Self::MethodType => TYPE_HINT_METHOD_TYPE,
-            Self::Dynamic => TYPE_HINT_DYNAMIC,
-            Self::InvokeDynamic => TYPE_HINT_INVOKE_DYNAMIC,
-            Self::Module => TYPE_HINT_MODULE,
-            Self::Package => TYPE_HINT_PACKAGE,
         }
     }
 }
