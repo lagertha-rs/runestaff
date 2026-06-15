@@ -1,7 +1,4 @@
 use clap::{Parser, Subcommand};
-use rns::diagnostic::DiagnosticTier;
-use rns::lexer;
-use rns::parser;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -50,68 +47,22 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
         std::process::exit(1);
     });
 
-    let (tokens, eof_span) = {
-        let (tokens, diagnostics, eof_span) = lexer::tokenize(&contents);
-        let mut has_error = false;
-        for diag in diagnostics {
-            if diag.tier == DiagnosticTier::SyntaxError {
-                has_error = true
-            }
-            diag.print(&filename, &contents);
-        }
-        if has_error {
-            std::process::exit(1);
-        }
-        (tokens, eof_span)
-    };
+    let (bytes, diagnostics) = rns::assemble(&contents);
 
-    let rns_module = {
-        let mut module = match parser::parse(tokens, eof_span) {
-            Ok(module) => module,
-            Err(errors) => {
-                for err in errors {
-                    err.print(&filename, &contents);
-                }
-                std::process::exit(1);
-            }
-        };
-
-        let mut has_error = false;
-        let diagnostics = std::mem::take(&mut module.diagnostics);
-        for diag in diagnostics {
-            if diag.tier == DiagnosticTier::SyntaxError {
-                has_error = true;
-            }
-            diag.print(&filename, &contents);
-        }
-        if has_error {
-            std::process::exit(1);
-        }
-
-        module
-    };
-
-    let (bytes, diagnostics) = rns_module.into_bytes();
-
-    let mut has_error = false;
     for diag in diagnostics {
-        if diag.tier == DiagnosticTier::SyntaxError {
-            has_error = true;
-        }
         diag.print(&filename, &contents);
     }
 
-    if has_error {
-        std::process::exit(1);
-    }
-
-    if let Some(bytes) = bytes {
-        let output_path = output
-            .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|| filename.replace(".rns", ".class"));
-        std::fs::write(output_path, bytes).expect("Failed to write output file");
-    } else {
-        std::process::exit(1);
+    match bytes {
+        Some(bytes) => {
+            let output_path = output
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_else(|| filename.replace(".rns", ".class"));
+            std::fs::write(output_path, bytes).expect("Failed to write output file");
+        }
+        None => {
+            std::process::exit(1);
+        }
     }
 }
 

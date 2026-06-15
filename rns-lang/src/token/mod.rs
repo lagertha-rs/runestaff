@@ -206,17 +206,6 @@ impl RnsToken {
         }
     }
 
-    pub fn is_class_nested_directive(&self) -> bool {
-        matches!(
-            self,
-            RnsToken::DotMethod(_) | RnsToken::DotAnnotation(_) | RnsToken::DotSuper(_)
-        )
-    }
-
-    pub fn is_method_nested_directive(&self) -> bool {
-        matches!(self, RnsToken::DotCode(_) | RnsToken::DotAnnotation(_))
-    }
-
     pub fn is_access_flag(&self) -> bool {
         matches!(self, RnsToken::AccessFlag(_))
     }

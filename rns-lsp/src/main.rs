@@ -1,4 +1,3 @@
-use rns::lexer;
 use tower_lsp_server::jsonrpc::Result;
 use tower_lsp_server::ls_types::*;
 use tower_lsp_server::{Client, LanguageServer, LspService, Server};
@@ -10,7 +9,7 @@ struct RnsLanguageServer {
 
 impl RnsLanguageServer {
     async fn analyze_and_publish(&self, uri: Uri, text: String) {
-        let (_tokens, errors, _eof_span) = lexer::tokenize(&text);
+        let errors = rns::lex(&text);
         let mut diagnostics = Vec::with_capacity(errors.len());
         for err in errors {
             let span = err.primary_location;

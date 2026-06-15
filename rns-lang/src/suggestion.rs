@@ -1,5 +1,3 @@
-use crate::instruction::INSTRUCTION_SPECS;
-
 fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     let s1_len = s1.chars().count();
     let s2_len = s2.chars().count();
@@ -82,10 +80,6 @@ pub fn closest_directive(input: &str) -> Option<&'static str> {
 
 pub fn closest_type_hint(input: &str) -> Option<&'static str> {
     closest_match(input, TYPE_HINTS, 2)
-}
-
-pub fn closest_instruction(input: &str) -> Option<&'static str> {
-    closest_match(input, INSTRUCTION_SPECS.keys().copied(), 2)
 }
 
 #[cfg(test)]
