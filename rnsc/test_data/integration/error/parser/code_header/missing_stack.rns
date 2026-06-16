@@ -1,0 +1,9 @@
+.class MissingStack
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code locals 2
+    return
+  .code_end
+.method_end
+.class_end

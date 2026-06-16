@@ -34,6 +34,7 @@ pub const ERR_CODE_DIR_ATTR: &str = "E-022";
 pub const ERR_CODE_CLASS_END_TRAILING_TOK: &str = "E-023";
 pub const ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH: &str = "E-024";
 pub const ERR_CODE_INSTR_TRAILING_TOK: &str = "E-025";
+pub const ERR_CODE_NOT_YET_IMPL: &str = "E-026";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {
@@ -111,10 +112,9 @@ impl Diagnostic {
             report = report.with_label(ariadne_label);
         }
 
-        report
+        let _ = report
             .finish()
-            .eprint((filename_owned, Source::from(source_code)))
-            .unwrap();
+            .eprint((filename_owned, Source::from(source_code)));
     }
 }
 

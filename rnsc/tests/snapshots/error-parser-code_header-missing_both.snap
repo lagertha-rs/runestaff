@@ -1,0 +1,43 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MissingBoth
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-026] Error: missing stack operand for code directive
+   ╭─[ test_data/integration/error/parser/code_header/missing_both.rns:5:8 ]
+   │
+ 5 │   .code
+   │        │ 
+   │        ╰─ missing 'stack' operand
+   │ 
+   │ Help: Auto-calculation of stack/locals is planned but not yet implemented. For now, specify them explicitly: .code stack N locals M
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-026
+───╯
+[E-026] Error: missing locals operand for code directive
+   ╭─[ test_data/integration/error/parser/code_header/missing_both.rns:5:8 ]
+   │
+ 5 │   .code
+   │        │ 
+   │        ╰─ missing 'locals' operand
+   │ 
+   │ Help: Auto-calculation of stack/locals is planned but not yet implemented. For now, specify them explicitly: .code stack N locals M
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-026
+───╯
+----- HASH -----
+not generated

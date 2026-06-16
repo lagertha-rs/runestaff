@@ -10,8 +10,8 @@ use crate::diagnostic::{
     Diagnostic, DiagnosticLabel, DiagnosticTier, ERR_CODE_DIR_ATTR, ERR_CODE_EMPTY_FILE,
     ERR_CODE_IDENT_OF_TH_EXPECTED, ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH,
     ERR_CODE_MISSING_TH_IMPLICIT_OP, ERR_CODE_MISSING_TH_OPERAND, ERR_CODE_MULTIPLE_CODE_DIR,
-    ERR_CODE_MULTIPLE_SUPER, ERR_CODE_TH_EXPECTS_NUM, ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic,
-    docs_note,
+    ERR_CODE_MULTIPLE_SUPER, ERR_CODE_NOT_YET_IMPL, ERR_CODE_TH_EXPECTS_NUM,
+    ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic, docs_note,
 };
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
@@ -56,6 +56,12 @@ pub(super) enum ParserError {
     },
     UnknownInstruction(Spanned<String>),
     UnknownCodeDirectiveAttribute(RnsToken),
+    // Temporary placeholder for features planned but not yet implemented.
+    NotYetImplemented {
+        msg: Cow<'static, str>,
+        label_msg: Cow<'static, str>,
+        span: Span,
+    },
 }
 
 impl IntoDiagnostic for ParserError {
@@ -77,6 +83,7 @@ impl IntoDiagnostic for ParserError {
                 ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH
             }
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
+            ParserError::NotYetImplemented { .. } => ERR_CODE_NOT_YET_IMPL,
         }
     }
 
@@ -184,6 +191,7 @@ impl IntoDiagnostic for ParserError {
                 raw_instruction.value
             )
             .into(),
+            ParserError::NotYetImplemented { msg, .. } => msg.clone(),
         }
     }
 
@@ -272,10 +280,11 @@ impl IntoDiagnostic for ParserError {
                     tokens.len(),
                     if tokens.len() == 1 { "" } else { "s" }
                 );
+                let last_byte_end = tokens[tokens.len() - 1].span().byte_end;
                 vec![
                     context,
                     DiagnosticLabel::at(
-                        tokens[0].span().byte_start..tokens.last().unwrap().span().byte_end,
+                        tokens[0].span().byte_start..last_byte_end,
                         msg,
                     ),
                 ]
@@ -445,6 +454,9 @@ impl IntoDiagnostic for ParserError {
                     ),
                     DiagnosticLabel::at(span, message),
                 ]
+            }
+            ParserError::NotYetImplemented { label_msg, span, .. } => {
+                vec![DiagnosticLabel::at(span.as_range(), label_msg.clone())]
             }
         }
     }
@@ -644,7 +656,10 @@ impl IntoDiagnostic for ParserError {
             ParserError::UnknownInstruction { .. } => None,
             ParserError::InstructionRequiresExplicitTypeHint {raw_instruction, ..} => Some(
                 format!("Please add an explicit type to the operand, for example:\n{} @string \"Hello World!\"", raw_instruction.value).into(),
-            )
+            ),
+            ParserError::NotYetImplemented { .. } => Some(
+                "Auto-calculation of stack/locals is planned but not yet implemented. For now, specify them explicitly: .code stack N locals M".into(),
+            ),
         }
     }
 
@@ -664,6 +679,7 @@ impl IntoDiagnostic for ParserError {
             ParserError::MissingImplicitTypeHintOperand { after_span, .. } => *after_span,
             ParserError::UnknownInstruction(instruction) => instruction.span,
             ParserError::InstructionRequiresExplicitTypeHint { found, .. } => found.span(),
+            ParserError::NotYetImplemented { span, .. } => *span,
         }
     }
 
