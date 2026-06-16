@@ -1,7 +1,8 @@
+use crate::assembler::error::AssemblerError;
 use crate::assembler::jvm_warning::JvmWarning;
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::ast::{MethodDirective, RnsModule, RnsOperand};
-use crate::diagnostic::Diagnostic;
+use crate::diagnostic::{Diagnostic, DiagnosticTier};
 use crate::token::type_hint::TypeHint;
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
@@ -9,6 +10,7 @@ use jclass::prelude::{
     ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
 };
 
+mod error;
 mod jvm_warning;
 
 impl RnsModule {
@@ -136,10 +138,16 @@ impl RnsModule {
                 }
                 Some(RnsOperand::Byte(v)) => code.push(v.value),
                 Some(RnsOperand::Label(label)) => {
-                    // TODO: resolve label to branch offset
-                    let target_pc = code_dir.labels.get(&label.value).expect("unknown label"); // TODO: proper error
+                    let target_pc = match code_dir.labels.get(&label.value) {
+                        Some(pc) => *pc,
+                        None => {
+                            self.diagnostics
+                                .push(AssemblerError::UndefinedLabel { label }.into());
+                            0
+                        }
+                    };
                     let current_pc = (code.len() - 1) as u32; // pc of opcode
-                    let offset = (*target_pc as i32) - (current_pc as i32);
+                    let offset = (target_pc as i32) - (current_pc as i32);
                     match opcode.operand_size() {
                         2 => code.extend((offset as i16).to_be_bytes()),
                         4 => code.extend(offset.to_be_bytes()),
@@ -186,6 +194,14 @@ impl RnsModule {
             .into_iter()
             .map(|method_dir| self.build_method_directive(&mut cp_builder, method_dir))
             .collect();
+
+        if self
+            .diagnostics
+            .iter()
+            .any(|d| d.tier == DiagnosticTier::SyntaxError)
+        {
+            return (None, self.diagnostics);
+        }
 
         // TODO: only when at least one code is actually present
         cp_builder.add_utf8("Code");

@@ -1,0 +1,32 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class UndefinedLabel
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    goto undefined
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-027] Error: undefined label 'undefined'
+   ╭─[ test_data/integration/error/parser/instructions/undefined_label.rns:6:10 ]
+   │
+ 6 │     goto undefined
+   │          ────┬────  
+   │              ╰────── label 'undefined' is not defined in this code directive
+   │ 
+   │ Help: Labels must be defined within the same code directive.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-027
+───╯
+----- HASH -----
+not generated
