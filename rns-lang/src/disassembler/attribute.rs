@@ -50,13 +50,7 @@ fn fmt_code_attribute_rns(
         });
     }
 
-    if !code.attributes.is_empty() {
-        let attribute = code
-            .attributes
-            .iter()
-            .map(code_attribute_name)
-            .next()
-            .expect("non-empty code attributes must have first attribute");
+    if let Some(attribute) = code.attributes.first().map(code_attribute_name) {
         return Err(DisasmError::UnsupportedCodeAttribute {
             method: method_name.to_string(),
             attribute,

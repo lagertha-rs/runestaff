@@ -542,10 +542,15 @@ impl RnsParser {
         Ok(instruction)
     }
 
-    /* TODO: doesn't handle errors. In the closest future I want to calculate stack and locals and make it optional.
-       TODO: When it will be explicitly specified but don't match my calculations, it should warn.
-    */
     fn parse_code_header(&mut self) -> (u16, u16) {
+        let dir_span = self.last_span;
+        let after_code = Span {
+            byte_start: dir_span.byte_end,
+            byte_end: dir_span.byte_end,
+            line: dir_span.line,
+            col_start: dir_span.col_end,
+            col_end: dir_span.col_end,
+        };
         let mut stack = None;
         let mut locals = None;
 
@@ -553,10 +558,10 @@ impl RnsParser {
             let identifier_token = self.next_token();
             match identifier_token {
                 RnsToken::Identifier(ref name) if name.value == "stack" => {
-                    stack = Some(self.try_next_numeric().unwrap().value);
+                    stack = self.try_next_numeric().ok().map(|s| s.value);
                 }
                 RnsToken::Identifier(ref name) if name.value == "locals" => {
-                    locals = Some(self.try_next_numeric().unwrap().value);
+                    locals = self.try_next_numeric().ok().map(|s| s.value);
                 }
                 other => self
                     .diagnostic
@@ -565,10 +570,39 @@ impl RnsParser {
         }
 
         if !matches!(self.peek_token(), Some(RnsToken::Newline(_))) {
-            panic!("Unexpected tokens after code directive header");
+            self.diagnostic.push(
+                ParserError::NotYetImplemented {
+                    msg: "unexpected tokens after code header".into(),
+                    label_msg: "unexpected tokens after code header".into(),
+                    span: after_code,
+                }
+                .into(),
+            );
         }
 
-        (stack.unwrap(), locals.unwrap())
+        let stack = stack.unwrap_or_else(|| {
+            self.diagnostic.push(
+                ParserError::NotYetImplemented {
+                    msg: "missing stack operand for code directive".into(),
+                    label_msg: "missing 'stack' operand".into(),
+                    span: after_code,
+                }
+                .into(),
+            );
+            0
+        });
+        let locals = locals.unwrap_or_else(|| {
+            self.diagnostic.push(
+                ParserError::NotYetImplemented {
+                    msg: "missing locals operand for code directive".into(),
+                    label_msg: "missing 'locals' operand".into(),
+                    span: after_code,
+                }
+                .into(),
+            );
+            0
+        });
+        (stack, locals)
     }
 
     fn parse_code_directive(&mut self) -> Option<CodeDirective> {
@@ -801,7 +835,7 @@ impl RnsParser {
     }
 
     fn take_super_directive(&mut self) -> Option<SuperDirective> {
-        let super_directives = std::mem::take(&mut self.super_directives);
+        let mut super_directives = std::mem::take(&mut self.super_directives);
         match super_directives.len() {
             0 => {
                 // If no class name is defined, doesn't make sense to report missing superclass
@@ -825,7 +859,7 @@ impl RnsParser {
                 })
             }
             1 => {
-                let (dir_span, name) = super_directives.into_iter().next().unwrap();
+                let (dir_span, name) = super_directives.swap_remove(0);
                 Some(SuperDirective {
                     dir_span: Some(dir_span),
                     name,

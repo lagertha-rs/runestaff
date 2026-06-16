@@ -1,0 +1,9 @@
+.class MissingBoth
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code
+    return
+  .code_end
+.method_end
+.class_end
