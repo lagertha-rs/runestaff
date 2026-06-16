@@ -283,10 +283,7 @@ impl IntoDiagnostic for ParserError {
                 let last_byte_end = tokens[tokens.len() - 1].span().byte_end;
                 vec![
                     context,
-                    DiagnosticLabel::at(
-                        tokens[0].span().byte_start..last_byte_end,
-                        msg,
-                    ),
+                    DiagnosticLabel::at(tokens[0].span().byte_start..last_byte_end, msg),
                 ]
             }
             ParserError::MultipleSuperDefinitions(defs) => {
@@ -455,7 +452,9 @@ impl IntoDiagnostic for ParserError {
                     DiagnosticLabel::at(span, message),
                 ]
             }
-            ParserError::NotYetImplemented { label_msg, span, .. } => {
+            ParserError::NotYetImplemented {
+                label_msg, span, ..
+            } => {
                 vec![DiagnosticLabel::at(span.as_range(), label_msg.clone())]
             }
         }
