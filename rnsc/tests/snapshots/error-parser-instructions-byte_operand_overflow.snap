@@ -1,0 +1,36 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class ByteOperandOverflow
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    bipush 256
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-028] Error: instruction 'bipush' requires a value that fits in 1 byte, but '256' is out of range
+   ╭─[ test_data/integration/error/parser/instructions/byte_operand_overflow.rns:6:12 ]
+   │
+ 6 │     bipush 256
+   │     ───┬── ─┬─  
+   │        ╰──────── the instruction 'bipush' requires a 1 byte integer as operand
+   │             │   
+   │             ╰─── but '256' is out of range
+   │ 
+   │ Help: The value '256' is out of range.
+   │       
+   │       Use a value between 0 and 255.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-028
+───╯
+----- HASH -----
+not generated

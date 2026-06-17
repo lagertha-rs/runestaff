@@ -10,9 +10,10 @@ use crate::diagnostic::{
     Diagnostic, DiagnosticLabel, DiagnosticTier, ERR_CODE_DIR_ATTR, ERR_CODE_EMPTY_FILE,
     ERR_CODE_IDENT_OF_TH_EXPECTED, ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH,
     ERR_CODE_MISSING_TH_IMPLICIT_OP, ERR_CODE_MISSING_TH_OPERAND, ERR_CODE_MULTIPLE_CODE_DIR,
-    ERR_CODE_MULTIPLE_SUPER, ERR_CODE_NOT_YET_IMPL, ERR_CODE_TH_EXPECTS_NUM,
-    ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic, docs_note,
+    ERR_CODE_MULTIPLE_SUPER, ERR_CODE_NOT_YET_IMPL, ERR_CODE_NUMERIC_OPERAND_OVERFLOW,
+    ERR_CODE_TH_EXPECTS_NUM, ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic, docs_note,
 };
+use crate::instruction::InstructionNumericOperand;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
 use crate::token::{RnsFlag, Spanned};
 use crate::token::{RnsToken, Span};
@@ -62,6 +63,11 @@ pub(super) enum ParserError {
         label_msg: Cow<'static, str>,
         span: Span,
     },
+    InstructionOperandNumericError {
+        instruction: Spanned<String>,
+        rejection: NumericRejection,
+        numeric_kind: InstructionNumericOperand,
+    },
 }
 
 impl IntoDiagnostic for ParserError {
@@ -84,6 +90,7 @@ impl IntoDiagnostic for ParserError {
             }
             ParserError::InvalidAccessFlag(ctx, _) => ctx.error_code(),
             ParserError::NotYetImplemented { .. } => ERR_CODE_NOT_YET_IMPL,
+            ParserError::InstructionOperandNumericError { .. } => ERR_CODE_NUMERIC_OPERAND_OVERFLOW,
         }
     }
 
@@ -192,6 +199,35 @@ impl IntoDiagnostic for ParserError {
             )
             .into(),
             ParserError::NotYetImplemented { msg, .. } => msg.clone(),
+            ParserError::InstructionOperandNumericError {
+                instruction,
+                rejection,
+                numeric_kind,
+            } => {
+                let byte_desc = numeric_kind.byte_description();
+                match rejection {
+                    NumericRejection::Missing(_) => format!(
+                        "instruction '{}' requires a numeric operand",
+                        instruction.value
+                    )
+                    .into(),
+                    NumericRejection::NotNumeric(spanned) => format!(
+                        "instruction '{}' requires a {} integer, but '{}' is not a number",
+                        instruction.value, byte_desc, spanned.value
+                    )
+                    .into(),
+                    NumericRejection::FloatingPoint(spanned) => format!(
+                        "instruction '{}' requires an integer, got '{}'",
+                        instruction.value, spanned.value
+                    )
+                    .into(),
+                    NumericRejection::Overflow(spanned) => format!(
+                        "instruction '{}' requires a value that fits in {}, but '{}' is out of range",
+                        instruction.value, byte_desc, spanned.value
+                    )
+                    .into(),
+                }
+            }
         }
     }
 
@@ -457,6 +493,39 @@ impl IntoDiagnostic for ParserError {
             } => {
                 vec![DiagnosticLabel::at(span.as_range(), label_msg.clone())]
             }
+            ParserError::InstructionOperandNumericError {
+                instruction,
+                rejection,
+                numeric_kind,
+            } => {
+                let byte_desc = numeric_kind.byte_description();
+                let context_label = DiagnosticLabel::context(
+                    instruction.span.as_range(),
+                    format!(
+                        "the instruction '{}' requires a {} integer as operand",
+                        instruction.value, byte_desc
+                    ),
+                );
+                let error_label = match rejection {
+                    NumericRejection::Missing(_) => DiagnosticLabel::at(
+                        instruction.span.byte_end..instruction.span.byte_end,
+                        "but no operand was provided",
+                    ),
+                    NumericRejection::NotNumeric(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("but '{}' is not a number", spanned.value),
+                    ),
+                    NumericRejection::FloatingPoint(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("but '{}' is a floating-point number", spanned.value),
+                    ),
+                    NumericRejection::Overflow(spanned) => DiagnosticLabel::at(
+                        spanned.span.as_range(),
+                        format!("but '{}' is out of range", spanned.value),
+                    ),
+                };
+                vec![context_label, error_label]
+            }
         }
     }
 
@@ -659,6 +728,47 @@ impl IntoDiagnostic for ParserError {
             ParserError::NotYetImplemented { .. } => Some(
                 "Auto-calculation of stack/locals is planned but not yet implemented. For now, specify them explicitly: .code stack N locals M".into(),
             ),
+            ParserError::InstructionOperandNumericError {
+                instruction,
+                rejection,
+                numeric_kind,
+            } => {
+                let min = numeric_kind.min_value();
+                let max = numeric_kind.max_value();
+                match rejection {
+                    NumericRejection::Missing(_) => Some(
+                        format!(
+                            "Provide a numeric operand for the instruction '{}', e.g.:\n\
+                             {} 42",
+                            instruction.value, instruction.value
+                        )
+                        .into(),
+                    ),
+                    NumericRejection::NotNumeric(spanned) => Some(
+                        format!(
+                            "'{}' is not a valid integer.\n\n\
+                             Use a decimal number in the range {} to {}.",
+                            spanned.value, min, max
+                        )
+                        .into(),
+                    ),
+                    NumericRejection::FloatingPoint(_) => Some(
+                        format!(
+                            "Use a whole number in the range {} to {}.",
+                            min, max
+                        )
+                        .into(),
+                    ),
+                    NumericRejection::Overflow(spanned) => Some(
+                        format!(
+                            "The value '{}' is out of range.\n\n\
+                             Use a value between {} and {}.",
+                            spanned.value, min, max
+                        )
+                        .into(),
+                    ),
+                }
+            }
         }
     }
 
@@ -679,6 +789,16 @@ impl IntoDiagnostic for ParserError {
             ParserError::UnknownInstruction(instruction) => instruction.span,
             ParserError::InstructionRequiresExplicitTypeHint { found, .. } => found.span(),
             ParserError::NotYetImplemented { span, .. } => *span,
+            ParserError::InstructionOperandNumericError {
+                rejection,
+                instruction,
+                ..
+            } => match rejection {
+                NumericRejection::Missing(_) => instruction.span,
+                NumericRejection::NotNumeric(spanned)
+                | NumericRejection::FloatingPoint(spanned)
+                | NumericRejection::Overflow(spanned) => spanned.span,
+            },
         }
     }
 

@@ -1,0 +1,34 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class ByteOperandFloat
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    bipush 3.14
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-028] Error: instruction 'bipush' requires an integer, got '3.14'
+   ╭─[ test_data/integration/error/parser/instructions/byte_operand_float.rns:6:12 ]
+   │
+ 6 │     bipush 3.14
+   │     ───┬── ──┬─  
+   │        ╰───────── the instruction 'bipush' requires a 1 byte integer as operand
+   │              │   
+   │              ╰─── but '3.14' is a floating-point number
+   │ 
+   │ Help: Use a whole number in the range 0 to 255.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-028
+───╯
+----- HASH -----
+not generated
