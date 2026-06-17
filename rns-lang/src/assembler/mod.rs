@@ -3,6 +3,7 @@ use crate::assembler::jvm_warning::JvmWarning;
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::ast::{MethodDirective, RnsModule, RnsOperand};
 use crate::diagnostic::{Diagnostic, DiagnosticTier};
+use crate::instruction::InstructionNumericOperand;
 use crate::token::type_hint::TypeHint;
 use jclass::ClassFile;
 use jclass::flags::ClassFlags;
@@ -136,7 +137,11 @@ impl RnsModule {
                         _ => unimplemented!(),
                     }
                 }
-                Some(RnsOperand::Byte(v)) => code.push(v.value),
+                Some(RnsOperand::Numeric(numeric_kind, v)) => match numeric_kind {
+                    InstructionNumericOperand::Byte => code.push(v.value as u8),
+                    InstructionNumericOperand::Short => code.extend((v.value as i16).to_be_bytes()),
+                    InstructionNumericOperand::Int => code.extend((v.value as i32).to_be_bytes()),
+                },
                 Some(RnsOperand::Label(label)) => {
                     let target_pc = match code_dir.labels.get(&label.value) {
                         Some(pc) => *pc,

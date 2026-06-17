@@ -519,12 +519,43 @@ impl RnsParser {
                     .into());
                 }
             },
-            InstructionOperand::Byte => {
-                let value = self.try_next_numeric::<u8>().unwrap(); // TODO: proper error handling
+            InstructionOperand::Numeric(numeric_kind) => {
+                let value = match self.try_next_numeric::<i64>() {
+                    Ok(spanned) => {
+                        if spanned.value < numeric_kind.min_value()
+                            || spanned.value > numeric_kind.max_value()
+                        {
+                            return Err(ParserError::InstructionOperandNumericError {
+                                instruction: Spanned::new(
+                                    raw_instruction.value.clone(),
+                                    raw_instruction.span,
+                                ),
+                                rejection: NumericRejection::Overflow(Spanned::new(
+                                    spanned.value.to_string(),
+                                    spanned.span,
+                                )),
+                                numeric_kind,
+                            }
+                            .into());
+                        }
+                        spanned
+                    }
+                    Err(rejection) => {
+                        return Err(ParserError::InstructionOperandNumericError {
+                            instruction: Spanned::new(
+                                raw_instruction.value.clone(),
+                                raw_instruction.span,
+                            ),
+                            rejection,
+                            numeric_kind,
+                        }
+                        .into());
+                    }
+                };
                 RnsInstruction::new(
                     raw_instruction.span,
                     instruction_spec,
-                    RnsOperand::Byte(value),
+                    RnsOperand::Numeric(numeric_kind, value),
                 )
             }
             InstructionOperand::Label => {

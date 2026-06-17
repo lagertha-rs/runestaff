@@ -1,0 +1,36 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class ByteOperandNotNumeric
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    bipush abc
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-028] Error: instruction 'bipush' requires a 1 byte integer, but 'abc' is not a number
+   ╭─[ test_data/integration/error/parser/instructions/byte_operand_not_numeric.rns:6:12 ]
+   │
+ 6 │     bipush abc
+   │     ───┬── ─┬─  
+   │        ╰──────── the instruction 'bipush' requires a 1 byte integer as operand
+   │             │   
+   │             ╰─── but 'abc' is not a number
+   │ 
+   │ Help: 'abc' is not a valid integer.
+   │       
+   │       Use a decimal number in the range 0 to 255.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-028
+───╯
+----- HASH -----
+not generated

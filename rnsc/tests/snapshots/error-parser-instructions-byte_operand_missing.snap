@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class ByteOperandMissing
+.super java/lang/Object
+
+.method static main ([Ljava/lang/String;)V
+  .code stack 2 locals 1
+    bipush
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-028] Error: instruction 'bipush' requires a numeric operand
+   ╭─[ test_data/integration/error/parser/instructions/byte_operand_missing.rns:6:5 ]
+   │
+ 6 │     bipush
+   │     ───┬──│ 
+   │        ╰──── the instruction 'bipush' requires a 1 byte integer as operand
+   │           │ 
+   │           ╰─ but no operand was provided
+   │ 
+   │ Help: Provide a numeric operand for the instruction 'bipush', e.g.:
+   │       bipush 42
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-028
+───╯
+----- HASH -----
+not generated

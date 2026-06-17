@@ -2,7 +2,7 @@ pub mod flag;
 
 use crate::ast::flag::RnsMethodFlag;
 use crate::diagnostic::Diagnostic;
-use crate::instruction::InstructionSpec;
+use crate::instruction::{InstructionNumericOperand, InstructionSpec};
 use crate::token::type_hint::TypeHint;
 use crate::token::{Span, Spanned};
 use flag::RnsClassFlag;
@@ -49,7 +49,7 @@ impl MethodDirective {
 
 pub enum RnsOperand {
     CpRef(TypeHint),
-    Byte(Spanned<u8>),
+    Numeric(InstructionNumericOperand, Spanned<i64>),
     Label(Spanned<String>),
 }
 
