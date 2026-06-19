@@ -1,0 +1,30 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MethodTrailingTokens
+.super java/lang/Object
+
+.method main ()V extra_token
+.method_end
+.class_end
+----- STDERR -----
+[E-018] Error: unexpected trailing tokens after method definition
+   ╭─[ test_data/integration/error/parser/method_directive/trailing_tokens.rns:4:18 ]
+   │
+ 4 │ .method main ()V extra_token
+   │                 │─────┬─────  
+   │                 ╰───────────── expected end of method definition here
+   │                       │       
+   │                       ╰─────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-018
+───╯
+----- HASH -----
+not generated

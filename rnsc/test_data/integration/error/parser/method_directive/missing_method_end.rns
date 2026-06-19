@@ -1,0 +1,7 @@
+.class MissingMethodEnd
+.super java/lang/Object
+
+.method main ()V
+  .code stack 1 locals 0
+    return
+  .code_end

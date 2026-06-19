@@ -706,14 +706,23 @@ impl IntoDiagnostic for ParserError {
                     .map(|op| op.placeholder())
                     .collect::<Vec<_>>()
                     .join(" ");
+                let (location, example) = match err_ctx {
+                    OperandErrPosContext::MethodDescriptor => {
+                        ("after the method name".to_string(), ".method main ()V".to_string())
+                    }
+                    OperandErrPosContext::MethodName => {
+                        ("after the '.method' directive".to_string(), ".method main ()V".to_string())
+                    }
+                    _ => (
+                        format!("after the '{}' directive", err_ctx.directive_name()),
+                        format!("{} {}", err_ctx.directive_name(), syntax),
+                    ),
+                };
                 Some(
                     format!(
-                        "Provide a {} after the '{}' directive, e.g.:\n\
-                         {} {}",
-                        err_ctx,
-                        err_ctx.directive_name(),
-                        err_ctx.directive_name(),
-                        syntax,
+                        "Provide a {} {}, e.g.:\n\
+                         {}",
+                        err_ctx, location, example,
                     )
                     .into(),
                 )
