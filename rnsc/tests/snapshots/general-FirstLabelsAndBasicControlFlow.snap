@@ -17,7 +17,7 @@ expression: "&snapshot_content"
 .method static basicIfElse (I)V
     .code stack 2 locals 1
       iload_0
-      bipush
+      bipush 42
       if_icmpeq
       getstatic java/lang/System out Ljava/io/PrintStream;
       ldc "Branch 1"
@@ -32,7 +32,7 @@ expression: "&snapshot_content"
 
 .method static main ([Ljava/lang/String;)V
     .code stack 1 locals 1
-      bipush
+      bipush 42
       invokestatic
       iconst_0
       invokestatic
