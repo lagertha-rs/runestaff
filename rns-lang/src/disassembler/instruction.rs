@@ -19,6 +19,9 @@ pub(crate) fn fmt_instruction_rns(
             fmt_cp_entry_rns(ind, cp, *idx)?;
             writeln!(ind)?;
         }
+        Instruction::Bipush(val) => {
+            writeln!(ind, "bipush {val}")?;
+        }
         _ => writeln!(ind, "{instruction}")?,
     }
     Ok(())

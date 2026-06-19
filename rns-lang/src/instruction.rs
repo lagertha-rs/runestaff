@@ -98,6 +98,10 @@ define_instructions! {
         name: "return",
         operand: InstructionOperand::None,
     },
+    Ireturn => {
+        name: "ireturn",
+        operand: InstructionOperand::None,
+    },
     Iload0 => {
         name: "iload_0",
         operand: InstructionOperand::None,
