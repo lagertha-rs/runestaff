@@ -1,0 +1,17 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class annotation MyAnnotation
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+.class annotation MyAnnotation
+.super java/lang/Object
+.class_end
+----- STDERR -----
+
+----- HASH -----
+f086103c39ec8102e11f92bb6ee57171170d6c124aca7c4381903343a7b5d388

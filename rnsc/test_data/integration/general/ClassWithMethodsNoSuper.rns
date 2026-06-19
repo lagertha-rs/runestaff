@@ -1,0 +1,10 @@
+.class MyClass
+
+.method public <init> ()V
+  .code stack 1 locals 1
+    aload_0
+    invokespecial @methodref java/lang/Object <init> ()V
+    return
+  .code_end
+.method_end
+.class_end

@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -28,7 +27,7 @@ not generated
    │
  1 │ .class MyClass SomethingElse
    │ ───┬──  
-   │    ╰──── class 'Some(Class(None, Spanned { value: "MyClass", span: Span { byte_start: 7, byte_end: 14, line: 0, col_start: 7, col_end: 14 } }))' is missing a '.super' directive
+   │    ╰──── class 'MyClass' is missing a '.super' directive
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯

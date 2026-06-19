@@ -1,0 +1,39 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class MyClass
+.super java/lang/Object
+
+.method public <init> ()V
+    .code stack 1 locals 1
+      aload_0
+      invokespecial java/lang/Object <init> ()V
+      return
+    .code_end
+.method_end
+.class_end
+----- INPUT -----
+.class MyClass
+
+.method public <init> ()V
+  .code stack 1 locals 1
+    aload_0
+    invokespecial @methodref java/lang/Object <init> ()V
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+[W-001] Warning: missing super directive
+   ╭─[ test_data/integration/general/ClassWithMethodsNoSuper.rns:1:1 ]
+   │
+ 1 │ .class MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+fc5bfbcd539cbc073e79977f3ad38c9390ddf93fbcb39444a24dc7a14ccf3dce
