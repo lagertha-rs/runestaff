@@ -1,0 +1,17 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public MySyntheticClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+.class public synthetic MySyntheticClass
+.super java/lang/Object
+.class_end
+----- STDERR -----
+
+----- HASH -----
+726b1c032d07e1741cd834316d9ab5f1a6dc65db58720baa254bfe3622861b62

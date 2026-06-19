@@ -1,0 +1,4 @@
+.class MyClass
+.super java/lang/Object
+.unknown_directive
+.class_end

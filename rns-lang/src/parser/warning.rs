@@ -86,10 +86,16 @@ impl IntoDiagnostic for ParserWarning {
                 class_dir_pos: class_directive_pos,
                 class_name,
                 ..
-            } => vec![DiagnosticLabel::at(
-                class_directive_pos.as_range(),
-                format!("class '{:?}' is missing a '.super' directive", class_name),
-            )],
+            } => {
+                let class_desc = match class_name {
+                    Some(name) => name.value(),
+                    None => "<unknown>".to_string(),
+                };
+                vec![DiagnosticLabel::at(
+                    class_directive_pos.as_range(),
+                    format!("class '{}' is missing a '.super' directive", class_desc),
+                )]
+            }
             ParserWarning::DuplicateAccessFlag { flag: _, spans, .. } => {
                 let mut labels = Vec::with_capacity(spans.len());
                 labels.push(DiagnosticLabel::context(

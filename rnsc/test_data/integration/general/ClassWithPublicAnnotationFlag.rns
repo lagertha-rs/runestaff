@@ -1,0 +1,3 @@
+.class public annotation MyAnnotation
+.super java/lang/Object
+.class_end
