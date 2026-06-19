@@ -1,0 +1,7 @@
+.class UnknownDirectiveInMethod
+.super java/lang/Object
+
+.method main ()V
+  .unknown_directive
+.method_end
+.class_end

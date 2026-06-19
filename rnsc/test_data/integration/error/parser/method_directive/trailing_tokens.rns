@@ -1,0 +1,6 @@
+.class MethodTrailingTokens
+.super java/lang/Object
+
+.method main ()V extra_token
+.method_end
+.class_end

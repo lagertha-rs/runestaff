@@ -1,0 +1,27 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class UnknownDirectiveInMethod
+.super java/lang/Object
+
+.method main ()V
+  .unknown_directive
+.method_end
+.class_end
+----- STDERR -----
+[E-002] Error: unknown directive
+   ╭─[ test_data/integration/error/parser/method_directive/unknown_directive_in_body.rns:5:3 ]
+   │
+ 5 │   .unknown_directive
+   │   ─────────┬────────  
+   │            ╰────────── '.unknown_directive' is not a recognized directive
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-002
+───╯
+----- HASH -----
+not generated

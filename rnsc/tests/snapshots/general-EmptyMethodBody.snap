@@ -1,0 +1,20 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class EmptyMethodBody
+.super java/lang/Object
+
+.method main ()V
+.method_end
+.class_end
+----- STDERR -----
+
+thread 'main' (54055) panicked at rns-lang/src/assembler/mod.rs:125:44:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+----- HASH -----
+not generated

@@ -1,0 +1,6 @@
+.class MissingMethodDescriptor
+.super java/lang/Object
+
+.method main
+.method_end
+.class_end

@@ -376,10 +376,27 @@ impl RnsParser {
         let kind = origin.kind();
         let kind_span = origin.kind_span();
         match kind {
-            TypeHintKind::Utf8 => Ok(TypeHint::Utf8(
-                kind_span,
-                self.parse_hint_identifier(origin, TypeHintOperandName::Utf8Entry)?,
-            )),
+            TypeHintKind::Utf8 => {
+                let operand_name = match origin {
+                    TypeHintOrigin::Implicit(OperandErrPosContext::MethodName, _) => {
+                        TypeHintOperandName::MethodName
+                    }
+                    TypeHintOrigin::Implicit(OperandErrPosContext::MethodDescriptor, _) => {
+                        TypeHintOperandName::MethodDescriptor
+                    }
+                    TypeHintOrigin::Implicit(OperandErrPosContext::ClassName, _) => {
+                        TypeHintOperandName::ClassName
+                    }
+                    TypeHintOrigin::Implicit(OperandErrPosContext::SuperName, _) => {
+                        TypeHintOperandName::ClassName
+                    }
+                    _ => TypeHintOperandName::Utf8Entry,
+                };
+                Ok(TypeHint::Utf8(
+                    kind_span,
+                    self.parse_hint_identifier(origin, operand_name)?,
+                ))
+            }
             TypeHintKind::String => Ok(TypeHint::String(
                 kind_span,
                 self.parse_hint_identifier(origin, TypeHintOperandName::StringLiteral)?,
