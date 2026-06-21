@@ -122,7 +122,7 @@ impl RnsModule {
         let name_index = Self::add_type_hint_to_cp(cp_builder, method_dir.name.unwrap());
         let descriptor_index =
             Self::add_type_hint_to_cp(cp_builder, method_dir.descriptor.unwrap());
-        
+
         let attributes = if let Some(code_dir) = method_dir.code_dir {
             let mut code = Vec::new();
             for ins in code_dir.instructions {
@@ -140,8 +140,12 @@ impl RnsModule {
                     }
                     Some(RnsOperand::Numeric(numeric_kind, v)) => match numeric_kind {
                         InstructionNumericOperand::Byte => code.push(v.value as u8),
-                        InstructionNumericOperand::Short => code.extend((v.value as i16).to_be_bytes()),
-                        InstructionNumericOperand::Int => code.extend((v.value as i32).to_be_bytes()),
+                        InstructionNumericOperand::Short => {
+                            code.extend((v.value as i16).to_be_bytes())
+                        }
+                        InstructionNumericOperand::Int => {
+                            code.extend((v.value as i32).to_be_bytes())
+                        }
                     },
                     Some(RnsOperand::Label(label)) => {
                         let target_pc = match code_dir.labels.get(&label.value) {
@@ -174,7 +178,7 @@ impl RnsModule {
             // abstract and native methods don't need code
             vec![]
         };
-        
+
         MethodInfo {
             access_flags,
             name_index,
