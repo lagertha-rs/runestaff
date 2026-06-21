@@ -106,6 +106,8 @@ Originally created to test the [Lagertha VM](https://github.com/lagertha-rs/lage
 - [x] Fix disassembler output to match assembler syntax (`.end class` → `.class_end`, `strictfp` → `strict`)
 - [ ] Restore parser unit tests (uncomment and update to current API)
 - [x] Fix `ldc` without type hint (currently `todo!()`)
+- [ ] Max test coverage for all
+- [ ] Extract all "jvm specification errors" analyze to the jclass crate to make it reusable between RNS and VM
 
 ### v0.3 — Complete JVM Coverage
 
