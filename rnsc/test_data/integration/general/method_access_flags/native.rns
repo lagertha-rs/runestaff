@@ -1,0 +1,6 @@
+.class MethodNative
+.super java/lang/Object
+
+.method native helper ()V
+.method_end
+.class_end

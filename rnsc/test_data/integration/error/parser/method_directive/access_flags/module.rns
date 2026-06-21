@@ -1,0 +1,6 @@
+.class MethodWithModuleFlag
+.super java/lang/Object
+
+.method module main ()V
+.method_end
+.class_end

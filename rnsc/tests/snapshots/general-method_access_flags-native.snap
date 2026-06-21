@@ -1,0 +1,22 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class MethodNative
+.super java/lang/Object
+
+.method native helper ()V
+.method_end
+.class_end
+----- INPUT -----
+.class MethodNative
+.super java/lang/Object
+
+.method native helper ()V
+.method_end
+.class_end
+----- STDERR -----
+
+----- HASH -----
+6ca57678bcf26c7ff8eb7aa5140a9e67bf8520dd92fbf37e89c35baa91a77ccb

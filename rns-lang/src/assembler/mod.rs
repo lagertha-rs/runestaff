@@ -122,57 +122,64 @@ impl RnsModule {
         let name_index = Self::add_type_hint_to_cp(cp_builder, method_dir.name.unwrap());
         let descriptor_index =
             Self::add_type_hint_to_cp(cp_builder, method_dir.descriptor.unwrap());
-        let code_dir = method_dir.code_dir.unwrap(); // TODO: handle missing code directive
-        let mut code = Vec::new();
-        for ins in code_dir.instructions {
-            let opcode = ins.spec.opcode;
-            code.push(opcode as u8);
-            match ins.operand {
-                None => {}
-                Some(RnsOperand::CpRef(hint)) => {
-                    let cp_index = Self::add_type_hint_to_cp(cp_builder, hint);
-                    match opcode.operand_size() {
-                        1 => code.push(cp_index as u8),
-                        2 => code.extend(cp_index.to_be_bytes()),
-                        _ => unimplemented!(),
-                    }
-                }
-                Some(RnsOperand::Numeric(numeric_kind, v)) => match numeric_kind {
-                    InstructionNumericOperand::Byte => code.push(v.value as u8),
-                    InstructionNumericOperand::Short => code.extend((v.value as i16).to_be_bytes()),
-                    InstructionNumericOperand::Int => code.extend((v.value as i32).to_be_bytes()),
-                },
-                Some(RnsOperand::Label(label)) => {
-                    let target_pc = match code_dir.labels.get(&label.value) {
-                        Some(pc) => *pc,
-                        None => {
-                            self.diagnostics
-                                .push(AssemblerError::UndefinedLabel { label }.into());
-                            0
+        
+        let attributes = if let Some(code_dir) = method_dir.code_dir {
+            let mut code = Vec::new();
+            for ins in code_dir.instructions {
+                let opcode = ins.spec.opcode;
+                code.push(opcode as u8);
+                match ins.operand {
+                    None => {}
+                    Some(RnsOperand::CpRef(hint)) => {
+                        let cp_index = Self::add_type_hint_to_cp(cp_builder, hint);
+                        match opcode.operand_size() {
+                            1 => code.push(cp_index as u8),
+                            2 => code.extend(cp_index.to_be_bytes()),
+                            _ => unimplemented!(),
                         }
-                    };
-                    let current_pc = (code.len() - 1) as u32; // pc of opcode
-                    let offset = (target_pc as i32) - (current_pc as i32);
-                    match opcode.operand_size() {
-                        2 => code.extend((offset as i16).to_be_bytes()),
-                        4 => code.extend(offset.to_be_bytes()),
-                        _ => unimplemented!(),
+                    }
+                    Some(RnsOperand::Numeric(numeric_kind, v)) => match numeric_kind {
+                        InstructionNumericOperand::Byte => code.push(v.value as u8),
+                        InstructionNumericOperand::Short => code.extend((v.value as i16).to_be_bytes()),
+                        InstructionNumericOperand::Int => code.extend((v.value as i32).to_be_bytes()),
+                    },
+                    Some(RnsOperand::Label(label)) => {
+                        let target_pc = match code_dir.labels.get(&label.value) {
+                            Some(pc) => *pc,
+                            None => {
+                                self.diagnostics
+                                    .push(AssemblerError::UndefinedLabel { label }.into());
+                                0
+                            }
+                        };
+                        let current_pc = (code.len() - 1) as u32; // pc of opcode
+                        let offset = (target_pc as i32) - (current_pc as i32);
+                        match opcode.operand_size() {
+                            2 => code.extend((offset as i16).to_be_bytes()),
+                            4 => code.extend(offset.to_be_bytes()),
+                            _ => unimplemented!(),
+                        }
                     }
                 }
             }
-        }
-        let code_attribute = MethodAttribute::Code(CodeAttribute {
-            max_stack: code_dir.max_stack,
-            max_locals: code_dir.max_locals,
-            code,
-            exception_table: vec![],
-            attributes: vec![],
-        });
+            let code_attribute = MethodAttribute::Code(CodeAttribute {
+                max_stack: code_dir.max_stack,
+                max_locals: code_dir.max_locals,
+                code,
+                exception_table: vec![],
+                attributes: vec![],
+            });
+            vec![code_attribute]
+        } else {
+            // abstract and native methods don't need code
+            vec![]
+        };
+        
         MethodInfo {
             access_flags,
             name_index,
             descriptor_index,
-            attributes: vec![code_attribute],
+            attributes,
         }
     }
 

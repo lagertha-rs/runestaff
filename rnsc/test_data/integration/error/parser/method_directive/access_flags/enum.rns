@@ -1,0 +1,6 @@
+.class MethodWithEnumFlag
+.super java/lang/Object
+
+.method enum main ()V
+.method_end
+.class_end

@@ -1,0 +1,28 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class MethodSynthetic
+.super java/lang/Object
+
+.method helper ()V
+    .code stack 1 locals 0
+      return
+    .code_end
+.method_end
+.class_end
+----- INPUT -----
+.class MethodSynthetic
+.super java/lang/Object
+
+.method synthetic helper ()V
+  .code stack 1 locals 0
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+
+----- HASH -----
+5517d5839c840c6904d5ddc05a0ad8eb538c1cde3c11acbc1e82b5d5b7ec1e2e

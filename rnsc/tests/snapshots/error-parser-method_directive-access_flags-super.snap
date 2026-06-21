@@ -1,0 +1,26 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MethodWithSuperFlag
+.super java/lang/Object
+
+.method super main ()V
+.method_end
+.class_end
+----- STDERR -----
+[E-016] Error: invalid method access flag 'super'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/super.rns:4:9 ]
+   │
+ 4 │ .method super main ()V
+   │         ──┬──  
+   │           ╰──── 'super' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+----- HASH -----
+not generated

@@ -1,0 +1,6 @@
+.class MethodWithMixedFlags
+.super java/lang/Object
+
+.method public interface static module ()V
+.method_end
+.class_end

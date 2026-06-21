@@ -1,0 +1,9 @@
+.class MethodStatic
+.super java/lang/Object
+
+.method static main ()V
+  .code stack 1 locals 0
+    return
+  .code_end
+.method_end
+.class_end
