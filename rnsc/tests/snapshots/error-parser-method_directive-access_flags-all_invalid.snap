@@ -1,0 +1,66 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MethodWithAllInvalidFlags
+.super java/lang/Object
+
+.method interface module annotation enum super main ()V
+.method_end
+.class_end
+----- STDERR -----
+[E-016] Error: invalid method access flag 'interface'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/all_invalid.rns:4:9 ]
+   │
+ 4 │ .method interface module annotation enum super main ()V
+   │         ────┬────  
+   │             ╰────── 'interface' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+[E-016] Error: invalid method access flag 'module'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/all_invalid.rns:4:19 ]
+   │
+ 4 │ .method interface module annotation enum super main ()V
+   │                   ───┬──  
+   │                      ╰──── 'module' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+[E-016] Error: invalid method access flag 'annotation'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/all_invalid.rns:4:26 ]
+   │
+ 4 │ .method interface module annotation enum super main ()V
+   │                          ─────┬────  
+   │                               ╰────── 'annotation' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+[E-016] Error: invalid method access flag 'enum'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/all_invalid.rns:4:37 ]
+   │
+ 4 │ .method interface module annotation enum super main ()V
+   │                                     ──┬─  
+   │                                       ╰─── 'enum' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+[E-016] Error: invalid method access flag 'super'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/all_invalid.rns:4:42 ]
+   │
+ 4 │ .method interface module annotation enum super main ()V
+   │                                          ──┬──  
+   │                                            ╰──── 'super' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+----- HASH -----
+not generated

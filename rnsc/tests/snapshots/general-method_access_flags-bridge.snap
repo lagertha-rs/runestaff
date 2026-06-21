@@ -1,0 +1,28 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class MethodBridge
+.super java/lang/Object
+
+.method helper ()V
+    .code stack 1 locals 0
+      return
+    .code_end
+.method_end
+.class_end
+----- INPUT -----
+.class MethodBridge
+.super java/lang/Object
+
+.method bridge helper ()V
+  .code stack 1 locals 0
+    return
+  .code_end
+.method_end
+.class_end
+----- STDERR -----
+
+----- HASH -----
+103d2ed762c1f6dcbea9f6c5a85670512fd48faf2bde07fc2ad564ca2dcb1eff

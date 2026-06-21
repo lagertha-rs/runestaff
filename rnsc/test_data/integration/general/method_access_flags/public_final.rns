@@ -1,0 +1,9 @@
+.class MethodPublicFinal
+.super java/lang/Object
+
+.method public final main ()V
+  .code stack 1 locals 0
+    return
+  .code_end
+.method_end
+.class_end

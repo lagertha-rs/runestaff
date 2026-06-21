@@ -1,0 +1,26 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MethodWithEnumFlag
+.super java/lang/Object
+
+.method enum main ()V
+.method_end
+.class_end
+----- STDERR -----
+[E-016] Error: invalid method access flag 'enum'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/enum.rns:4:9 ]
+   │
+ 4 │ .method enum main ()V
+   │         ──┬─  
+   │           ╰─── 'enum' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+----- HASH -----
+not generated

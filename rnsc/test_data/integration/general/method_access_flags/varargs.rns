@@ -1,0 +1,9 @@
+.class MethodVarargs
+.super java/lang/Object
+
+.method varargs main ([Ljava/lang/String;)V
+  .code stack 1 locals 1
+    return
+  .code_end
+.method_end
+.class_end

@@ -1,0 +1,51 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MethodWithMixedFlags
+.super java/lang/Object
+
+.method public interface static module ()V
+.method_end
+.class_end
+----- STDERR -----
+[E-016] Error: invalid method access flag 'interface'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:16 ]
+   │
+ 4 │ .method public interface static module ()V
+   │                ────┬────  
+   │                    ╰────── 'interface' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+[E-016] Error: invalid method access flag 'module'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:33 ]
+   │
+ 4 │ .method public interface static module ()V
+   │                                 ───┬──  
+   │                                    ╰──── 'module' is not a valid method access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-016
+───╯
+[E-020] Error: missing method descriptor after '.method'
+   ╭─[ test_data/integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:40 ]
+   │
+ 4 │ .method public interface static module ()V
+   │                                        ─┬─│ 
+   │                                         ╰─── the '.method' directive requires a method descriptor as operand
+   │                                           │ 
+   │                                           ╰─ but method descriptor is missing
+   │ 
+   │ Help: Provide a method descriptor after the method name, e.g.:
+   │       .method main ()V
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+----- HASH -----
+not generated

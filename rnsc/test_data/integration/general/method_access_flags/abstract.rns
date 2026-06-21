@@ -1,0 +1,6 @@
+.class MethodAbstract
+.super java/lang/Object
+
+.method abstract helper ()V
+.method_end
+.class_end
