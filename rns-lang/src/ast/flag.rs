@@ -14,7 +14,6 @@ use crate::token::{
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
 pub enum RnsClassFlag {
     Public,
-    Static,
     Final,
     Super,
     Interface,
@@ -33,7 +32,6 @@ impl RnsClassFlag {
             RnsClassFlag::Enum => JVMS_ENUM_FLAG_NAME,
             RnsClassFlag::Module => JVMS_MODULE_FLAG_NAME,
             RnsClassFlag::Public => JVMS_PUBLIC_FLAG_NAME,
-            RnsClassFlag::Static => JVMS_STATIC_FLAG_NAME,
             RnsClassFlag::Final => JVMS_FINAL_FLAG_NAME,
             RnsClassFlag::Super => JVMS_SUPER_FLAG_NAME,
             RnsClassFlag::Synthetic => JVMS_SYNTHETIC_FLAG_NAME,
@@ -48,7 +46,6 @@ impl RnsClassFlag {
             RnsClassFlag::Enum => FLAG_ENUM,
             RnsClassFlag::Module => FLAG_MODULE,
             RnsClassFlag::Public => FLAG_PUBLIC,
-            RnsClassFlag::Static => FLAG_STATIC,
             RnsClassFlag::Final => FLAG_FINAL,
             RnsClassFlag::Super => FLAG_SUPER,
             RnsClassFlag::Synthetic => FLAG_SYNTHETIC,

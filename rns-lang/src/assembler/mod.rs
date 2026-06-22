@@ -1,5 +1,4 @@
 use crate::assembler::error::AssemblerError;
-use crate::assembler::jvm_warning::JvmWarning;
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::ast::{MethodDirective, RnsModule, RnsOperand};
 use crate::diagnostic::{Diagnostic, DiagnosticTier};
@@ -22,49 +21,12 @@ impl RnsModule {
                 RnsClassFlag::Public => res.set_public(),
                 RnsClassFlag::Final => res.set_final(),
                 RnsClassFlag::Super => res.set_super(),
-                RnsClassFlag::Interface => {
-                    // TODO: put in method?
-                    if !self.class_dir.flags.contains_key(&RnsClassFlag::Abstract) {
-                        self.diagnostics.push(
-                            JvmWarning::InterfaceFlagWithMissingAbstract {
-                                interface_span: *span,
-                            }
-                            .into(),
-                        )
-                    }
-                    let exclusive_flags = self
-                        .class_dir
-                        .flags
-                        .iter()
-                        .filter(|(f, _)| {
-                            // TODO: add a method, something like "is_exclusive_with_interface" to RnsFlag
-                            matches!(
-                                f,
-                                RnsClassFlag::Final
-                                    | RnsClassFlag::Enum
-                                    | RnsClassFlag::Module
-                                    | RnsClassFlag::Super
-                            )
-                        })
-                        .map(|(f, s)| (*f, *s))
-                        .collect::<Vec<_>>();
-                    if !exclusive_flags.is_empty() {
-                        self.diagnostics.push(
-                            JvmWarning::InterfaceMutuallyExclusive {
-                                interface_span: *span,
-                                exclusive_flags,
-                            }
-                            .into(),
-                        )
-                    }
-                    res.set_interface()
-                }
+                RnsClassFlag::Interface => res.set_interface(),
                 RnsClassFlag::Abstract => res.set_abstract(),
                 RnsClassFlag::Enum => res.set_enum(),
                 RnsClassFlag::Synthetic => res.set_synthetic(),
                 RnsClassFlag::Annotation => res.set_annotation(),
                 RnsClassFlag::Module => res.set_module(),
-                _ => unimplemented!(),
             }
         }
         res
