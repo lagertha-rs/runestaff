@@ -97,7 +97,6 @@ impl RnsFlag {
     pub fn as_class_flag(&self) -> Option<RnsClassFlag> {
         match self {
             RnsFlag::Public => Some(RnsClassFlag::Public),
-            RnsFlag::Static => Some(RnsClassFlag::Static),
             RnsFlag::Final => Some(RnsClassFlag::Final),
             RnsFlag::Super => Some(RnsClassFlag::Super),
             RnsFlag::Interface => Some(RnsClassFlag::Interface),
