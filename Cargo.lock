@@ -588,9 +588,9 @@ dependencies = [
 
 [[package]]
 name = "lvm-class"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07ccd4cfa077e62d03b9190f61f9a1ba9dbc60aa7e3597023f5396b79b940d89"
+checksum = "565284c6f4de1b59fa356c3389d0206f8ab32f0b234b9af9f6871abba5104c15"
 dependencies = [
  "lvm-common",
  "num_enum",
@@ -598,9 +598,9 @@ dependencies = [
 
 [[package]]
 name = "lvm-common"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db75d6d99e872b08bfcfa5a097c8a84d507b529b46b3318785effccd575691a4"
+checksum = "4836631d6d402d703023efbda5b3847ecb3ea72ee8c1d670e567bf583eb0faf7"
 dependencies = [
  "num_enum",
  "tracing-subscriber",
@@ -932,7 +932,6 @@ dependencies = [
  "ariadne",
  "insta",
  "lvm-class",
- "lvm-common",
  "phf",
  "rstest",
  "tabwriter",
