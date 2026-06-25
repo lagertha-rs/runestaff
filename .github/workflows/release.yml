@@ -40,6 +40,7 @@ jobs:
           for c in rns-lang rnsc rns-lsp; do
             sed -i -E "s/^version = \"[^\"]+\"/version = \"$v\"/" "$c/Cargo.toml"
           done
+          sed -i -E "s/^(rns = \{ version = \")[^\"]+/\\1$v/" Cargo.toml
 
       - name: Refresh Cargo.lock
         run: cargo build --workspace
