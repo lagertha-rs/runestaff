@@ -4,8 +4,8 @@ use crate::disassembler::constant_pool::fmt_cp_entry_rns;
 use crate::disassembler::flags::fmt_method_flags_rns;
 use crate::disassembler::indent_write::Indented;
 use crate::token::{DIRECTIVE_DOT_METHOD, DIRECTIVE_DOT_METHOD_END};
-use jclass::constant_pool::ConstantPool;
-use jclass::member::MethodInfo;
+use lvm_class::constant_pool::ConstantPool;
+use lvm_class::member::MethodInfo;
 use std::fmt::Write as _;
 
 fn fmt_signature(method: &MethodInfo, ind: &mut Indented, cp: &ConstantPool) -> DisasmResult<()> {

@@ -2,9 +2,9 @@ use crate::disassembler::indent_write::Indented;
 use crate::disassembler::instruction::fmt_instruction_rns;
 use crate::disassembler::{DisasmError, DisasmResult};
 use crate::token::{DIRECTIVE_DOT_CODE, DIRECTIVE_DOT_CODE_END};
-use jclass::attribute::{CodeAttribute, MethodAttribute};
-use jclass::bytecode::Instruction;
-use jclass::constant_pool::ConstantPool;
+use lvm_class::attribute::{CodeAttribute, MethodAttribute};
+use lvm_class::bytecode::Instruction;
+use lvm_class::constant_pool::ConstantPool;
 use std::fmt::Write as _;
 
 pub(crate) fn fmt_method_attribute_rns(
@@ -61,18 +61,22 @@ fn fmt_code_attribute_rns(
     Ok(())
 }
 
-fn code_attribute_name(attribute: &jclass::attribute::method::CodeAttributeInfo) -> &'static str {
+fn code_attribute_name(
+    attribute: &lvm_class::attribute::method::CodeAttributeInfo,
+) -> &'static str {
     match attribute {
-        jclass::attribute::method::CodeAttributeInfo::LineNumberTable(_) => "LineNumberTable",
-        jclass::attribute::method::CodeAttributeInfo::LocalVariableTable(_) => "LocalVariableTable",
-        jclass::attribute::method::CodeAttributeInfo::StackMapTable(_) => "StackMapTable",
-        jclass::attribute::method::CodeAttributeInfo::LocalVariableTypeTable(_) => {
+        lvm_class::attribute::method::CodeAttributeInfo::LineNumberTable(_) => "LineNumberTable",
+        lvm_class::attribute::method::CodeAttributeInfo::LocalVariableTable(_) => {
+            "LocalVariableTable"
+        }
+        lvm_class::attribute::method::CodeAttributeInfo::StackMapTable(_) => "StackMapTable",
+        lvm_class::attribute::method::CodeAttributeInfo::LocalVariableTypeTable(_) => {
             "LocalVariableTypeTable"
         }
-        jclass::attribute::method::CodeAttributeInfo::RuntimeVisibleTypeAnnotations => {
+        lvm_class::attribute::method::CodeAttributeInfo::RuntimeVisibleTypeAnnotations => {
             "RuntimeVisibleTypeAnnotations"
         }
-        jclass::attribute::method::CodeAttributeInfo::RuntimeInvisibleTypeAnnotations => {
+        lvm_class::attribute::method::CodeAttributeInfo::RuntimeInvisibleTypeAnnotations => {
             "RuntimeInvisibleTypeAnnotations"
         }
     }

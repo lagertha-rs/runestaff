@@ -5,7 +5,7 @@ use crate::token::{
     FLAG_MODULE, FLAG_NATIVE, FLAG_PRIVATE, FLAG_PROTECTED, FLAG_PUBLIC, FLAG_STATIC, FLAG_STRICT,
     FLAG_SUPER, FLAG_SYNCHRONIZED,
 };
-use jclass::flags::{ClassFlags, MethodFlags};
+use lvm_class::flags::{ClassFlags, MethodFlags};
 use std::fmt::Write as _;
 
 pub(crate) fn fmt_class_flags_rns(flags: &ClassFlags, ind: &mut Indented) -> DisasmResult<()> {

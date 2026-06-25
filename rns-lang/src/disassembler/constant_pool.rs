@@ -1,6 +1,6 @@
 use crate::disassembler::indent_write::Indented;
 use crate::disassembler::{DisasmError, DisasmResult};
-use jclass::constant_pool::{ConstantEntry, ConstantPool};
+use lvm_class::constant_pool::{ConstantEntry, ConstantPool};
 use std::fmt::Write as _;
 
 fn get_raw_entry(cp: &ConstantPool, idx: u16) -> DisasmResult<&ConstantEntry> {

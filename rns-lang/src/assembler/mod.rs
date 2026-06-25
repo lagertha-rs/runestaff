@@ -5,12 +5,12 @@ use crate::ast::{MethodDirective, RnsModule, RnsOperand};
 use crate::diagnostic::{Diagnostic, DiagnosticTier};
 use crate::instruction::InstructionNumericOperand;
 use crate::token::type_hint::TypeHint;
-use jclass::ClassFile;
-use jclass::flags::ClassFlags;
-use jclass::prelude::{
+use lvm_class::ClassFile;
+use lvm_class::flags::ClassFlags;
+use lvm_class::prelude::{
     ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
 };
-use jclass::verify::{ClassFlagsFinding, Finding};
+use lvm_class::verify::{ClassFlagsFinding, Finding};
 
 mod error;
 mod jvm_warning;
