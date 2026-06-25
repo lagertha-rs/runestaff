@@ -45,7 +45,7 @@ fn get_hash(path: &Path) -> String {
 }
 
 fn to_snapshot_name(path: &Path) -> String {
-    let marker = Path::new("test_data/integration");
+    let marker = Path::new("test_data/rns_integration");
     let components = path.components().collect::<Vec<_>>();
     let marker_parts = marker.components().collect::<Vec<_>>();
     let idx = components
@@ -182,7 +182,7 @@ impl Drop for TempClassFile {
 
 #[rstest]
 fn test_integration(
-    #[base_dir = "test_data/integration/"]
+    #[base_dir = "test_data/rns_integration/"]
     #[files("**/*.rns")]
     path: PathBuf,
 ) {

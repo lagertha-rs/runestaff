@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-014] Error: '@string' type hint is missing its string literal
-   ╭─[ test_data/integration/error/parser/instructions/ldc_th_without_operand.rns:6:9 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/ldc_th_without_operand.rns:6:9 ]
    │
  6 │     ldc @string
    │         ───┬───│ 

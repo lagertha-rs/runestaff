@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +8,7 @@ not generated
 @lon
 ----- STDERR -----
 [E-005] Error: unknown type hint
-   ╭─[ test_data/integration/error/lexer/type_hints/at_lon.rns:1:1 ]
+   ╭─[ test_data/rns_integration/error/lexer/type_hints/at_lon.rns:1:1 ]
    │
  1 │ @lon
    │ ──┬─  

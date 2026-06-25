@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -11,7 +11,7 @@ not generated
 .class_end   trailing tokens   ; <- err
 ----- STDERR -----
 [E-023] Error: unexpected trailing tokens after class definition end
-   ╭─[ test_data/integration/error/parser/class_body/dot_class_end_trailing_tokens.rns:4:14 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/dot_class_end_trailing_tokens.rns:4:14 ]
    │
  4 │ .class_end   trailing tokens   ; <- err
    │           │  ───────┬───────  

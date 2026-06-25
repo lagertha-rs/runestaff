@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -11,7 +11,7 @@ not generated
 unexpected
 ----- STDERR -----
 [E-008] Error: unexpected directive before class definition
-   ╭─[ test_data/integration/error/parser/class_body/err_before_dot_class_recovers.rns:1:1 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/err_before_dot_class_recovers.rns:1:1 ]
    │
  1 │ .method shouldn't be here
    │ ───┬───  
@@ -23,7 +23,7 @@ unexpected
    │       https://rune.lagertha-vm.com/errors/E-008
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/class_body/err_before_dot_class_recovers.rns:4:1 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/err_before_dot_class_recovers.rns:4:1 ]
    │
  4 │ unexpected
    │ ─────┬────  

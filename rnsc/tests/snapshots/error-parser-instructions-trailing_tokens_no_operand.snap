@@ -16,7 +16,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-025] Error: unexpected trailing tokens after instruction 'return'
-   ╭─[ test_data/integration/error/parser/instructions/trailing_tokens_no_operand.rns:6:12 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/trailing_tokens_no_operand.rns:6:12 ]
    │
  6 │     return extra_token
    │           │─────┬─────  

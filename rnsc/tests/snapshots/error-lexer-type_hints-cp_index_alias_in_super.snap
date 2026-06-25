@@ -1,6 +1,5 @@
 ---
-source: tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +9,7 @@ not generated
 .super @cp_index 42 ; explicit constant pool index
 ----- STDERR -----
 [E-005] Error: unknown type hint
-   ╭─[ test_data/integration/error/lexer/type_hints/cp_index_alias_in_super.rns:2:8 ]
+   ╭─[ test_data/rns_integration/error/lexer/type_hints/cp_index_alias_in_super.rns:2:8 ]
    │
  2 │ .super @cp_index 42 ; explicit constant pool index
    │        ────┬────  

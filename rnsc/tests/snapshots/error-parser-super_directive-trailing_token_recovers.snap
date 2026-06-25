@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -13,7 +13,7 @@ not generated
      unknown_token ; <- still reported
 ----- STDERR -----
 [E-012] Error: unexpected trailing tokens after super class definition
-   ╭─[ test_data/integration/error/parser/super_directive/trailing_token_recovers.rns:4:25 ]
+   ╭─[ test_data/rns_integration/error/parser/super_directive/trailing_token_recovers.rns:4:25 ]
    │
  4 │ .super java/lang/String java/lang/Other
    │                        │───────┬───────  
@@ -27,7 +27,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-012
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/super_directive/trailing_token_recovers.rns:6:6 ]
+   ╭─[ test_data/rns_integration/error/parser/super_directive/trailing_token_recovers.rns:6:6 ]
    │
  6 │      unknown_token ; <- still reported
    │      ──────┬──────  

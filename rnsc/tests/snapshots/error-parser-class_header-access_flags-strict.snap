@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +10,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-015] Error: invalid class access flag 'strict'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/strict.rns:1:8 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/strict.rns:1:8 ]
    │
  1 │ .class strict HelloWorld
    │        ───┬──  

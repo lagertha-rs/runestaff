@@ -8,7 +8,7 @@ not generated
 .class @fieldref MyClass fieldName Ljava/io/PrintStream; trailing
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@fieldref'
-   ╭─[ test_data/integration/error/parser/type_hints/fieldref/trailing_token_recovers.rns:1:58 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/fieldref/trailing_token_recovers.rns:1:58 ]
    │
  1 │ .class @fieldref MyClass fieldName Ljava/io/PrintStream; trailing
    │        ────┬────                                         ────┬───  
@@ -22,7 +22,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-013
 ───╯
 [W-001] Warning: missing super directive
-   ╭─[ test_data/integration/error/parser/type_hints/fieldref/trailing_token_recovers.rns:1:1 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/fieldref/trailing_token_recovers.rns:1:1 ]
    │
  1 │ .class @fieldref MyClass fieldName Ljava/io/PrintStream; trailing
    │ ───┬──  

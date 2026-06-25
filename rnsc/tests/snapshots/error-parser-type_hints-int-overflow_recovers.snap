@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 unexpected_token ; <- this error should be reported as well
 ----- STDERR -----
 [E-003] Error: '@int' requires a 32-bit integer, but '99999999999' is out of range
-   ╭─[ test_data/integration/error/parser/type_hints/int/overflow_recovers.rns:1:8 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/int/overflow_recovers.rns:1:8 ]
    │
  1 │ .class @int 99999999999
    │        ──┬─ ─────┬─────  
@@ -24,7 +24,7 @@ unexpected_token ; <- this error should be reported as well
    │       https://rune.lagertha-vm.com/errors/E-003
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/type_hints/int/overflow_recovers.rns:2:1 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/int/overflow_recovers.rns:2:1 ]
    │
  2 │ unexpected_token ; <- this error should be reported as well
    │ ────────┬───────  

@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +9,7 @@ not generated
 .super java/lang/Object
 ----- STDERR -----
 [E-014] Error: '@methodref' type hint is missing its method name
-   ╭─[ test_data/integration/error/parser/type_hints/methodref/no_operand_2.rns:1:10 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/methodref/no_operand_2.rns:1:10 ]
    │
  1 │ .class   @methodref className
    │          ─────┬────          │ 

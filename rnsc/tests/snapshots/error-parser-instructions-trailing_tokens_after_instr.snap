@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@string'
-   ╭─[ test_data/integration/error/parser/instructions/trailing_tokens_after_instr.rns:6:32 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/trailing_tokens_after_instr.rns:6:32 ]
    │
  6 │     ldc @string "Hello World!" extra_token
    │         ───┬───                ─────┬─────  

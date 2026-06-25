@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -12,7 +12,7 @@ not generated
 unexpected
 ----- STDERR -----
 [E-010] Error: unexpected trailing tokens after class definition
-   ╭─[ test_data/integration/error/parser/class_body/dot_class_trailing_token_recovers.rns:1:11 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/dot_class_trailing_token_recovers.rns:1:11 ]
    │
  1 │ .class 42 with trailing tokens
    │          │──────────┬─────────  
@@ -26,7 +26,7 @@ unexpected
    │       https://rune.lagertha-vm.com/errors/E-010
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/class_body/dot_class_trailing_token_recovers.rns:5:1 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/dot_class_trailing_token_recovers.rns:5:1 ]
    │
  5 │ unexpected
    │ ─────┬────  

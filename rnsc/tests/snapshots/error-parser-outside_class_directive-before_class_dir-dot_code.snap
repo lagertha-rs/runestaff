@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +10,7 @@ not generated
 .super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected directive before class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/before_class_dir/dot_code.rns:1:1 ]
+   ╭─[ test_data/rns_integration/error/parser/outside_class_directive/before_class_dir/dot_code.rns:1:1 ]
    │
  1 │ .code
    │ ──┬──  

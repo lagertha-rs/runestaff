@@ -13,7 +13,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-018] Error: unexpected trailing tokens after method definition
-   ╭─[ test_data/integration/error/parser/method_directive/trailing_tokens.rns:4:18 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/trailing_tokens.rns:4:18 ]
    │
  4 │ .method main ()V extra_token
    │                 │─────┬─────  

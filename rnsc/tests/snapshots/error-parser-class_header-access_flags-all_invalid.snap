@@ -10,7 +10,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-015] Error: invalid class access flag 'private'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:8 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:8 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │        ───┬───  
@@ -20,7 +20,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'static'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:16 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:16 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                ───┬──  
@@ -30,7 +30,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'protected'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:23 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:23 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                       ────┬────  
@@ -40,7 +40,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'synchronized'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:33 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:33 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                                 ──────┬─────  
@@ -50,7 +50,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'bridge'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:46 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:46 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                                              ───┬──  
@@ -60,7 +60,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'varargs'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:53 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:53 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                                                     ───┬───  
@@ -70,7 +70,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'native'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:61 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:61 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                                                             ───┬──  
@@ -80,7 +80,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'strict'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/all_invalid.rns:1:68 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/all_invalid.rns:1:68 ]
    │
  1 │ .class private static protected synchronized bridge varargs native strict HelloWorld
    │                                                                    ───┬──  

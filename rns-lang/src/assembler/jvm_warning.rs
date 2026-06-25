@@ -5,6 +5,7 @@ use crate::diagnostic::{
 use crate::token::{RnsFlag, Span};
 use std::borrow::Cow;
 
+// TODO: rename to jvms warning
 #[derive(Debug)]
 pub(super) enum JvmWarning {
     InterfaceFlagWithMissingAbstract {

@@ -13,7 +13,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-020] Error: missing method descriptor after '.method'
-   ╭─[ test_data/integration/error/parser/method_directive/missing_descriptor.rns:4:9 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/missing_descriptor.rns:4:9 ]
    │
  4 │ .method main
    │         ──┬─│ 

@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-027] Error: undefined label 'undefined'
-   ╭─[ test_data/integration/error/parser/instructions/undefined_label.rns:6:10 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/undefined_label.rns:6:10 ]
    │
  6 │     goto undefined
    │          ────┬────  

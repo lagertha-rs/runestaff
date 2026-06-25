@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -13,7 +13,7 @@ not generated
 .super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected access flag before class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/before_class_dir/public_keyword.rns:1:4 ]
+   ╭─[ test_data/rns_integration/error/parser/outside_class_directive/before_class_dir/public_keyword.rns:1:4 ]
    │
  1 │    public
    │    ───┬──  

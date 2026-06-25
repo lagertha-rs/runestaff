@@ -16,7 +16,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-026] Error: missing locals operand for code directive
-   ╭─[ test_data/integration/error/parser/code_header/missing_locals.rns:5:8 ]
+   ╭─[ test_data/rns_integration/error/parser/code_header/missing_locals.rns:5:8 ]
    │
  5 │   .code stack 2
    │        │ 

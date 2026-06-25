@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +8,7 @@ not generated
 
 ----- STDERR -----
 [E-006] Error: file contains no class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/before_class_dir/empty.rns:1:1 ]
+   ╭─[ test_data/rns_integration/error/parser/outside_class_directive/before_class_dir/empty.rns:1:1 ]
    │
  1 │ 
    │ │ 

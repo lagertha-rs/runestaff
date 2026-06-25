@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 .super @cp_idx 65536 ; explicit constant pool index
 ----- STDERR -----
 [E-003] Error: '@cp_idx' requires a 16-bit integer, but '65536' is out of range
-   ╭─[ test_data/integration/error/parser/type_hints/cp_idx/overflow.rns:2:8 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/cp_idx/overflow.rns:2:8 ]
    │
  2 │ .super @cp_idx 65536 ; explicit constant pool index
    │        ───┬─── ──┬──  

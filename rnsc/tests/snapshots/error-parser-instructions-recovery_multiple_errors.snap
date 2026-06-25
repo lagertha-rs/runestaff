@@ -19,7 +19,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-024] Error: instruction 'ldc' requires an explicit type hint
-   ╭─[ test_data/integration/error/parser/instructions/recovery_multiple_errors.rns:6:9 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/recovery_multiple_errors.rns:6:9 ]
    │
  6 │     ldc "first error"
    │     ─┬─ ──────┬──────  
@@ -34,7 +34,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-024
 ───╯
 [E-024] Error: instruction 'ldc' requires an explicit type hint
-   ╭─[ test_data/integration/error/parser/instructions/recovery_multiple_errors.rns:7:9 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/recovery_multiple_errors.rns:7:9 ]
    │
  7 │     ldc 42
    │     ─┬─ ─┬  
@@ -49,7 +49,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-024
 ───╯
 [E-024] Error: instruction 'ldc' requires an explicit type hint
-   ╭─[ test_data/integration/error/parser/instructions/recovery_multiple_errors.rns:8:9 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/recovery_multiple_errors.rns:8:9 ]
    │
  8 │     ldc "second error"
    │     ─┬─ ───────┬──────  

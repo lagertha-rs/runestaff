@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-028] Error: instruction 'bipush' requires an integer, got '3.14'
-   ╭─[ test_data/integration/error/parser/instructions/byte_operand_float.rns:6:12 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/byte_operand_float.rns:6:12 ]
    │
  6 │     bipush 3.14
    │     ───┬── ──┬─  

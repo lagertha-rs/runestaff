@@ -13,7 +13,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-016] Error: invalid method access flag 'module'
-   ╭─[ test_data/integration/error/parser/method_directive/access_flags/module.rns:4:9 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/access_flags/module.rns:4:9 ]
    │
  4 │ .method module main ()V
    │         ───┬──  

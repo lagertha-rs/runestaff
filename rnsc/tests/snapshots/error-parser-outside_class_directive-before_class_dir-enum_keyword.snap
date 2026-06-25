@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -12,7 +12,7 @@ enum
 .super java/lang/Object
 ----- STDERR -----
 [E-008] Error: unexpected access flag before class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/before_class_dir/enum_keyword.rns:3:1 ]
+   ╭─[ test_data/rns_integration/error/parser/outside_class_directive/before_class_dir/enum_keyword.rns:3:1 ]
    │
  3 │ enum
    │ ──┬─  

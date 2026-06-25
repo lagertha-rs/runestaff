@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +10,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-015] Error: invalid class access flag 'native'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/mixed_valid_and_invalid.rns:1:15 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/mixed_valid_and_invalid.rns:1:15 ]
    │
  1 │ .class public native final bridge HelloWorld
    │               ───┬──  
@@ -20,7 +20,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-015
 ───╯
 [E-015] Error: invalid class access flag 'bridge'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/mixed_valid_and_invalid.rns:1:28 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/mixed_valid_and_invalid.rns:1:28 ]
    │
  1 │ .class public native final bridge HelloWorld
    │                            ───┬──  

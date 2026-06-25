@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 .super java/lang/Object
 ----- STDERR -----
 [E-003] Error: '@int' requires a 32-bit integer, but '99999999999' is out of range
-   ╭─[ test_data/integration/error/parser/type_hints/int/overflow.rns:1:8 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/int/overflow.rns:1:8 ]
    │
  1 │ .class @int 99999999999
    │        ──┬─ ─────┬─────  
