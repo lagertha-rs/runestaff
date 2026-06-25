@@ -34,7 +34,11 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Command::Asm { file, output, quiet }) => assemble(&file, output.as_ref(), quiet),
+        Some(Command::Asm {
+            file,
+            output,
+            quiet,
+        }) => assemble(&file, output.as_ref(), quiet),
         Some(Command::Dis { file }) => disassemble(&file),
         None => {
             if let Some(file) = cli.file {
@@ -57,7 +61,13 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, quiet: bool) {
     let (bytes, diagnostics) = rns::assemble(&contents);
 
     for diag in diagnostics {
-        if quiet && matches!(diag.tier, rns::diagnostic::DiagnosticTier::AssemblerWarn | rns::diagnostic::DiagnosticTier::JvmSpecWarn) {
+        if quiet
+            && matches!(
+                diag.tier,
+                rns::diagnostic::DiagnosticTier::AssemblerWarn
+                    | rns::diagnostic::DiagnosticTier::JvmSpecWarn
+            )
+        {
             continue;
         }
         diag.print(&filename, &contents);
