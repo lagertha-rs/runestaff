@@ -9,4 +9,4 @@ members = [
 
 [workspace.dependencies]
 lvm-class = { version = "0.3.0", features = ["write"] }
-rns = { version = "0.1.0", path = "rns-lang", package = "rns-lang" }
+rns = { version = "0.2.0", path = "rns-lang", package = "rns-lang" }
