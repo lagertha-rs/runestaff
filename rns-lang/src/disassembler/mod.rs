@@ -1,5 +1,5 @@
-use jclass::ClassFile;
-use jclass::{ClassFormatErr, InstructionErr};
+use lvm_class::ClassFile;
+use lvm_class::{ClassFormatErr, InstructionErr};
 use std::fmt;
 
 mod attribute;

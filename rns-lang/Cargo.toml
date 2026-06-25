@@ -16,7 +16,7 @@ path = "src/lib.rs"
 
 [dependencies]
 ariadne = { version = "0.6.0", features = ["auto-color"] }
-jclass = { workspace = true, features = ["write"] }
+lvm-class = { workspace = true, features = ["write"] }
 phf = { version = "0.11", features = ["macros"] }
 
 [dev-dependencies]

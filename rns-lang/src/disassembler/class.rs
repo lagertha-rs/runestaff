@@ -4,7 +4,7 @@ use crate::disassembler::flags::fmt_class_flags_rns;
 use crate::disassembler::indent_write::Indented;
 use crate::disassembler::method::fmt_method_rns;
 use crate::token::{DIRECTIVE_DOT_CLASS_END, DIRECTIVE_DOT_SUPER};
-use jclass::ClassFile;
+use lvm_class::ClassFile;
 use std::fmt::Write as _;
 
 fn fmt_signature(class: &ClassFile, ind: &mut Indented) -> DisasmResult<()> {

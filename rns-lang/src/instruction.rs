@@ -1,4 +1,4 @@
-use jclass::bytecode::Opcode;
+use lvm_class::bytecode::Opcode;
 use phf::phf_map;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
