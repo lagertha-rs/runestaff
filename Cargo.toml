@@ -8,6 +8,5 @@ members = [
 ]
 
 [workspace.dependencies]
-jclass = { version = "0.2.0", package = "lvm-class", features = ["write"] }
-common = { version = "0.2.0", package = "lvm-common" }
+jclass = { version = "0.3.0", package = "lvm-class", features = ["write"] }
 rns = { path = "rns-lang", package = "rns-lang" }

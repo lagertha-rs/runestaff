@@ -1,4 +1,5 @@
 use crate::assembler::error::AssemblerError;
+use crate::assembler::jvm_warning::JvmWarning;
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::ast::{MethodDirective, RnsModule, RnsOperand};
 use crate::diagnostic::{Diagnostic, DiagnosticTier};
@@ -9,6 +10,7 @@ use jclass::flags::ClassFlags;
 use jclass::prelude::{
     ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
 };
+use jclass::verify::{ClassFlagsFinding, Finding};
 
 mod error;
 mod jvm_warning;
@@ -16,7 +18,7 @@ mod jvm_warning;
 impl RnsModule {
     fn build_class_flags(&mut self) -> ClassFlags {
         let mut res = ClassFlags::new(0);
-        for (flag, span) in &self.class_dir.flags {
+        for flag in self.class_dir.flags.keys() {
             match flag {
                 RnsClassFlag::Public => res.set_public(),
                 RnsClassFlag::Final => res.set_final(),
@@ -191,6 +193,53 @@ impl RnsModule {
             .methods(methods)
             .build();
 
+        if let Some(class_file) = &class_file {
+            let findings = class_file.verify();
+            for finding in findings {
+                self.map_lvm_class_finding(finding);
+            }
+        }
+
         (class_file, self.diagnostics)
+    }
+
+    fn map_lvm_class_finding(&mut self, finding: Finding) {
+        match finding {
+            Finding::ClassFlag(class_flag_finding) => match class_flag_finding {
+                ClassFlagsFinding::InterfaceWithoutAbstract => {
+                    let interface_span = self.class_dir.flags[&RnsClassFlag::Interface];
+                    self.diagnostics.push(
+                        JvmWarning::InterfaceFlagWithMissingAbstract { interface_span }.into(),
+                    );
+                }
+                ClassFlagsFinding::InterfaceIncompatibleFlags(incompatible) => {
+                    let interface_span = self.class_dir.flags[&RnsClassFlag::Interface];
+                    let exclusive_flags = self
+                        .class_dir
+                        .flags
+                        .iter()
+                        .filter(|(f, _)| Self::rns_flag_in_mask(**f, incompatible))
+                        .map(|(f, s)| (*f, *s))
+                        .collect();
+                    self.diagnostics.push(
+                        JvmWarning::InterfaceMutuallyExclusive {
+                            interface_span,
+                            exclusive_flags,
+                        }
+                        .into(),
+                    );
+                }
+            },
+        }
+    }
+
+    fn rns_flag_in_mask(f: RnsClassFlag, mask: ClassFlags) -> bool {
+        match f {
+            RnsClassFlag::Final => mask.is_final(),
+            RnsClassFlag::Super => mask.is_super(),
+            RnsClassFlag::Enum => mask.is_enum(),
+            RnsClassFlag::Module => mask.is_module(),
+            _ => false,
+        }
     }
 }
