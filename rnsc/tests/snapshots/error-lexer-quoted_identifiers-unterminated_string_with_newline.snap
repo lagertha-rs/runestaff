@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -12,7 +11,7 @@ across lines"
 .class_end
 ----- STDERR -----
 [E-001] Error: unterminated quoted identifier
-   ╭─[ test_data/integration/error/lexer/quoted_identifiers/unterminated_string_with_newline.rns:2:1 ]
+   ╭─[ test_data/rns_integration/error/lexer/quoted_identifiers/unterminated_string_with_newline.rns:2:1 ]
    │
  2 │ "String that breaks
    │ ┬  

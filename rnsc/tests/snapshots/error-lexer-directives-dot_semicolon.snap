@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -11,7 +10,7 @@ not generated
 .method_end
 ----- STDERR -----
 [E-002] Error: unknown directive
-   ╭─[ test_data/integration/error/lexer/directives/dot_semicolon.rns:2:5 ]
+   ╭─[ test_data/rns_integration/error/lexer/directives/dot_semicolon.rns:2:5 ]
    │
  2 │     .;comment after semicolon
    │     ────┬────  

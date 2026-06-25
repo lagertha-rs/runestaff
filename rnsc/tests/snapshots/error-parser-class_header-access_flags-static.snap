@@ -10,7 +10,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-015] Error: invalid class access flag 'static'
-   ╭─[ test_data/integration/error/parser/class_header/access_flags/static.rns:1:8 ]
+   ╭─[ test_data/rns_integration/error/parser/class_header/access_flags/static.rns:1:8 ]
    │
  1 │ .class static HelloWorld
    │        ───┬──  

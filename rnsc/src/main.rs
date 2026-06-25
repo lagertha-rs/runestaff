@@ -9,6 +9,10 @@ struct Cli {
 
     #[arg(value_name = "FILE")]
     file: Option<PathBuf>,
+
+    /// Suppress AssemblerWarn and JvmSpecWarn diagnostics
+    #[arg(short, long)]
+    quiet: bool,
 }
 
 #[derive(Subcommand)]
@@ -17,6 +21,9 @@ enum Command {
         file: PathBuf,
         #[arg(short, long)]
         output: Option<PathBuf>,
+        /// Suppress AssemblerWarn and JvmSpecWarn diagnostics
+        #[arg(short, long)]
+        quiet: bool,
     },
     Dis {
         file: PathBuf,
@@ -27,11 +34,11 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Command::Asm { file, output }) => assemble(&file, output.as_ref()),
+        Some(Command::Asm { file, output, quiet }) => assemble(&file, output.as_ref(), quiet),
         Some(Command::Dis { file }) => disassemble(&file),
         None => {
             if let Some(file) = cli.file {
-                assemble(&file, None);
+                assemble(&file, None, cli.quiet);
             } else {
                 eprintln!("Usage: rnsc <file.rns> or rnsc asm <file.rns> or rnsc dis <file.class>");
                 std::process::exit(1);
@@ -40,7 +47,7 @@ fn main() {
     }
 }
 
-fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
+fn assemble(path: &PathBuf, output: Option<&PathBuf>, quiet: bool) {
     let filename = path.to_string_lossy().to_string();
     let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
         eprintln!("Error reading file {}: {}", filename, err);
@@ -50,6 +57,9 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>) {
     let (bytes, diagnostics) = rns::assemble(&contents);
 
     for diag in diagnostics {
+        if quiet && matches!(diag.tier, rns::diagnostic::DiagnosticTier::AssemblerWarn | rns::diagnostic::DiagnosticTier::JvmSpecWarn) {
+            continue;
+        }
         diag.print(&filename, &contents);
     }
 

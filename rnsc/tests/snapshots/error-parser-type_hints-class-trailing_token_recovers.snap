@@ -8,7 +8,7 @@ not generated
 .class @class value unexpected_second_operand ; <- this error shouldn't block no superclass warn
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@class'
-   ╭─[ test_data/integration/error/parser/type_hints/class/trailing_token_recovers.rns:1:21 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/class/trailing_token_recovers.rns:1:21 ]
    │
  1 │ .class @class value unexpected_second_operand ; <- this error shouldn't block no superclass warn
    │        ───┬──       ────────────┬────────────  
@@ -22,7 +22,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-013
 ───╯
 [W-001] Warning: missing super directive
-   ╭─[ test_data/integration/error/parser/type_hints/class/trailing_token_recovers.rns:1:1 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/class/trailing_token_recovers.rns:1:1 ]
    │
  1 │ .class @class value unexpected_second_operand ; <- this error shouldn't block no superclass warn
    │ ───┬──  

@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-024] Error: instruction 'ldc' requires an explicit type hint
-   ╭─[ test_data/integration/error/parser/instructions/ldc_without_operands2.rns:6:8 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/ldc_without_operands2.rns:6:8 ]
    │
  6 │     ldc
    │     ─┬─│ 

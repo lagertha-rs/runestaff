@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +9,7 @@ not generated
 .super
 ----- STDERR -----
 [E-020] Error: missing class name after '.super'
-   ╭─[ test_data/integration/error/parser/super_directive/missing_operand.rns:2:1 ]
+   ╭─[ test_data/rns_integration/error/parser/super_directive/missing_operand.rns:2:1 ]
    │
  2 │ .super
    │ ───┬──│ 

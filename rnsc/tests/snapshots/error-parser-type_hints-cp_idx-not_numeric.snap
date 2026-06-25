@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 .super @cp_idx not_a_number ; explicit constant pool index
 ----- STDERR -----
 [E-003] Error: '@cp_idx' expects a constant pool index, but 'not_a_number' is not an integer
-   ╭─[ test_data/integration/error/parser/type_hints/cp_idx/not_numeric.rns:2:8 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/cp_idx/not_numeric.rns:2:8 ]
    │
  2 │ .super @cp_idx not_a_number ; explicit constant pool index
    │        ───┬─── ──────┬─────  

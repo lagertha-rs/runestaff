@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -12,7 +11,7 @@ not generated
 .super java/lang/String java/lang/Other ; trailing tokens, but should note about multiple inheritance as well
 ----- STDERR -----
 [E-012] Error: unexpected trailing tokens after super class definition
-   ╭─[ test_data/integration/error/parser/super_directive/trailing_token.rns:4:25 ]
+   ╭─[ test_data/rns_integration/error/parser/super_directive/trailing_token.rns:4:25 ]
    │
  4 │ .super java/lang/String java/lang/Other ; trailing tokens, but should note about multiple inheritance as well
    │                        │───────┬───────  

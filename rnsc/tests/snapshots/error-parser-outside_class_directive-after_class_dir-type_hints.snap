@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -13,7 +13,7 @@ not generated
 @int 42 ; This one is not error, because after finding the first error, the parser will stop and try to find .class
 ----- STDERR -----
 [E-008] Error: unexpected type hint after class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/after_class_dir/type_hints.rns:5:1 ]
+   ╭─[ test_data/rns_integration/error/parser/outside_class_directive/after_class_dir/type_hints.rns:5:1 ]
    │
  5 │ @string "Hello, World!"
    │ ───┬───  

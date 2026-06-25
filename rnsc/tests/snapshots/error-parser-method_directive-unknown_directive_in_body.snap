@@ -14,7 +14,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-002] Error: unknown directive
-   ╭─[ test_data/integration/error/parser/method_directive/unknown_directive_in_body.rns:5:3 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/unknown_directive_in_body.rns:5:3 ]
    │
  5 │   .unknown_directive
    │   ─────────┬────────  

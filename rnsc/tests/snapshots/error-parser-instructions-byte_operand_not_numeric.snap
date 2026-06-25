@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-028] Error: instruction 'bipush' requires a 1 byte integer, but 'abc' is not a number
-   ╭─[ test_data/integration/error/parser/instructions/byte_operand_not_numeric.rns:6:12 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/byte_operand_not_numeric.rns:6:12 ]
    │
  6 │     bipush abc
    │     ───┬── ─┬─  

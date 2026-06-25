@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -14,7 +14,7 @@ not generated
 abstract
 ----- STDERR -----
 [E-008] Error: unexpected access flag after class definition
-   ╭─[ test_data/integration/error/parser/outside_class_directive/after_class_dir/abstract_keyword.rns:7:1 ]
+   ╭─[ test_data/rns_integration/error/parser/outside_class_directive/after_class_dir/abstract_keyword.rns:7:1 ]
    │
  7 │ abstract
    │ ────┬───  

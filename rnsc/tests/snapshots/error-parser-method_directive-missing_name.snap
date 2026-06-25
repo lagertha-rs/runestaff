@@ -13,7 +13,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-020] Error: missing method name after '.method'
-   ╭─[ test_data/integration/error/parser/method_directive/missing_name.rns:4:1 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/missing_name.rns:4:1 ]
    │
  4 │ .method
    │ ───┬───│ 

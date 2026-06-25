@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +10,7 @@ unexpected
 .super java/lang/Object
 ----- STDERR -----
 [E-003] Error: '@int' requires a 32-bit integer, but 'not_a_number' is not a number
-   ╭─[ test_data/integration/error/parser/class_body/err_in_class_name_recovers.rns:1:8 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/err_in_class_name_recovers.rns:1:8 ]
    │
  1 │ .class @int not_a_number
    │        ──┬─ ──────┬─────  
@@ -30,7 +30,7 @@ unexpected
    │       https://rune.lagertha-vm.com/errors/E-003
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/class_body/err_in_class_name_recovers.rns:2:1 ]
+   ╭─[ test_data/rns_integration/error/parser/class_body/err_in_class_name_recovers.rns:2:1 ]
    │
  2 │ unexpected
    │ ─────┬────  

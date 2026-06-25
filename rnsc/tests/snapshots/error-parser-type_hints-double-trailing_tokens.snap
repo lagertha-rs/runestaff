@@ -1,6 +1,5 @@
 ---
-source: rns-asm/tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +9,7 @@ not generated
 .super java/lang/Object
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@double'
-   ╭─[ test_data/integration/error/parser/type_hints/double/trailing_tokens.rns:1:21 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/double/trailing_tokens.rns:1:21 ]
    │
  1 │ .class @double 3.14 unexpected_second_operand
    │        ───┬───      ────────────┬────────────  

@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -12,7 +12,7 @@ not generated
 badabadaboom ; <- still reported
 ----- STDERR -----
 [E-014] Error: '@fieldref' type hint is missing its field name
-   ╭─[ test_data/integration/error/parser/type_hints/fieldref/no_operand_2_recovers.rns:1:10 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/fieldref/no_operand_2_recovers.rns:1:10 ]
    │
  1 │ .class   @fieldref MyClass
    │          ────┬────        │ 
@@ -30,7 +30,7 @@ badabadaboom ; <- still reported
    │       https://rune.lagertha-vm.com/errors/E-014
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/type_hints/fieldref/no_operand_2_recovers.rns:5:1 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/fieldref/no_operand_2_recovers.rns:5:1 ]
    │
  5 │ badabadaboom ; <- still reported
    │ ──────┬─────  

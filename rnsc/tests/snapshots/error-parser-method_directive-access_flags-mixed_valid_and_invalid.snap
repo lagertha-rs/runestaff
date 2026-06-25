@@ -13,7 +13,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-016] Error: invalid method access flag 'interface'
-   ╭─[ test_data/integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:16 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:16 ]
    │
  4 │ .method public interface static module ()V
    │                ────┬────  
@@ -23,7 +23,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-016
 ───╯
 [E-016] Error: invalid method access flag 'module'
-   ╭─[ test_data/integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:33 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:33 ]
    │
  4 │ .method public interface static module ()V
    │                                 ───┬──  
@@ -33,7 +33,7 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-016
 ───╯
 [E-020] Error: missing method descriptor after '.method'
-   ╭─[ test_data/integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:40 ]
+   ╭─[ test_data/rns_integration/error/parser/method_directive/access_flags/mixed_valid_and_invalid.rns:4:40 ]
    │
  4 │ .method public interface static module ()V
    │                                        ─┬─│ 

@@ -1,6 +1,5 @@
 ---
-source: tests/rns_test.rs
-assertion_line: 210
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -10,7 +9,7 @@ not generated
 .super @cp_idx 42 42 ; explicit constant pool index
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@cp_idx'
-   ╭─[ test_data/integration/error/parser/type_hints/cp_idx/trailing_tokens.rns:2:19 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/cp_idx/trailing_tokens.rns:2:19 ]
    │
  2 │ .super @cp_idx 42 42 ; explicit constant pool index
    │        ───┬───    ─┬  

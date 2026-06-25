@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-028] Error: instruction 'bipush' requires a numeric operand
-   ╭─[ test_data/integration/error/parser/instructions/byte_operand_missing.rns:6:5 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/byte_operand_missing.rns:6:5 ]
    │
  6 │     bipush
    │     ───┬──│ 

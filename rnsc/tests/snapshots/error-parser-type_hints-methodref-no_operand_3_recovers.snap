@@ -1,5 +1,5 @@
 ---
-source: tests/rns_test.rs
+source: rnsc/tests/rns_test.rs
 expression: "&snapshot_content"
 ---
 ----- DISASSEMBLED -----
@@ -9,7 +9,7 @@ not generated
 blabla ; <- should be still reported as an error
 ----- STDERR -----
 [E-014] Error: '@methodref' type hint is missing its method descriptor
-   ╭─[ test_data/integration/error/parser/type_hints/methodref/no_operand_3_recovers.rns:1:10 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/methodref/no_operand_3_recovers.rns:1:10 ]
    │
  1 │ .class   @methodref MyClass methodName
    │          ─────┬────                   │ 
@@ -27,7 +27,7 @@ blabla ; <- should be still reported as an error
    │       https://rune.lagertha-vm.com/errors/E-014
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/integration/error/parser/type_hints/methodref/no_operand_3_recovers.rns:2:1 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/methodref/no_operand_3_recovers.rns:2:1 ]
    │
  2 │ blabla ; <- should be still reported as an error
    │ ───┬──  

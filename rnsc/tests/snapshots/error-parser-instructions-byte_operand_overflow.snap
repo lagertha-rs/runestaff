@@ -17,7 +17,7 @@ not generated
 .class_end
 ----- STDERR -----
 [E-028] Error: instruction 'bipush' requires a value that fits in 1 byte, but '256' is out of range
-   ╭─[ test_data/integration/error/parser/instructions/byte_operand_overflow.rns:6:12 ]
+   ╭─[ test_data/rns_integration/error/parser/instructions/byte_operand_overflow.rns:6:12 ]
    │
  6 │     bipush 256
    │     ───┬── ─┬─  
