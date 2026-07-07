@@ -1,0 +1,27 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public com/example/test/MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that .package directive correctly prepends package to class binary name.
+; Input: .class public MyClass with .package com/example/test
+; Expected: Binary name becomes com/example/test/MyClass (visible in disassembly)
+; This proves:
+;   1. Package is parsed and stored in AST
+;   2. Package is prepended to class name in constant pool
+;   3. Class file is written to correct directory structure (com/example/test/)
+
+.class public MyClass
+.package com/example/test
+.super java/lang/Object
+
+.class_end
+----- STDERR -----
+
+----- HASH -----
+c34bcdd56bc4a8002b9f583afb95471975308878fa885a6826ef281904fa854a

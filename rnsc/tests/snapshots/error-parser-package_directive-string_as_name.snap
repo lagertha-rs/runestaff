@@ -1,0 +1,41 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public my.package/MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a string literal can be used as package name.
+; This should produce an error because "my.package" is a string, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package "my.package"
+
+.class_end
+----- STDERR -----
+[W-002] Warning: package name 'my.package' contains '.' separator
+   ╭─[ test_data/rns_integration/error/parser/package_directive/string_as_name.rns:6:10 ]
+   │
+ 6 │ .package "my.package"
+   │          ──────┬─────  
+   │                ╰─────── package 'my.package' uses '.' as separator
+   │ 
+   │ Help: If you intended Java-style package syntax, use '/' instead: 'my/package'
+   │ 
+   │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/string_as_name.rns:5:1 ]
+   │
+ 5 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+6626d39841e64f42131f03802eb5c5ef46deee1d66cf224e66e673a269f815e7

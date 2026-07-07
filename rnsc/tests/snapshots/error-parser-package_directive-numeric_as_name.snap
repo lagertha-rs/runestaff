@@ -1,0 +1,30 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public 123/MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a numeric literal can be used as package name.
+; This should produce an error because 123 is a number, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package 123
+
+.class_end
+----- STDERR -----
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/numeric_as_name.rns:5:1 ]
+   │
+ 5 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+c9ca07a137c169f4c38ed01ce8c95d61854002235f780ad897b5f115a0262033

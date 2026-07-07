@@ -18,6 +18,10 @@ pub(super) enum ParserWarning {
         spans: Vec<Span>,
     },
     ReservedLikeIdentifierTodoName,
+    PackageContainsDot {
+        package_name: String,
+        package_span: Span,
+    },
 }
 
 impl IntoDiagnostic for ParserWarning {
@@ -26,6 +30,7 @@ impl IntoDiagnostic for ParserWarning {
             ParserWarning::MissingSuperClass { .. } => "W-001",
             ParserWarning::DuplicateAccessFlag { .. } => "TODO",
             ParserWarning::ReservedLikeIdentifierTodoName => "TODO",
+            ParserWarning::PackageContainsDot { .. } => "W-002",
         }
     }
 
@@ -41,6 +46,9 @@ impl IntoDiagnostic for ParserWarning {
             ParserWarning::ReservedLikeIdentifierTodoName => {
                 "TODO: reserved-like identifier used as name".into()
             }
+            ParserWarning::PackageContainsDot { package_name, .. } => {
+                format!("package name '{}' contains '.' separator", package_name).into()
+            }
         }
     }
 
@@ -54,6 +62,7 @@ impl IntoDiagnostic for ParserWarning {
                 spans.get(1).copied().unwrap_or_default()
             }
             ParserWarning::ReservedLikeIdentifierTodoName => Span::default(),
+            ParserWarning::PackageContainsDot { package_span, .. } => *package_span,
         }
     }
 
@@ -77,6 +86,11 @@ impl IntoDiagnostic for ParserWarning {
             ParserWarning::ReservedLikeIdentifierTodoName => {
                 Some("TODO: reserved-like identifier used as name".into())
             }
+            ParserWarning::PackageContainsDot { .. } => Some(
+                "In bytecode, package separators are represented as '/'. \
+                 The '.' character is used in Java source syntax but will be kept as-is in the bytecode."
+                    .into(),
+            ),
         }
     }
 
@@ -111,11 +125,29 @@ impl IntoDiagnostic for ParserWarning {
                 labels
             }
             ParserWarning::ReservedLikeIdentifierTodoName => vec![],
+            ParserWarning::PackageContainsDot { package_name, .. } => {
+                vec![DiagnosticLabel::at(
+                    self.primary_location().as_range(),
+                    format!("package '{}' uses '.' as separator", package_name),
+                )]
+            }
         }
     }
 
     fn help(&self) -> Option<Cow<'static, str>> {
-        None
+        match self {
+            ParserWarning::PackageContainsDot { package_name, .. } => {
+                let suggested = package_name.replace('.', "/");
+                Some(
+                    format!(
+                        "If you intended Java-style package syntax, use '/' instead: '{}'",
+                        suggested
+                    )
+                    .into(),
+                )
+            }
+            _ => None,
+        }
     }
 
     fn tier(&self) -> DiagnosticTier {

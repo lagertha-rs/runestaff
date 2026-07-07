@@ -20,6 +20,7 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
             RnsToken::Label(s) => format!("Label({:?})", s.value),
             RnsToken::DotCode(_) => "DotCode".to_string(),
             RnsToken::DotCodeEnd(_) => "DotCodeEnd".to_string(),
+            RnsToken::DotPackage(_) => "DotPackage".to_string(),
             RnsToken::DotClass(_) => "DotClass".to_string(),
             RnsToken::DotClassEnd(_) => "DotClassEnd".to_string(),
             RnsToken::DotMethod(_) => "DotMethod".to_string(),

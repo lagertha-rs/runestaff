@@ -1,0 +1,42 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public .class/MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a directive token can be used as package name.
+; This should produce an error because .class is a directive, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package .class
+
+.class_end
+----- STDERR -----
+[TODO] Warning: TODO: reserved-like identifier used as name
+[W-002] Warning: package name '.class' contains '.' separator
+   ╭─[ test_data/rns_integration/error/parser/package_directive/directive_as_name_class.rns:6:10 ]
+   │
+ 6 │ .package .class
+   │          ───┬──  
+   │             ╰──── package '.class' uses '.' as separator
+   │ 
+   │ Help: If you intended Java-style package syntax, use '/' instead: '/class'
+   │ 
+   │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/directive_as_name_class.rns:5:1 ]
+   │
+ 5 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+5d3ff254a7a0e16b2ac9701c6a6b631c464320abf5f0a51c26fa8df248bb761e

@@ -1,8 +1,9 @@
 use crate::diagnostic::{
     ERR_CODE_CLASS_DEF_TRAILING_TOK, ERR_CODE_CLASS_END_TRAILING_TOK, ERR_CODE_INSTR_TRAILING_TOK,
     ERR_CODE_INVALID_CLASS_FLAG, ERR_CODE_INVALID_METHOD_FLAG, ERR_CODE_METHOD_TRAILING_TOK,
-    ERR_CODE_SUPER_TRAILING_TOK, ERR_CODE_TH_TRAILING_TOK, ERR_CODE_TOKEN_OUTSIDE_CLASS,
-    ERR_CODE_UNEXPECTED_TOKEN_IN_CLASS, ERR_CODE_UNEXPECTED_TOKEN_IN_METHOD,
+    ERR_CODE_PACKAGE_TRAILING_TOK, ERR_CODE_SUPER_TRAILING_TOK, ERR_CODE_TH_TRAILING_TOK,
+    ERR_CODE_TOKEN_OUTSIDE_CLASS, ERR_CODE_UNEXPECTED_TOKEN_IN_CLASS,
+    ERR_CODE_UNEXPECTED_TOKEN_IN_METHOD,
 };
 use crate::instruction::InstructionSpec;
 use crate::token::Spanned;
@@ -72,6 +73,7 @@ impl UnexpectedTokenContext {
 pub(in crate::parser) enum OperandErrPosContext {
     ClassName,
     SuperName,
+    PackageName,
     MethodName,
     MethodDescriptor,
     InstructionName,
@@ -86,6 +88,7 @@ pub(in crate::parser) enum TrailingTokensErrContext {
     TypeHint(Spanned<TypeHintKind>),
     ClassEnd,
     Instruction(Spanned<String>),
+    Package,
 }
 
 impl Display for TrailingTokensErrContext {
@@ -94,6 +97,7 @@ impl Display for TrailingTokensErrContext {
             TrailingTokensErrContext::Class => write!(f, "class definition"),
             TrailingTokensErrContext::Super => write!(f, "super class definition"),
             TrailingTokensErrContext::Method => write!(f, "method definition"),
+            TrailingTokensErrContext::Package => write!(f, "package definition"),
             TrailingTokensErrContext::TypeHint(kind) => {
                 write!(f, "type hint '{}'", kind.value.token_name())
             }
@@ -110,6 +114,7 @@ impl TrailingTokensErrContext {
         match self {
             TrailingTokensErrContext::Class => ERR_CODE_CLASS_DEF_TRAILING_TOK,
             TrailingTokensErrContext::Super => ERR_CODE_SUPER_TRAILING_TOK,
+            TrailingTokensErrContext::Package => ERR_CODE_PACKAGE_TRAILING_TOK,
             TrailingTokensErrContext::TypeHint(_) => ERR_CODE_TH_TRAILING_TOK,
             TrailingTokensErrContext::Method => ERR_CODE_METHOD_TRAILING_TOK,
             TrailingTokensErrContext::ClassEnd => ERR_CODE_CLASS_END_TRAILING_TOK,
@@ -123,6 +128,7 @@ impl Display for OperandErrPosContext {
         match self {
             OperandErrPosContext::ClassName => write!(f, "class name"),
             OperandErrPosContext::SuperName => write!(f, "super class name"),
+            OperandErrPosContext::PackageName => write!(f, "package name"),
             OperandErrPosContext::MethodName => write!(f, "method name"),
             OperandErrPosContext::MethodDescriptor => write!(f, "method descriptor"),
             OperandErrPosContext::InstructionName => write!(f, "instruction name"),
@@ -139,6 +145,7 @@ impl OperandErrPosContext {
             //TODO: use something like TokenKind::DotClass.name() to not hardcode here
             OperandErrPosContext::ClassName => ".class",
             OperandErrPosContext::SuperName => ".super",
+            OperandErrPosContext::PackageName => ".package",
             OperandErrPosContext::MethodName | OperandErrPosContext::MethodDescriptor => ".method",
             OperandErrPosContext::InstructionName => "instruction",
             OperandErrPosContext::InstructionOperand(spec) => spec.opcode.as_str(),

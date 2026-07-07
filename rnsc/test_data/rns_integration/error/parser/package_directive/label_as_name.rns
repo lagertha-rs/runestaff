@@ -1,0 +1,8 @@
+; Tests that a label can be used as package name.
+; This should produce an error because label: is a label, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package label:
+
+.class_end

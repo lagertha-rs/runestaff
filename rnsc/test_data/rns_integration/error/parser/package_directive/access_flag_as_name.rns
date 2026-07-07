@@ -1,0 +1,8 @@
+; Tests that an access flag can be used as package name.
+; This should produce an error because public is an access flag, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package public
+
+.class_end

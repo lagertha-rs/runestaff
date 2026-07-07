@@ -1,0 +1,8 @@
+; Tests that a numeric literal can be used as package name.
+; This should produce an error because 123 is a number, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package 123
+
+.class_end

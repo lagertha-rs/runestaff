@@ -1,0 +1,60 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+.class MyClass
+.package com.example trailing_tokens
+
+     unknown_token ; <- still reported
+----- STDERR -----
+[W-002] Warning: package name 'com.example' contains '.' separator
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens_recovers.rns:2:10 ]
+   │
+ 2 │ .package com.example trailing_tokens
+   │          ─────┬─────  
+   │               ╰─────── package 'com.example' uses '.' as separator
+   │ 
+   │ Help: If you intended Java-style package syntax, use '/' instead: 'com/example'
+   │ 
+   │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+───╯
+[E-029] Error: unexpected trailing tokens after package definition
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens_recovers.rns:2:22 ]
+   │
+ 2 │ .package com.example trailing_tokens
+   │                     │───────┬───────  
+   │                     ╰───────────────── expected end of package definition here
+   │                             │         
+   │                             ╰───────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-029
+───╯
+[E-007] Error: unexpected identifier class body
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens_recovers.rns:4:6 ]
+   │
+ 4 │      unknown_token ; <- still reported
+   │      ──────┬──────  
+   │            ╰──────── unexpected token
+   │ 
+   │ Help: Check the syntax of the class body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-007
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens_recovers.rns:1:1 ]
+   │
+ 1 │ .class MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+not generated

@@ -13,17 +13,22 @@ struct Cli {
     /// Suppress AssemblerWarn and JvmSpecWarn diagnostics
     #[arg(short, long)]
     quiet: bool,
+
+    /// Output directory for class files
+    #[arg(short = 'd', long)]
+    output_dir: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]
 enum Command {
     Asm {
         file: PathBuf,
-        #[arg(short, long)]
-        output: Option<PathBuf>,
         /// Suppress AssemblerWarn and JvmSpecWarn diagnostics
         #[arg(short, long)]
         quiet: bool,
+        /// Output directory for class files
+        #[arg(short = 'd', long)]
+        output_dir: Option<PathBuf>,
     },
     Dis {
         file: PathBuf,
@@ -36,13 +41,13 @@ fn main() {
     match cli.command {
         Some(Command::Asm {
             file,
-            output,
             quiet,
-        }) => assemble(&file, output.as_ref(), quiet),
+            output_dir,
+        }) => assemble(&file, output_dir, quiet),
         Some(Command::Dis { file }) => disassemble(&file),
         None => {
             if let Some(file) = cli.file {
-                assemble(&file, None, cli.quiet);
+                assemble(&file, cli.output_dir, cli.quiet);
             } else {
                 eprintln!("Usage: rnsc <file.rns> or rnsc asm <file.rns> or rnsc dis <file.class>");
                 std::process::exit(1);
@@ -51,14 +56,14 @@ fn main() {
     }
 }
 
-fn assemble(path: &PathBuf, output: Option<&PathBuf>, quiet: bool) {
+fn assemble(path: &PathBuf, output_dir: Option<PathBuf>, quiet: bool) {
     let filename = path.to_string_lossy().to_string();
     let contents = std::fs::read_to_string(path).unwrap_or_else(|err| {
         eprintln!("Error reading file {}: {}", filename, err);
         std::process::exit(1);
     });
 
-    let (bytes, diagnostics) = rns::assemble(&contents);
+    let (assembled, diagnostics) = rns::assemble(&contents);
 
     for diag in diagnostics {
         if quiet
@@ -73,12 +78,25 @@ fn assemble(path: &PathBuf, output: Option<&PathBuf>, quiet: bool) {
         diag.print(&filename, &contents);
     }
 
-    match bytes {
-        Some(bytes) => {
-            let output_path = output
-                .map(|p| p.to_string_lossy().to_string())
-                .unwrap_or_else(|| filename.replace(".rns", ".class"));
-            std::fs::write(output_path, bytes).expect("Failed to write output file");
+    match assembled {
+        Some(assembled) => {
+            let base_dir = output_dir.unwrap_or_else(|| PathBuf::from("."));
+
+            for (class_name, bytes) in &assembled.classes {
+                let output_path = base_dir.join(format!("{}.class", class_name));
+
+                if let Some(parent) = output_path.parent() {
+                    std::fs::create_dir_all(parent).unwrap_or_else(|err| {
+                        eprintln!("Error creating directory {}: {}", parent.display(), err);
+                        std::process::exit(1);
+                    });
+                }
+
+                std::fs::write(&output_path, bytes).unwrap_or_else(|err| {
+                    eprintln!("Error writing file {}: {}", output_path.display(), err);
+                    std::process::exit(1);
+                });
+            }
         }
         None => {
             std::process::exit(1);

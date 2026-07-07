@@ -1,0 +1,8 @@
+; Tests that .super directive can be used as package name.
+; This should produce an error because .super is a directive, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package .super
+
+.class_end

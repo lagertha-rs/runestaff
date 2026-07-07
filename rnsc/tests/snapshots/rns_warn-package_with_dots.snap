@@ -1,0 +1,37 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public com.example.test/MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that .package directive with '.' separator produces a warning.
+; Input: .package com.example.test (using Java-style dots)
+; Expected: Warning W-002 about using '.' as separator
+; This proves:
+;   1. Parser detects '.' in package name
+;   2. Warning suggests using '/' instead for bytecode consistency
+;   3. Package is still accepted as-is (not auto-converted)
+
+.class public MyClass
+.package com.example.test
+.super java/lang/Object
+
+.class_end
+----- STDERR -----
+[W-002] Warning: package name 'com.example.test' contains '.' separator
+    ╭─[ test_data/rns_integration/rns_warn/package_with_dots.rns:10:10 ]
+    │
+ 10 │ .package com.example.test
+    │          ────────┬───────  
+    │                  ╰───────── package 'com.example.test' uses '.' as separator
+    │ 
+    │ Help: If you intended Java-style package syntax, use '/' instead: 'com/example/test'
+    │ 
+    │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+────╯
+----- HASH -----
+e312e0555f7f38be3b0bc93da50292dfe9622ab270b8fe81d847b55631773cd3

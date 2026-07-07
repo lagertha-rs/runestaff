@@ -1,0 +1,8 @@
+; Tests that trailing tokens after .package are detected and reported.
+; Expected error: E-029 (package trailing tokens)
+; The parser should detect 'trailing_tokens' as unexpected after the package name.
+
+.class public MyClass
+.package com.example trailing_tokens
+
+.class_end

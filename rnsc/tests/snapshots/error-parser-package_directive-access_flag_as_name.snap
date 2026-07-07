@@ -1,0 +1,31 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public public/MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that an access flag can be used as package name.
+; This should produce an error because public is an access flag, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package public
+
+.class_end
+----- STDERR -----
+[TODO] Warning: TODO: reserved-like identifier used as name
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/access_flag_as_name.rns:5:1 ]
+   │
+ 5 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+b4dff235aec19b755c4ced6df29a9273a90bf1237f1885e51c0598eb9c9cde7e

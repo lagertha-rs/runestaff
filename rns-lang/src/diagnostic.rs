@@ -37,6 +37,8 @@ pub const ERR_CODE_INSTR_TRAILING_TOK: &str = "E-025";
 pub const ERR_CODE_NOT_YET_IMPL: &str = "E-026";
 pub const ERR_CODE_UNDEFINED_LABEL: &str = "E-027";
 pub const ERR_CODE_NUMERIC_OPERAND_OVERFLOW: &str = "E-028";
+pub const ERR_CODE_PACKAGE_TRAILING_TOK: &str = "E-029";
+pub const ERR_CODE_MULTIPLE_PACKAGE: &str = "E-030";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {

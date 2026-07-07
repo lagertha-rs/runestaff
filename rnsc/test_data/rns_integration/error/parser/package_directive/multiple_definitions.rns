@@ -1,0 +1,9 @@
+; Tests that multiple .package directives are detected and reported.
+; Expected error: E-030 (multiple package definitions)
+; The parser should detect the second .package as a duplicate.
+
+.class public MyClass
+.package com.example
+.package com.other
+
+.class_end
