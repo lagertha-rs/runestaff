@@ -73,30 +73,6 @@ fn to_snapshot_name(path: &Path) -> String {
     base_name.replace("/", "-").replace("--", "-")
 }
 
-struct TempClassFile(PathBuf);
-
-impl TempClassFile {
-    fn new(stem: &str) -> Self {
-        let path = std::env::temp_dir().join(format!(
-            "rnsc_cli_test_{}_{}.class",
-            stem,
-            rand::random::<u16>()
-        ));
-        fs::remove_file(&path).ok();
-        Self(path)
-    }
-
-    fn path(&self) -> &PathBuf {
-        &self.0
-    }
-}
-
-impl Drop for TempClassFile {
-    fn drop(&mut self) {
-        fs::remove_file(&self.0).ok();
-    }
-}
-
 fn hash_of(path: &Path) -> String {
     match fs::read(path) {
         Ok(bytes) => {
@@ -108,6 +84,22 @@ fn hash_of(path: &Path) -> String {
     }
 }
 
+fn find_class_file_recursive(dir: &Path) -> Option<PathBuf> {
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if let Some(found) = find_class_file_recursive(&path) {
+                    return Some(found);
+                }
+            } else if path.extension().is_some_and(|ext| ext == "class") {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
+
 struct RunResult {
     stdout: String,
     stderr: String,
@@ -115,9 +107,9 @@ struct RunResult {
     hash: String,
 }
 
-fn run_assembly(input: &Path, output: &Path, extra_args: &[&str]) -> RunResult {
+fn run_assembly(input: &Path, output_dir: &Path, extra_args: &[&str]) -> RunResult {
     let mut cmd = Command::cargo_bin("rnsc").expect("rnsc binary not found");
-    cmd.arg("asm").arg(input).arg("--output").arg(output);
+    cmd.arg("asm").arg(input).arg("-d").arg(output_dir);
     for arg in extra_args {
         cmd.arg(arg);
     }
@@ -125,8 +117,20 @@ fn run_assembly(input: &Path, output: &Path, extra_args: &[&str]) -> RunResult {
     let stdout = String::from_utf8_lossy(&output_res.stdout).into_owned();
     let stderr = String::from_utf8_lossy(&output_res.stderr).into_owned();
     let success = output_res.status.success();
-    let hash = hash_of(output);
-    fs::remove_file(output).ok();
+
+    // Find the generated class file (recursively for package directories)
+    let hash = if success {
+        if let Some(class_file) = find_class_file_recursive(output_dir) {
+            let hash = hash_of(&class_file);
+            fs::remove_file(&class_file).ok();
+            hash
+        } else {
+            "not generated".to_string()
+        }
+    } else {
+        "not generated".to_string()
+    };
+
     RunResult {
         stdout,
         stderr,
@@ -179,13 +183,27 @@ fn test_cli_integration(
         .to_string_lossy()
         .to_string();
 
-    let default_out = TempClassFile::new(&format!("{stem}_default"));
-    let quiet_out = TempClassFile::new(&format!("{stem}_quiet"));
+    let default_dir = env::temp_dir().join(format!(
+        "rnsc_cli_test_{}_default_{}",
+        stem,
+        rand::random::<u16>()
+    ));
+    let quiet_dir = env::temp_dir().join(format!(
+        "rnsc_cli_test_{}_quiet_{}",
+        stem,
+        rand::random::<u16>()
+    ));
 
-    let default = run_assembly(&path, default_out.path(), &[]);
-    let quiet = run_assembly(&path, quiet_out.path(), &["-q"]);
+    fs::create_dir_all(&default_dir).ok();
+    fs::create_dir_all(&quiet_dir).ok();
+
+    let default = run_assembly(&path, &default_dir, &[]);
+    let quiet = run_assembly(&path, &quiet_dir, &["-q"]);
 
     let snapshot = build_snapshot(&path, &default, &quiet);
+
+    fs::remove_dir_all(&default_dir).ok();
+    fs::remove_dir_all(&quiet_dir).ok();
 
     with_settings!(
         {

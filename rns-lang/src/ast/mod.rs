@@ -9,10 +9,16 @@ use flag::RnsClassFlag;
 use std::collections::{BTreeMap, HashMap};
 
 pub struct RnsModule {
+    pub package: Option<PackageDirective>,
     pub class_dir: ClassDirective,
     pub super_dir: Option<SuperDirective>,
     pub diagnostics: Vec<Diagnostic>,
     pub methods: Vec<MethodDirective>,
+}
+
+pub struct PackageDirective {
+    pub dir_span: Option<Span>,
+    pub name: String,
 }
 
 pub struct SuperDirective {

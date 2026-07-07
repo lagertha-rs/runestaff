@@ -11,9 +11,15 @@ use lvm_class::prelude::{
     ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
 };
 use lvm_class::verify::{ClassFlagsFinding, Finding};
+use std::collections::HashMap;
 
 mod error;
 mod jvm_warning;
+
+pub struct AssembledClasses {
+    pub package: String,
+    pub classes: HashMap<String, Vec<u8>>,
+}
 
 impl RnsModule {
     fn build_class_flags(&mut self) -> ClassFlags {
@@ -151,10 +157,36 @@ impl RnsModule {
         }
     }
 
-    pub fn into_bytes(self) -> (Option<Vec<u8>>, Vec<Diagnostic>) {
+    pub fn into_bytes(self) -> (Option<AssembledClasses>, Vec<Diagnostic>) {
+        let package = self
+            .package
+            .as_ref()
+            .map(|p| p.name.clone())
+            .unwrap_or_default();
+
+        let class_name = self
+            .class_dir
+            .name
+            .as_ref()
+            .map(|n| n.value())
+            .unwrap_or_default();
+
+        let full_class_name = if package.is_empty() {
+            class_name.to_string()
+        } else {
+            format!("{}/{}", package, class_name)
+        };
+
         let (class_file, diagnostics) = self.into_class_file();
         let bytes = class_file.map(|cf| cf.to_bytes());
-        (bytes, diagnostics)
+
+        let assembled = bytes.map(|b| {
+            let mut classes = HashMap::new();
+            classes.insert(full_class_name, b);
+            AssembledClasses { package, classes }
+        });
+
+        (assembled, diagnostics)
     }
 
     // TODO: why tuple but not Result?
@@ -163,11 +195,21 @@ impl RnsModule {
         let super_cp_id = self.build_super_class(&mut cp_builder);
         let class_flags = self.build_class_flags();
 
-        let this_cp_id = self
-            .class_dir
-            .name
-            .take()
-            .map(|name| Self::add_type_hint_to_cp(&mut cp_builder, name));
+        let package = self
+            .package
+            .as_ref()
+            .map(|p| p.name.clone())
+            .unwrap_or_default();
+
+        let this_cp_id = self.class_dir.name.take().map(|name| {
+            let class_name = name.value();
+            let full_name = if package.is_empty() {
+                class_name.to_string()
+            } else {
+                format!("{}/{}", package, class_name)
+            };
+            cp_builder.add_class(&full_name)
+        });
 
         let rns_methods = std::mem::take(&mut self.methods);
         let methods = rns_methods

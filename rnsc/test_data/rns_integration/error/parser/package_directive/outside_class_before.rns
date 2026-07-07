@@ -1,0 +1,10 @@
+; Tests that .package directive before .class is detected as unexpected token.
+; Expected error: E-006 (unexpected token before class definition)
+; The .package directive is only valid inside a class body, not before it.
+
+.package com.example
+
+.class public MyClass
+.super java/lang/Object
+
+.class_end

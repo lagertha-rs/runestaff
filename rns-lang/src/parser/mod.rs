@@ -1,7 +1,7 @@
 use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
 use crate::ast::{
-    ClassDirective, CodeDirective, MethodDirective, RnsInstruction, RnsModule, RnsOperand,
-    SuperDirective,
+    ClassDirective, CodeDirective, MethodDirective, PackageDirective, RnsInstruction, RnsModule,
+    RnsOperand, SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
 use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
@@ -58,6 +58,7 @@ struct RnsParser {
     method_dirs: Vec<MethodDirective>,
 
     super_directives: Vec<(Span, TypeHint)>,
+    package_directives: Vec<(Span, String)>,
     reported_errs: ReportedErrs,
 }
 
@@ -68,6 +69,7 @@ enum ErrKind {
     Super = 0,
     CodeStack = 1,
     CodeLocals = 2,
+    Package = 3,
 }
 
 #[derive(Default, Clone, Copy)]
@@ -96,6 +98,7 @@ impl RnsParser {
             class_name: None,
             method_dirs: Vec::new(),
             super_directives: Vec::new(),
+            package_directives: Vec::new(),
             reported_errs: ReportedErrs::default(),
             access_flags: Default::default(),
         }
@@ -791,6 +794,43 @@ impl RnsParser {
         self.verify_trailing_tokens(TrailingTokensErrContext::Super)
     }
 
+    fn parse_package_directive(&mut self) {
+        let package_token = self.next_token(); // consume .package token
+
+        match self.try_next_identifier() {
+            Ok(package_name) => {
+                let name_span = package_name.span;
+                let name_value = package_name.value;
+
+                // Warn if package name contains '.'
+                if name_value.contains('.') {
+                    self.diagnostic.push(
+                        ParserWarning::PackageContainsDot {
+                            package_name: name_value.clone(),
+                            package_span: name_span,
+                        }
+                        .into(),
+                    );
+                }
+
+                self.package_directives
+                    .push((package_token.span(), name_value));
+            }
+            Err(token) => {
+                self.reported_errs.insert(ErrKind::Package);
+                self.diagnostic.push(
+                    ParserError::IdentifierOrHintExpected(
+                        self.last_span,
+                        token,
+                        OperandErrPosContext::PackageName,
+                    )
+                    .into(),
+                );
+            }
+        }
+        self.verify_trailing_tokens(TrailingTokensErrContext::Package);
+    }
+
     fn anchor_class_directive(&mut self) -> Result<Span, Box<Diagnostic>> {
         self.skip_newlines();
         let next_token = self.next_token();
@@ -844,6 +884,7 @@ impl RnsParser {
                     self.verify_trailing_tokens(TrailingTokensErrContext::ClassEnd);
                     break;
                 }
+                RnsToken::DotPackage(_) => self.parse_package_directive(),
                 RnsToken::Eof(_) => break,
                 _ => {
                     let unexpected_error = ParserError::UnexpectedToken(
@@ -920,6 +961,25 @@ impl RnsParser {
             }
         }
     }
+
+    fn take_package_directive(&mut self) -> Option<PackageDirective> {
+        let mut package_directives = std::mem::take(&mut self.package_directives);
+        match package_directives.len() {
+            0 => None,
+            1 => {
+                let (dir_span, name) = package_directives.swap_remove(0);
+                Some(PackageDirective {
+                    dir_span: Some(dir_span),
+                    name,
+                })
+            }
+            _ => {
+                self.diagnostic
+                    .push(ParserError::MultiplePackageDefinitions(package_directives).into());
+                None
+            }
+        }
+    }
 }
 
 pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Diagnostic>> {
@@ -929,6 +989,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         instance.diagnostic.push(*e);
         return Err(instance.diagnostic);
     }
+    let package = instance.take_package_directive();
     let super_dir = instance.take_super_directive();
     let class_dir = ClassDirective {
         dir_span: instance.class_dir_span,
@@ -936,6 +997,7 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         flags: instance.access_flags,
     };
     Ok(RnsModule {
+        package,
         class_dir,
         super_dir,
         diagnostics: instance.diagnostic,

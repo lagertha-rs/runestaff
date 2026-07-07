@@ -1,0 +1,4 @@
+.class MyClass
+.package com.example trailing_tokens
+
+     unknown_token ; <- still reported

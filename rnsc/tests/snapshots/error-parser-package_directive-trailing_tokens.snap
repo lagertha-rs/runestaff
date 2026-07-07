@@ -1,0 +1,52 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that trailing tokens after .package are detected and reported.
+; Expected error: E-029 (package trailing tokens)
+; The parser should detect 'trailing_tokens' as unexpected after the package name.
+
+.class public MyClass
+.package com.example trailing_tokens
+
+.class_end
+----- STDERR -----
+[W-002] Warning: package name 'com.example' contains '.' separator
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:6:10 ]
+   │
+ 6 │ .package com.example trailing_tokens
+   │          ─────┬─────  
+   │               ╰─────── package 'com.example' uses '.' as separator
+   │ 
+   │ Help: If you intended Java-style package syntax, use '/' instead: 'com/example'
+   │ 
+   │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+───╯
+[E-029] Error: unexpected trailing tokens after package definition
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:6:22 ]
+   │
+ 6 │ .package com.example trailing_tokens
+   │                     │───────┬───────  
+   │                     ╰───────────────── expected end of package definition here
+   │                             │         
+   │                             ╰───────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-029
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:5:1 ]
+   │
+ 5 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+not generated

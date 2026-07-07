@@ -12,6 +12,7 @@ pub mod type_hint;
 pub const DIRECTIVE_DOT_CLASS: &str = ".class";
 pub const DIRECTIVE_DOT_SUPER: &str = ".super";
 pub const DIRECTIVE_DOT_METHOD: &str = ".method";
+pub const DIRECTIVE_DOT_PACKAGE: &str = ".package";
 pub const DIRECTIVE_DOT_CLASS_END: &str = ".class_end";
 pub const DIRECTIVE_DOT_METHOD_END: &str = ".method_end";
 pub const DIRECTIVE_DOT_CODE_END: &str = ".code_end";
@@ -20,6 +21,7 @@ pub const DIRECTIVE_DOT_ANNOTATION: &str = ".annotation";
 
 pub const DIRECTIVE_CLASS: &str = "class";
 pub const DIRECTIVE_SUPER: &str = "super";
+pub const DIRECTIVE_PACKAGE: &str = "package";
 pub const DIRECTIVE_METHOD: &str = "method";
 pub const DIRECTIVE_CLASS_END: &str = "class_end";
 pub const DIRECTIVE_METHOD_END: &str = "method_end";
@@ -77,6 +79,7 @@ pub enum RnsToken {
     DotCode(Span),
     DotCodeEnd(Span),
     DotAnnotation(Span),
+    DotPackage(Span),
 
     Label(Spanned<String>),
     AccessFlag(Spanned<RnsFlag>),
@@ -108,6 +111,7 @@ impl RnsToken {
             RnsToken::DotClass(_) => DIRECTIVE_DOT_CLASS,
             RnsToken::DotSuper(_) => DIRECTIVE_DOT_SUPER,
             RnsToken::DotMethod(_) => DIRECTIVE_DOT_METHOD,
+            RnsToken::DotPackage(_) => DIRECTIVE_DOT_PACKAGE,
             RnsToken::DotClassEnd(_) => DIRECTIVE_DOT_CLASS_END,
             RnsToken::DotMethodEnd(_) => DIRECTIVE_DOT_METHOD_END,
             RnsToken::DotCodeEnd(_) => DIRECTIVE_DOT_CODE_END,
@@ -128,6 +132,7 @@ impl RnsToken {
             RnsToken::DotClass(_) => &[RnsTokenContext::TopLevel],
             RnsToken::DotSuper(_) => &[RnsTokenContext::ClassBody],
             RnsToken::DotMethod(_) => &[RnsTokenContext::ClassBody],
+            RnsToken::DotPackage(_) => &[RnsTokenContext::ClassBody],
             RnsToken::DotClassEnd(_) => &[RnsTokenContext::ClassBody],
             RnsToken::DotMethodEnd(_) => &[RnsTokenContext::MethodBody],
             RnsToken::DotCodeEnd(_) => &[RnsTokenContext::CodeBody],
@@ -152,6 +157,7 @@ impl RnsToken {
             RnsToken::DotMethod(_) => RnsTokenKind::DotMethod,
             RnsToken::DotClassEnd(_) => RnsTokenKind::DotClassEnd,
             RnsToken::DotMethodEnd(_) => RnsTokenKind::DotMethodEnd,
+            RnsToken::DotPackage(_) => RnsTokenKind::DotPackage,
             RnsToken::DotCodeEnd(_) => RnsTokenKind::DotCodeEnd,
             RnsToken::DotCode(_) => RnsTokenKind::DotCode,
             RnsToken::DotAnnotation(_) => RnsTokenKind::DotAnnotation,
@@ -212,6 +218,7 @@ impl RnsToken {
 
     pub fn from_directive(name: &str, span: Span) -> Option<Self> {
         match name {
+            DIRECTIVE_PACKAGE => Some(RnsToken::DotPackage(span)),
             DIRECTIVE_CLASS => Some(RnsToken::DotClass(span)),
             DIRECTIVE_SUPER => Some(RnsToken::DotSuper(span)),
             DIRECTIVE_METHOD => Some(RnsToken::DotMethod(span)),
@@ -245,6 +252,7 @@ impl RnsToken {
             | RnsToken::DotCode(span)
             | RnsToken::DotCodeEnd(span)
             | RnsToken::DotAnnotation(span)
+            | RnsToken::DotPackage(span)
             | RnsToken::Newline(span)
             | RnsToken::Eof(span) => *span,
             RnsToken::Identifier(spanned) | RnsToken::Label(spanned) => spanned.span,
@@ -262,6 +270,7 @@ impl RnsToken {
             | RnsToken::DotMethodEnd(_)
             | RnsToken::DotAnnotation(_)
             | RnsToken::DotCode(_)
+            | RnsToken::DotPackage(_)
             | RnsToken::DotCodeEnd(_) => TOKEN_TYPE_DIRECTIVE,
             RnsToken::AccessFlag(_) => TOKEN_TYPE_ACCESS_FLAG,
             RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,

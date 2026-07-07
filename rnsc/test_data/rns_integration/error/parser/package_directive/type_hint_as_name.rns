@@ -1,0 +1,8 @@
+; Tests that a type hint can be used as package name.
+; This should produce an error because @string is a type hint, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package @string
+
+.class_end

@@ -1,0 +1,8 @@
+; Tests that missing operand after .package is detected and reported.
+; Expected error: E-005 (identifier or type hint expected)
+; The parser should detect that the package name is missing.
+
+.class public MyClass
+.package
+
+.class_end

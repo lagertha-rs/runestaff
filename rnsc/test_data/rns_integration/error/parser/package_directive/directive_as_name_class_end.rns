@@ -1,0 +1,8 @@
+; Tests that .class_end directive can be used as package name.
+; This should produce an error because .class_end is a directive, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package .class_end
+
+.class_end

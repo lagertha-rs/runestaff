@@ -1,0 +1,8 @@
+; Tests that a string literal can be used as package name.
+; This should produce an error because "my.package" is a string, not an identifier.
+; Expected: parser error about unexpected token
+
+.class public MyClass
+.package "my.package"
+
+.class_end

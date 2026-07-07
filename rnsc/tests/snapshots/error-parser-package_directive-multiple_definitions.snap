@@ -1,0 +1,65 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that multiple .package directives are detected and reported.
+; Expected error: E-030 (multiple package definitions)
+; The parser should detect the second .package as a duplicate.
+
+.class public MyClass
+.package com.example
+.package com.other
+
+.class_end
+----- STDERR -----
+[W-002] Warning: package name 'com.example' contains '.' separator
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions.rns:6:10 ]
+   │
+ 6 │ .package com.example
+   │          ─────┬─────  
+   │               ╰─────── package 'com.example' uses '.' as separator
+   │ 
+   │ Help: If you intended Java-style package syntax, use '/' instead: 'com/example'
+   │ 
+   │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+───╯
+[W-002] Warning: package name 'com.other' contains '.' separator
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions.rns:7:10 ]
+   │
+ 7 │ .package com.other
+   │          ────┬────  
+   │              ╰────── package 'com.other' uses '.' as separator
+   │ 
+   │ Help: If you intended Java-style package syntax, use '/' instead: 'com/other'
+   │ 
+   │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
+───╯
+[E-030] Error: multiple .package directives
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions.rns:7:1 ]
+   │
+ 6 │ .package com.example
+   │ ────┬───  
+   │     ╰───── first .package directive defined here with package 'com.example'
+ 7 │ .package com.other
+   │ ────┬───  
+   │     ╰───── but another .package directive defined here with package 'com.other'
+   │ 
+   │ Help: A class can only have one .package directive. Remove the duplicates.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-030
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions.rns:5:1 ]
+   │
+ 5 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- HASH -----
+not generated

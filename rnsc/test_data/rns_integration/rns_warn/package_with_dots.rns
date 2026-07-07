@@ -1,0 +1,13 @@
+; Tests that .package directive with '.' separator produces a warning.
+; Input: .package com.example.test (using Java-style dots)
+; Expected: Warning W-002 about using '.' as separator
+; This proves:
+;   1. Parser detects '.' in package name
+;   2. Warning suggests using '/' instead for bytecode consistency
+;   3. Package is still accepted as-is (not auto-converted)
+
+.class public MyClass
+.package com.example.test
+.super java/lang/Object
+
+.class_end

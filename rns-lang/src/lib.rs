@@ -10,11 +10,12 @@ pub(crate) mod token;
 
 use crate::diagnostic::{Diagnostic, DiagnosticTier};
 
+pub use assembler::AssembledClasses;
 pub use disassembler::{DisasmError, disassemble_bytes};
 
 pub const ERROR_DOCS_BASE_URL: &str = "https://rune.lagertha-vm.com/errors/";
 
-pub fn assemble(source: &str) -> (Option<Vec<u8>>, Vec<Diagnostic>) {
+pub fn assemble(source: &str) -> (Option<AssembledClasses>, Vec<Diagnostic>) {
     let mut all_diagnostics = Vec::new();
     let mut has_error = false;
 
@@ -52,7 +53,7 @@ pub fn assemble(source: &str) -> (Option<Vec<u8>>, Vec<Diagnostic>) {
         return (None, all_diagnostics);
     }
 
-    let (bytes, asm_diags) = module.into_bytes();
+    let (assembled, asm_diags) = module.into_bytes();
     for diag in asm_diags {
         if diag.tier == DiagnosticTier::SyntaxError {
             has_error = true;
@@ -64,7 +65,7 @@ pub fn assemble(source: &str) -> (Option<Vec<u8>>, Vec<Diagnostic>) {
         return (None, all_diagnostics);
     }
 
-    (bytes, all_diagnostics)
+    (assembled, all_diagnostics)
 }
 
 pub fn lex(source: &str) -> Vec<Diagnostic> {
