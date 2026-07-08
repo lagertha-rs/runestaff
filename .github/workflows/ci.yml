@@ -22,6 +22,12 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
