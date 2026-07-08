@@ -15,8 +15,8 @@ expression: "&snapshot_content"
 
 ----- JAVAP -----
 Classfile <TEMP_DIR>/MySyntheticClass.class
-  Last modified <DATE>; size 75 bytes
-  SHA-256 checksum 726b1c032d07e1741cd834316d9ab5f1a6dc65db58720baa254bfe3622861b62
+  Last modified <DATE>; size 68 bytes
+  SHA-256 checksum dfbadd444de06b451f714487d571207080f63a95b06c5e08db0186a2f5a30f8d
 public class MySyntheticClass
   minor version: 0
   major version: 69
@@ -29,6 +29,5 @@ Constant pool:
   #2 = Utf8               java/lang/Object
   #3 = Class              #4              // MySyntheticClass
   #4 = Utf8               MySyntheticClass
-  #5 = Utf8               Code
 {
 }

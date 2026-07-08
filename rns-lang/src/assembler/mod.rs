@@ -190,7 +190,7 @@ impl RnsModule {
     }
 
     // TODO: why tuple but not Result?
-    pub fn into_class_file(mut self) -> (Option<ClassFile>, Vec<Diagnostic>) {
+    fn into_class_file(mut self) -> (Option<ClassFile>, Vec<Diagnostic>) {
         let mut cp_builder = ConstantPoolBuilder::new();
         let super_cp_id = self.build_super_class(&mut cp_builder);
         let class_flags = self.build_class_flags();
@@ -212,10 +212,15 @@ impl RnsModule {
         });
 
         let rns_methods = std::mem::take(&mut self.methods);
-        let methods = rns_methods
-            .into_iter()
-            .map(|method_dir| self.build_method_directive(&mut cp_builder, method_dir))
-            .collect();
+        let mut methods = Vec::with_capacity(rns_methods.len());
+        let mut has_code_attr = false;
+
+        for rns_method in rns_methods {
+            if rns_method.code_dir.is_some() {
+                has_code_attr = true;
+            }
+            methods.push(self.build_method_directive(&mut cp_builder, rns_method));
+        }
 
         if self
             .diagnostics
@@ -225,8 +230,10 @@ impl RnsModule {
             return (None, self.diagnostics);
         }
 
-        // TODO: only when at least one code is actually present
-        cp_builder.add_utf8("Code");
+        if has_code_attr {
+            // TODO: Don't hardcode the attribute name, use/create a const from lvm-class
+            cp_builder.add_utf8("Code");
+        }
 
         let class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
             .access_flags(class_flags) // TODO: set access flags based on parsed flags
@@ -256,13 +263,14 @@ impl RnsModule {
                 }
                 ClassFlagsFinding::InterfaceIncompatibleFlags(incompatible) => {
                     let interface_span = self.class_dir.flags[&RnsClassFlag::Interface];
-                    let exclusive_flags = self
+                    let mut exclusive_flags: Vec<_> = self
                         .class_dir
                         .flags
                         .iter()
                         .filter(|(f, _)| Self::rns_flag_in_mask(**f, incompatible))
                         .map(|(f, s)| (*f, *s))
                         .collect();
+                    exclusive_flags.sort_by_key(|(f, _)| *f);
                     self.diagnostics.push(
                         JvmWarning::InterfaceMutuallyExclusive {
                             interface_span,

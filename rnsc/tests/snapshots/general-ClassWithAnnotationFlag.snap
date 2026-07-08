@@ -15,8 +15,8 @@ expression: "&snapshot_content"
 
 ----- JAVAP -----
 Classfile <TEMP_DIR>/MyAnnotation.class
-  Last modified <DATE>; size 71 bytes
-  SHA-256 checksum f086103c39ec8102e11f92bb6ee57171170d6c124aca7c4381903343a7b5d388
+  Last modified <DATE>; size 64 bytes
+  SHA-256 checksum 5041f612632558c4269554eef6507f52ef0adeba36eae7b9c8aacf431220d0d6
 class MyAnnotation
   minor version: 0
   major version: 69
@@ -29,6 +29,5 @@ Constant pool:
   #2 = Utf8               java/lang/Object
   #3 = Class              #4              // MyAnnotation
   #4 = Utf8               MyAnnotation
-  #5 = Utf8               Code
 {
 }

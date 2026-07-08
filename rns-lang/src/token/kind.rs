@@ -2,9 +2,9 @@ use crate::token::flag::RnsFlag;
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{
     DIRECTIVE_DOT_ANNOTATION, DIRECTIVE_DOT_CLASS, DIRECTIVE_DOT_CLASS_END, DIRECTIVE_DOT_CODE,
-    DIRECTIVE_DOT_CODE_END, DIRECTIVE_DOT_METHOD, DIRECTIVE_DOT_METHOD_END, DIRECTIVE_DOT_PACKAGE,
-    DIRECTIVE_DOT_SUPER, TOKEN_TYPE_EOF, TOKEN_TYPE_IDENTIFIER, TOKEN_TYPE_LABEL,
-    TOKEN_TYPE_NEWLINE,
+    DIRECTIVE_DOT_CODE_END, DIRECTIVE_DOT_INNER, DIRECTIVE_DOT_INNER_END, DIRECTIVE_DOT_METHOD,
+    DIRECTIVE_DOT_METHOD_END, DIRECTIVE_DOT_PACKAGE, DIRECTIVE_DOT_SUPER, TOKEN_TYPE_EOF,
+    TOKEN_TYPE_IDENTIFIER, TOKEN_TYPE_LABEL, TOKEN_TYPE_NEWLINE,
 };
 use std::fmt::{Display, Formatter};
 
@@ -12,6 +12,8 @@ use std::fmt::{Display, Formatter};
 pub enum RnsTokenKind {
     DotClass,
     DotClassEnd,
+    DotInner,
+    DotInnerEnd,
     DotSuper,
     DotMethod,
     DotMethodEnd,
@@ -32,6 +34,8 @@ impl RnsTokenKind {
         match self {
             RnsTokenKind::DotClass => DIRECTIVE_DOT_CLASS,
             RnsTokenKind::DotClassEnd => DIRECTIVE_DOT_CLASS_END,
+            RnsTokenKind::DotInner => DIRECTIVE_DOT_INNER,
+            RnsTokenKind::DotInnerEnd => DIRECTIVE_DOT_INNER_END,
             RnsTokenKind::DotSuper => DIRECTIVE_DOT_SUPER,
             RnsTokenKind::DotPackage => DIRECTIVE_DOT_PACKAGE,
             RnsTokenKind::DotMethod => DIRECTIVE_DOT_METHOD,

@@ -39,8 +39,8 @@ expression: "&snapshot_content"
 ───╯
 ----- JAVAP -----
 Classfile <TEMP_DIR>/my.package/MyClass.class
-  Last modified <DATE>; size 77 bytes
-  SHA-256 checksum 6626d39841e64f42131f03802eb5c5ef46deee1d66cf224e66e673a269f815e7
+  Last modified <DATE>; size 70 bytes
+  SHA-256 checksum 1b5372220a99b15d3259071914d4d4e173dd55e3ccb31273dba6748d6ccc6393
 public class my.package.MyClass
   minor version: 0
   major version: 69
@@ -53,6 +53,5 @@ Constant pool:
   #2 = Utf8               java/lang/Object
   #3 = Class              #4              // "my.package/MyClass"
   #4 = Utf8               my.package/MyClass
-  #5 = Utf8               Code
 {
 }

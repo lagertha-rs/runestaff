@@ -34,8 +34,8 @@ expression: "&snapshot_content"
 ───╯
 ----- JAVAP -----
 Classfile <TEMP_DIR>/EmptyClass.class
-  Last modified <DATE>; size 69 bytes
-  SHA-256 checksum 107688e673ac0be096e57665ff6e3b6477c7b66f54b8122e46e86c86984f5446
+  Last modified <DATE>; size 62 bytes
+  SHA-256 checksum 342bd34189f6220742f8e6f6e796cc35bdefed280997df3d3ae78d85babf41b9
 interface EmptyClass
   minor version: 0
   major version: 69
@@ -48,6 +48,5 @@ Constant pool:
   #2 = Utf8               java/lang/Object
   #3 = Class              #4              // EmptyClass
   #4 = Utf8               EmptyClass
-  #5 = Utf8               Code
 {
 }

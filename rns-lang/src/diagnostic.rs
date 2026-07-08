@@ -39,6 +39,10 @@ pub const ERR_CODE_UNDEFINED_LABEL: &str = "E-027";
 pub const ERR_CODE_NUMERIC_OPERAND_OVERFLOW: &str = "E-028";
 pub const ERR_CODE_PACKAGE_TRAILING_TOK: &str = "E-029";
 pub const ERR_CODE_MULTIPLE_PACKAGE: &str = "E-030";
+pub const ERR_CODE_INVALID_INNER_FLAG: &str = "E-031";
+pub const ERR_CODE_INNER_TRAILING_TOK: &str = "E-032";
+pub const ERR_CODE_INNER_END_TRAILING_TOK: &str = "E-033";
+pub const ERR_CODE_UNEXPECTED_TOKEN_IN_INNER: &str = "E-034";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {
