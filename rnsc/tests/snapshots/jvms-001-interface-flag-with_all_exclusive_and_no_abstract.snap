@@ -8,15 +8,23 @@ expression: "&snapshot_content"
 
 .class_end
 ----- INPUT -----
+; Tests JVM spec requirement: interface cannot have multiple mutually exclusive flags
+; Expected warnings: JVMS-001 (interface without abstract, interface with final/super/enum/module)
+; This proves:
+;   1. Parser detects interface without abstract flag
+;   2. Parser detects all mutually exclusive flags (final, super, enum, module)
+;   3. Multiple warnings are generated for a single class
+;   4. Bytecode is still generated (warnings, not errors)
+
 .class interface final super enum module EmptyClass
 .super java/lang/Object
 
 .class_end
 ----- STDERR -----
 [JVMS-001] Warning: interface must also be declared as 'abstract'
-   ╭─[ test_data/rns_integration/jvms/001-interface-flag/with_all_exclusive_and_no_abstract.rns:1:8 ]
+   ╭─[ test_data/rns_integration/jvms/001-interface-flag/with_all_exclusive_and_no_abstract.rns:9:8 ]
    │
- 1 │ .class interface final super enum module EmptyClass
+ 9 │ .class interface final super enum module EmptyClass
    │        ────┬────  
    │            ╰────── 'ACC_INTERFACE' requires 'ACC_ABSTRACT'
    │ 
@@ -26,9 +34,9 @@ expression: "&snapshot_content"
    │       https://rune.lagertha-vm.com/errors/JVMS-001
 ───╯
 [JVMS-001] Warning: interface cannot be declared with mutually exclusive flags
-   ╭─[ test_data/rns_integration/jvms/001-interface-flag/with_all_exclusive_and_no_abstract.rns:1:8 ]
+   ╭─[ test_data/rns_integration/jvms/001-interface-flag/with_all_exclusive_and_no_abstract.rns:9:8 ]
    │
- 1 │ .class interface final super enum module EmptyClass
+ 9 │ .class interface final super enum module EmptyClass
    │        ────┬──── ──┬── ──┬── ──┬─ ───┬──  
    │            ╰────────────────────────────── 'ACC_INTERFACE' is declared here
    │                    │     │     │     │    
@@ -45,5 +53,22 @@ expression: "&snapshot_content"
    │ Note: If this violation isn't intentional, see details at:
    │       https://rune.lagertha-vm.com/errors/JVMS-001
 ───╯
------ HASH -----
-d80e704759647b042b655f49bf5d15fbe9ac3cc8294c57197bdbeeb7bbab78c0
+----- JAVAP -----
+Classfile <TEMP_DIR>/EmptyClass.class
+  Last modified <DATE>; size 69 bytes
+  SHA-256 checksum d80e704759647b042b655f49bf5d15fbe9ac3cc8294c57197bdbeeb7bbab78c0
+final class EmptyClass
+  minor version: 0
+  major version: 69
+  flags: (0xc230) ACC_FINAL, ACC_SUPER, ACC_INTERFACE, ACC_ENUM, ACC_MODULE
+  this_class: #3                          // EmptyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // EmptyClass
+  #4 = Utf8               EmptyClass
+  #5 = Utf8               Code
+{
+}

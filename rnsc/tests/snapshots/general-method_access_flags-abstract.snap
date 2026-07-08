@@ -18,5 +18,27 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-f6fc59bd1386b0e323b03b99a1ec96e30f6f2d556e69fff6145c203ba73374d4
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodAbstract.class
+  Last modified <DATE>; size 96 bytes
+  SHA-256 checksum f6fc59bd1386b0e323b03b99a1ec96e30f6f2d556e69fff6145c203ba73374d4
+class MethodAbstract
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodAbstract
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodAbstract
+  #4 = Utf8               MethodAbstract
+  #5 = Utf8               helper
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  abstract void helper();
+    descriptor: ()V
+    flags: (0x0400) ACC_ABSTRACT
+}

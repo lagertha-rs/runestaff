@@ -1,6 +1,7 @@
 .class
 .super
 .method
+.package
 .annotation
 .class_end
 .method_end

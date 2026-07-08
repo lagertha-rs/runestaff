@@ -13,8 +13,8 @@ expression: "&snapshot_content"
 ; Expected: Warning W-002 about using '.' as separator
 ; This proves:
 ;   1. Parser detects '.' in package name
-;   2. Warning suggests using '/' instead for bytecode consistency
-;   3. Package is still accepted as-is (not auto-converted)
+;   2. Warning suggests using '/' instead (recommended for bytecode)
+;   3. Package name is kept as-is in bytecode (dots are NOT converted)
 
 .class public MyClass
 .package com.example.test
@@ -33,5 +33,22 @@ expression: "&snapshot_content"
     │ 
     │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
 ────╯
------ HASH -----
-e312e0555f7f38be3b0bc93da50292dfe9622ab270b8fe81d847b55631773cd3
+----- JAVAP -----
+Classfile <TEMP_DIR>/com.example.test/MyClass.class
+  Last modified <DATE>; size 83 bytes
+  SHA-256 checksum e312e0555f7f38be3b0bc93da50292dfe9622ab270b8fe81d847b55631773cd3
+public class com.example.test.MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // com.example.test/MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // "com.example.test/MyClass"
+  #4 = Utf8               com.example.test/MyClass
+  #5 = Utf8               Code
+{
+}

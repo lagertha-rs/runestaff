@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-572b7c7a0ead68338a5d05a1b4e54678498df72d4ace9bb871d3d8434f3a4e87
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodVarargs.class
+  Last modified <DATE>; size 131 bytes
+  SHA-256 checksum 572b7c7a0ead68338a5d05a1b4e54678498df72d4ace9bb871d3d8434f3a4e87
+class MethodVarargs
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodVarargs
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodVarargs
+  #4 = Utf8               MethodVarargs
+  #5 = Utf8               main
+  #6 = Utf8               ([Ljava/lang/String;)V
+  #7 = Utf8               Code
+{
+  void main(java.lang.String...);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0080) ACC_VARARGS
+    Code:
+      stack=1, locals=1, args_size=2
+         0: return
+}

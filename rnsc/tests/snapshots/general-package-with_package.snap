@@ -23,5 +23,22 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-c34bcdd56bc4a8002b9f583afb95471975308878fa885a6826ef281904fa854a
+----- JAVAP -----
+Classfile <TEMP_DIR>/com/example/test/MyClass.class
+  Last modified <DATE>; size 83 bytes
+  SHA-256 checksum c34bcdd56bc4a8002b9f583afb95471975308878fa885a6826ef281904fa854a
+public class com.example.test.MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // com/example/test/MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // com/example/test/MyClass
+  #4 = Utf8               com/example/test/MyClass
+  #5 = Utf8               Code
+{
+}

@@ -22,5 +22,30 @@ expression: "&snapshot_content"
   .code_end
 ----- STDERR -----
 
------ HASH -----
-11b5ae9e1beaa1dbfc5bca8a510152df5736a6069efe84ffc6aad73ab2d7f742
+----- JAVAP -----
+Classfile <TEMP_DIR>/MissingMethodEnd.class
+  Last modified <DATE>; size 115 bytes
+  SHA-256 checksum 11b5ae9e1beaa1dbfc5bca8a510152df5736a6069efe84ffc6aad73ab2d7f742
+class MissingMethodEnd
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MissingMethodEnd
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MissingMethodEnd
+  #4 = Utf8               MissingMethodEnd
+  #5 = Utf8               main
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  void main();
+    descriptor: ()V
+    flags: (0x0000)
+    Code:
+      stack=1, locals=0, args_size=1
+         0: return
+}

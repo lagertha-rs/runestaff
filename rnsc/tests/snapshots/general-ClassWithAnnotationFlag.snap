@@ -13,5 +13,22 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-f086103c39ec8102e11f92bb6ee57171170d6c124aca7c4381903343a7b5d388
+----- JAVAP -----
+Classfile <TEMP_DIR>/MyAnnotation.class
+  Last modified <DATE>; size 71 bytes
+  SHA-256 checksum f086103c39ec8102e11f92bb6ee57171170d6c124aca7c4381903343a7b5d388
+class MyAnnotation
+  minor version: 0
+  major version: 69
+  flags: (0x2000) ACC_ANNOTATION
+  this_class: #3                          // MyAnnotation
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyAnnotation
+  #4 = Utf8               MyAnnotation
+  #5 = Utf8               Code
+{
+}

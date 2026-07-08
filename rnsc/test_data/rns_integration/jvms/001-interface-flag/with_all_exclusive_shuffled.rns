@@ -1,3 +1,12 @@
+; Tests that flag order doesn't affect validation
+; Expected warning: JVMS-001 (interface with final/super/enum/module)
+; This proves:
+;   1. Parser correctly handles flags in any order
+;   2. Parser detects interface has abstract flag (no missing abstract warning)
+;   3. Parser detects all mutually exclusive flags regardless of order
+;   4. Extra whitespace between flags is handled correctly
+;   5. Bytecode is still generated (warning, not error)
+
 .class  final abstract   super  interface   enum    module EmptyClass
 .super java/lang/Object
 

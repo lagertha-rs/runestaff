@@ -8,15 +8,23 @@ expression: "&snapshot_content"
 
 .class_end
 ----- INPUT -----
+; Tests JVM spec requirement: interface with abstract but still has mutually exclusive flags
+; Expected warning: JVMS-001 (interface with final/super/enum/module)
+; This proves:
+;   1. Parser correctly identifies interface has abstract flag (no missing abstract warning)
+;   2. Parser still detects all mutually exclusive flags (final, super, enum, module)
+;   3. Only the mutually exclusive flags warning is generated
+;   4. Bytecode is still generated (warning, not error)
+
 .class abstract interface final super enum module EmptyClass
 .super java/lang/Object
 
 .class_end
 ----- STDERR -----
 [JVMS-001] Warning: interface cannot be declared with mutually exclusive flags
-   ╭─[ test_data/rns_integration/jvms/001-interface-flag/with_all_exclusive_and_with_abstract.rns:1:17 ]
+   ╭─[ test_data/rns_integration/jvms/001-interface-flag/with_all_exclusive_and_with_abstract.rns:9:17 ]
    │
- 1 │ .class abstract interface final super enum module EmptyClass
+ 9 │ .class abstract interface final super enum module EmptyClass
    │                 ────┬──── ──┬── ──┬── ──┬─ ───┬──  
    │                     ╰────────────────────────────── 'ACC_INTERFACE' is declared here
    │                             │     │     │     │    
@@ -33,5 +41,22 @@ expression: "&snapshot_content"
    │ Note: If this violation isn't intentional, see details at:
    │       https://rune.lagertha-vm.com/errors/JVMS-001
 ───╯
------ HASH -----
-3a9c58b308f2789e0f209505ce1b07d019d9f07b480342dc3bf54b531d500453
+----- JAVAP -----
+Classfile <TEMP_DIR>/EmptyClass.class
+  Last modified <DATE>; size 69 bytes
+  SHA-256 checksum 3a9c58b308f2789e0f209505ce1b07d019d9f07b480342dc3bf54b531d500453
+final class EmptyClass
+  minor version: 0
+  major version: 69
+  flags: (0xc630) ACC_FINAL, ACC_SUPER, ACC_INTERFACE, ACC_ABSTRACT, ACC_ENUM, ACC_MODULE
+  this_class: #3                          // EmptyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // EmptyClass
+  #4 = Utf8               EmptyClass
+  #5 = Utf8               Code
+{
+}

@@ -14,5 +14,22 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-9ff5bc486d7ff6eb3ea2e96b73c9e840d97e2b2caaa22b9e4e830d059ebfd9cd
+----- JAVAP -----
+Classfile <TEMP_DIR>/EmptyClass.class
+  Last modified <DATE>; size 69 bytes
+  SHA-256 checksum 9ff5bc486d7ff6eb3ea2e96b73c9e840d97e2b2caaa22b9e4e830d059ebfd9cd
+public class EmptyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // EmptyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // EmptyClass
+  #4 = Utf8               EmptyClass
+  #5 = Utf8               Code
+{
+}

@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-71206dae2ebc121a53c3f0e28c37f9154b3e70a8d48cbefafcdd85ef38dff7d0
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodSynchronized.class
+  Last modified <DATE>; size 117 bytes
+  SHA-256 checksum 71206dae2ebc121a53c3f0e28c37f9154b3e70a8d48cbefafcdd85ef38dff7d0
+class MethodSynchronized
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodSynchronized
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodSynchronized
+  #4 = Utf8               MethodSynchronized
+  #5 = Utf8               main
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  synchronized void main();
+    descriptor: ()V
+    flags: (0x0020) ACC_SYNCHRONIZED
+    Code:
+      stack=1, locals=0, args_size=1
+         0: return
+}

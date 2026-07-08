@@ -1,0 +1,53 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after missing operand error and reports subsequent errors
+; Expected errors: E-005 (missing operand), E-007 (unknown token)
+
+.class public MyClass
+.package
+
+     unknown_token ; <- still reported after recovery
+----- STDERR -----
+[E-009] Error: unexpected newline where a package name is required
+   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:5:1 ]
+   │
+ 5 │ .package
+   │ ────┬───│ 
+   │     ╰───── the '.package' directive requires a package name as operand
+   │         │ 
+   │         ╰─ but nothing was provided
+   │ 
+   │ Help: Provide a package name after the '.package' directive, e.g.:
+   │       .package com.example
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-009
+───╯
+[E-007] Error: unexpected identifier class body
+   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:7:6 ]
+   │
+ 7 │      unknown_token ; <- still reported after recovery
+   │      ──────┬──────  
+   │            ╰──────── unexpected token
+   │ 
+   │ Help: Check the syntax of the class body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-007
+───╯
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:4:1 ]
+   │
+ 4 │ .class public MyClass
+   │ ───┬──  
+   │    ╰──── class 'MyClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- JAVAP -----
+not generated

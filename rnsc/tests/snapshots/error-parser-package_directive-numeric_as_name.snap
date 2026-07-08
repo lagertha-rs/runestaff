@@ -26,5 +26,22 @@ expression: "&snapshot_content"
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
------ HASH -----
-c9ca07a137c169f4c38ed01ce8c95d61854002235f780ad897b5f115a0262033
+----- JAVAP -----
+Classfile <TEMP_DIR>/123/MyClass.class
+  Last modified <DATE>; size 70 bytes
+  SHA-256 checksum c9ca07a137c169f4c38ed01ce8c95d61854002235f780ad897b5f115a0262033
+public class 123.MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // 123/MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // "123/MyClass"
+  #4 = Utf8               123/MyClass
+  #5 = Utf8               Code
+{
+}

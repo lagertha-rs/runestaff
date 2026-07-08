@@ -36,5 +36,5 @@ unknown_token ; <- still reported
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-007
 ───╯
------ HASH -----
+----- JAVAP -----
 not generated

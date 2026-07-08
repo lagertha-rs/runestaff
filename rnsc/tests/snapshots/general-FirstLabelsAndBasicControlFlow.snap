@@ -81,5 +81,86 @@ end:
 .method_end
 ----- STDERR -----
 
------ HASH -----
-6fe6feee3af0ed1f93cf156380838dcfc945d243e445a00d86f619fe59da6ba7
+----- JAVAP -----
+Classfile <TEMP_DIR>/FirstLabelsAndBasicControlFlow.class
+  Last modified <DATE>; size 471 bytes
+  SHA-256 checksum 6fe6feee3af0ed1f93cf156380838dcfc945d243e445a00d86f619fe59da6ba7
+public class FirstLabelsAndBasicControlFlow
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // FirstLabelsAndBasicControlFlow
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 3, attributes: 0
+Constant pool:
+   #1 = Class              #2             // java/lang/Object
+   #2 = Utf8               java/lang/Object
+   #3 = Class              #4             // FirstLabelsAndBasicControlFlow
+   #4 = Utf8               FirstLabelsAndBasicControlFlow
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Methodref          #1.#8          // java/lang/Object."<init>":()V
+   #8 = NameAndType        #5:#6          // "<init>":()V
+   #9 = Utf8               basicIfElse
+  #10 = Utf8               (I)V
+  #11 = Fieldref           #12.#13        // java/lang/System.out:Ljava/io/PrintStream;
+  #12 = Class              #14            // java/lang/System
+  #13 = NameAndType        #15:#16        // out:Ljava/io/PrintStream;
+  #14 = Utf8               java/lang/System
+  #15 = Utf8               out
+  #16 = Utf8               Ljava/io/PrintStream;
+  #17 = String             #18            // Branch 1
+  #18 = Utf8               Branch 1
+  #19 = Methodref          #20.#21        // java/io/PrintStream.println:(Ljava/lang/String;)V
+  #20 = Class              #22            // java/io/PrintStream
+  #21 = NameAndType        #23:#24        // println:(Ljava/lang/String;)V
+  #22 = Utf8               java/io/PrintStream
+  #23 = Utf8               println
+  #24 = Utf8               (Ljava/lang/String;)V
+  #25 = String             #26            // Branch 2
+  #26 = Utf8               Branch 2
+  #27 = Utf8               main
+  #28 = Utf8               ([Ljava/lang/String;)V
+  #29 = Methodref          #30.#31        // HelloWorld.basicIfElse:(I)V
+  #30 = Class              #32            // HelloWorld
+  #31 = NameAndType        #9:#10         // basicIfElse:(I)V
+  #32 = Utf8               HelloWorld
+  #33 = Utf8               Code
+{
+  public FirstLabelsAndBasicControlFlow();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=10, locals=10, args_size=1
+         0: aload_0
+         1: invokespecial #7                  // Method java/lang/Object."<init>":()V
+         4: return
+
+  static void basicIfElse(int);
+    descriptor: (I)V
+    flags: (0x0008) ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: iload_0
+         1: bipush        42
+         3: if_icmpeq     17
+         6: getstatic     #11                 // Field java/lang/System.out:Ljava/io/PrintStream;
+         9: ldc           #17                 // String Branch 1
+        11: invokevirtual #19                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        14: goto          25
+        17: getstatic     #11                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        20: ldc           #25                 // String Branch 2
+        22: invokevirtual #19                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        25: return
+
+  static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0008) ACC_STATIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: bipush        42
+         2: invokestatic  #29                 // Method HelloWorld.basicIfElse:(I)V
+         5: iconst_0
+         6: invokestatic  #29                 // Method HelloWorld.basicIfElse:(I)V
+         9: return
+}

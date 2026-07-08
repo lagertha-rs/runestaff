@@ -56,5 +56,5 @@ not generated
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
------ HASH -----
+----- JAVAP -----
 not generated

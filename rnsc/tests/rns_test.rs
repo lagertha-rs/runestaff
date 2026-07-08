@@ -1,11 +1,12 @@
 use assert_cmd::cargo_bin_cmd;
 use insta::with_settings;
+use regex::Regex;
 use rstest::rstest;
-use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Output;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const SNAPSHOT_PATH: &str = "snapshots";
 
@@ -37,11 +38,20 @@ fn get_file_contents(path: &Path) -> String {
     fs::read_to_string(path).expect("Unable to read file")
 }
 
-fn get_hash(path: &Path) -> String {
-    let bytes = fs::read(path).expect("Unable to read class file");
-    let mut hasher = Sha256::new();
-    hasher.update(&bytes);
-    format!("{:x}", hasher.finalize())
+// TODO: ensure specific jdk
+fn get_javap_output(path: &Path) -> String {
+    let output = std::process::Command::new("javap")
+        .arg("-v")
+        .arg("-p")
+        .arg(path)
+        .output()
+        .expect("Failed to execute javap");
+
+    if output.status.success() {
+        String::from_utf8(output.stdout).expect("Failed to read javap output")
+    } else {
+        "javap failed".to_string()
+    }
 }
 
 fn to_snapshot_name(path: &Path) -> String {
@@ -104,10 +114,24 @@ fn find_class_file_in_dir(dir: &Path) -> Option<PathBuf> {
     None
 }
 
+fn normalize_javap_output(javap_output: &str, temp_dir: &Path) -> String {
+    let temp_dir_str = temp_dir.to_string_lossy();
+    let mut normalized = javap_output.replace(&*temp_dir_str, "<TEMP_DIR>");
+
+    // Normalize the "Last modified" line to remove date/time variability
+    let re = Regex::new(r"Last modified .+?;").unwrap();
+    normalized = re
+        .replace_all(&normalized, "Last modified <DATE>;")
+        .to_string();
+
+    normalized
+}
+
 fn process_assembly_result(output: &Output, output_dir: &Path) -> (String, String) {
     if output.status.success() {
         if let Some(class_file) = find_class_file_in_dir(output_dir) {
-            let hash = get_hash(&class_file);
+            let javap_output = get_javap_output(&class_file);
+            let normalized_javap = normalize_javap_output(&javap_output, output_dir);
 
             let disassembled = {
                 let mut cmd = cargo_bin_cmd!("rnsc");
@@ -115,7 +139,7 @@ fn process_assembly_result(output: &Output, output_dir: &Path) -> (String, Strin
                 let dis_output = cmd.output().expect("Failed to execute disassemble");
                 String::from_utf8(dis_output.stdout).expect("Failed to read disassemble output")
             };
-            (disassembled, hash)
+            (disassembled, normalized_javap)
         } else {
             ("not generated".to_string(), "not generated".to_string())
         }
@@ -155,15 +179,15 @@ fn create_snapshot_content(
     disassembled: &str,
     input_path: &Path,
     stderr: &str,
-    hash: &str,
+    javap_output: &str,
 ) -> String {
     let original_contents = get_file_contents(input_path);
     format!(
-        "----- DISASSEMBLED -----\n{}\n----- INPUT -----\n{}\n----- STDERR -----\n{}\n----- HASH -----\n{}",
+        "----- DISASSEMBLED -----\n{}\n----- INPUT -----\n{}\n----- STDERR -----\n{}\n----- JAVAP -----\n{}",
         disassembled.trim_end(),
         original_contents.trim_end(),
         stderr.trim_end(),
-        hash
+        javap_output.trim_end()
     )
 }
 
@@ -179,8 +203,11 @@ fn test_integration(
         .to_string_lossy()
         .to_string();
 
-    let output_dir =
-        std::env::temp_dir().join(format!("rnsc_test_{}_{}", stem, rand::random::<u16>()));
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let output_dir = env::temp_dir().join(format!("rnsc_test_{}_{}", stem, timestamp));
 
     fs::create_dir_all(&output_dir).ok();
 

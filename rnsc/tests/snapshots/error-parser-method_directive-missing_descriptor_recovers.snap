@@ -1,0 +1,48 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after missing method descriptor error and reports subsequent errors
+; Expected errors: E-017 (missing descriptor), E-007 (unknown token)
+
+.class public MyClass
+.super java/lang/Object
+
+.method public static main
+
+     unknown_token ; <- still reported after recovery
+
+.class_end
+----- STDERR -----
+[E-020] Error: missing method descriptor after '.method'
+   ╭─[ test_data/rns_integration/error/parser/method_directive/missing_descriptor_recovers.rns:7:23 ]
+   │
+ 7 │ .method public static main
+   │                       ──┬─│ 
+   │                         ╰─── the '.method' directive requires a method descriptor as operand
+   │                           │ 
+   │                           ╰─ but method descriptor is missing
+   │ 
+   │ Help: Provide a method descriptor after the method name, e.g.:
+   │       .method main ()V
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+[E-017] Error: unexpected identifier method body
+   ╭─[ test_data/rns_integration/error/parser/method_directive/missing_descriptor_recovers.rns:9:6 ]
+   │
+ 9 │      unknown_token ; <- still reported after recovery
+   │      ──────┬──────  
+   │            ╰──────── unexpected token
+   │ 
+   │ Help: Check the syntax of the method body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-017
+───╯
+----- JAVAP -----
+not generated

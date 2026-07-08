@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-82324169d1a2e099b8dc44a732daedee5dc2bec24af9c04228696f705f0d1f53
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodPrivateStaticFinal.class
+  Last modified <DATE>; size 125 bytes
+  SHA-256 checksum 82324169d1a2e099b8dc44a732daedee5dc2bec24af9c04228696f705f0d1f53
+class MethodPrivateStaticFinal
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodPrivateStaticFinal
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodPrivateStaticFinal
+  #4 = Utf8               MethodPrivateStaticFinal
+  #5 = Utf8               helper
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  private static final void helper();
+    descriptor: ()V
+    flags: (0x001a) ACC_PRIVATE, ACC_STATIC, ACC_FINAL
+    Code:
+      stack=1, locals=0, args_size=0
+         0: return
+}

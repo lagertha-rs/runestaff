@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-103d2ed762c1f6dcbea9f6c5a85670512fd48faf2bde07fc2ad564ca2dcb1eff
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodBridge.class
+  Last modified <DATE>; size 113 bytes
+  SHA-256 checksum 103d2ed762c1f6dcbea9f6c5a85670512fd48faf2bde07fc2ad564ca2dcb1eff
+class MethodBridge
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodBridge
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodBridge
+  #4 = Utf8               MethodBridge
+  #5 = Utf8               helper
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  void helper();
+    descriptor: ()V
+    flags: (0x0040) ACC_BRIDGE
+    Code:
+      stack=1, locals=0, args_size=1
+         0: return
+}

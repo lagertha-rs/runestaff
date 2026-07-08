@@ -15,6 +15,7 @@ use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const SNAPSHOT_PATH: &str = "snapshots";
 const MARKER: &str = "test_data/cli_integration";
@@ -183,16 +184,12 @@ fn test_cli_integration(
         .to_string_lossy()
         .to_string();
 
-    let default_dir = env::temp_dir().join(format!(
-        "rnsc_cli_test_{}_default_{}",
-        stem,
-        rand::random::<u16>()
-    ));
-    let quiet_dir = env::temp_dir().join(format!(
-        "rnsc_cli_test_{}_quiet_{}",
-        stem,
-        rand::random::<u16>()
-    ));
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let default_dir = env::temp_dir().join(format!("rnsc_cli_test_{}_default_{}", stem, timestamp));
+    let quiet_dir = env::temp_dir().join(format!("rnsc_cli_test_{}_quiet_{}", stem, timestamp));
 
     fs::create_dir_all(&default_dir).ok();
     fs::create_dir_all(&quiet_dir).ok();

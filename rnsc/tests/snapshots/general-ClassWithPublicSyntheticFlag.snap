@@ -13,5 +13,22 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-726b1c032d07e1741cd834316d9ab5f1a6dc65db58720baa254bfe3622861b62
+----- JAVAP -----
+Classfile <TEMP_DIR>/MySyntheticClass.class
+  Last modified <DATE>; size 75 bytes
+  SHA-256 checksum 726b1c032d07e1741cd834316d9ab5f1a6dc65db58720baa254bfe3622861b62
+public class MySyntheticClass
+  minor version: 0
+  major version: 69
+  flags: (0x1001) ACC_PUBLIC, ACC_SYNTHETIC
+  this_class: #3                          // MySyntheticClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MySyntheticClass
+  #4 = Utf8               MySyntheticClass
+  #5 = Utf8               Code
+{
+}

@@ -43,5 +43,5 @@ should print 3 diagnostics, first is "should" .class MyClass ExtraToken ; <- Ext
    │ 
    │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
------ HASH -----
+----- JAVAP -----
 not generated

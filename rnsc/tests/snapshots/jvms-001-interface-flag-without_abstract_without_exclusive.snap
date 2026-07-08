@@ -8,15 +8,22 @@ expression: "&snapshot_content"
 
 .class_end
 ----- INPUT -----
+; Tests JVM spec requirement: interface must be declared abstract
+; Expected warning: JVMS-001 (interface without abstract)
+; This proves:
+;   1. Parser detects interface flag without abstract flag
+;   2. Warning message is clear and references JVM spec
+;   3. Bytecode is still generated (warning, not error)
+
 .class interface EmptyClass
 .super java/lang/Object
 
 .class_end
 ----- STDERR -----
 [JVMS-001] Warning: interface must also be declared as 'abstract'
-   ╭─[ test_data/rns_integration/jvms/001-interface-flag/without_abstract_without_exclusive.rns:1:8 ]
+   ╭─[ test_data/rns_integration/jvms/001-interface-flag/without_abstract_without_exclusive.rns:8:8 ]
    │
- 1 │ .class interface EmptyClass
+ 8 │ .class interface EmptyClass
    │        ────┬────  
    │            ╰────── 'ACC_INTERFACE' requires 'ACC_ABSTRACT'
    │ 
@@ -25,5 +32,22 @@ expression: "&snapshot_content"
    │ Note: If this violation isn't intentional, see details at:
    │       https://rune.lagertha-vm.com/errors/JVMS-001
 ───╯
------ HASH -----
-107688e673ac0be096e57665ff6e3b6477c7b66f54b8122e46e86c86984f5446
+----- JAVAP -----
+Classfile <TEMP_DIR>/EmptyClass.class
+  Last modified <DATE>; size 69 bytes
+  SHA-256 checksum 107688e673ac0be096e57665ff6e3b6477c7b66f54b8122e46e86c86984f5446
+interface EmptyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0200) ACC_INTERFACE
+  this_class: #3                          // EmptyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // EmptyClass
+  #4 = Utf8               EmptyClass
+  #5 = Utf8               Code
+{
+}
