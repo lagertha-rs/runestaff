@@ -11,7 +11,7 @@ use crate::token::{
     FLAG_SUPER, FLAG_SYNCHRONIZED, FLAG_SYNTHETIC, FLAG_VARARGS,
 };
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, PartialOrd, Ord)]
 pub enum RnsClassFlag {
     Public,
     Final,
@@ -54,7 +54,21 @@ impl RnsClassFlag {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, PartialOrd, Ord)]
+pub enum RnsInnerFlag {
+    Public,
+    Private,
+    Protected,
+    Static,
+    Final,
+    Interface,
+    Abstract,
+    Synthetic,
+    Annotation,
+    Enum,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, PartialOrd, Ord)]
 pub enum RnsMethodFlag {
     Public,
     Private,

@@ -20,8 +20,8 @@ expression: "&snapshot_content"
 
 ----- JAVAP -----
 Classfile <TEMP_DIR>/MethodAbstract.class
-  Last modified <DATE>; size 96 bytes
-  SHA-256 checksum f6fc59bd1386b0e323b03b99a1ec96e30f6f2d556e69fff6145c203ba73374d4
+  Last modified <DATE>; size 89 bytes
+  SHA-256 checksum d9b2e7dfc011a5c24cbbbc4c19d79ca6eb69c5661ad2b7c27de46df0e5fce2de
 class MethodAbstract
   minor version: 0
   major version: 69
@@ -36,7 +36,6 @@ Constant pool:
   #4 = Utf8               MethodAbstract
   #5 = Utf8               helper
   #6 = Utf8               ()V
-  #7 = Utf8               Code
 {
   abstract void helper();
     descriptor: ()V

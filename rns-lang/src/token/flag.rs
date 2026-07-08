@@ -1,4 +1,4 @@
-use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
+use crate::ast::flag::{RnsClassFlag, RnsInnerFlag, RnsMethodFlag};
 use crate::token::{
     FLAG_ABSTRACT, FLAG_ANNOTATION, FLAG_BRIDGE, FLAG_ENUM, FLAG_FINAL, FLAG_INTERFACE,
     FLAG_MODULE, FLAG_NATIVE, FLAG_PRIVATE, FLAG_PROTECTED, FLAG_PUBLIC, FLAG_STATIC, FLAG_STRICT,
@@ -24,7 +24,7 @@ pub const JVMS_VARARGS_FLAG_NAME: &str = "ACC_VARARGS";
 pub const JVMS_NATIVE_FLAG_NAME: &str = "ACC_NATIVE";
 pub const JVMS_STRICT_FLAG_NAME: &str = "ACC_STRICT";
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, PartialOrd, Ord)]
 pub enum RnsFlag {
     Public,
     Private,
@@ -123,6 +123,22 @@ impl RnsFlag {
             RnsFlag::Abstract => Some(RnsMethodFlag::Abstract),
             RnsFlag::Strict => Some(RnsMethodFlag::Strict),
             RnsFlag::Synthetic => Some(RnsMethodFlag::Synthetic),
+            _ => None,
+        }
+    }
+
+    pub fn as_inner_flag(&self) -> Option<RnsInnerFlag> {
+        match self {
+            RnsFlag::Public => Some(RnsInnerFlag::Public),
+            RnsFlag::Private => Some(RnsInnerFlag::Private),
+            RnsFlag::Protected => Some(RnsInnerFlag::Protected),
+            RnsFlag::Static => Some(RnsInnerFlag::Static),
+            RnsFlag::Final => Some(RnsInnerFlag::Final),
+            RnsFlag::Interface => Some(RnsInnerFlag::Interface),
+            RnsFlag::Abstract => Some(RnsInnerFlag::Abstract),
+            RnsFlag::Synthetic => Some(RnsInnerFlag::Synthetic),
+            RnsFlag::Annotation => Some(RnsInnerFlag::Annotation),
+            RnsFlag::Enum => Some(RnsInnerFlag::Enum),
             _ => None,
         }
     }

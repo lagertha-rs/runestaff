@@ -10,15 +10,19 @@ pub(crate) mod span;
 pub mod type_hint;
 
 pub const DIRECTIVE_DOT_CLASS: &str = ".class";
+pub const DIRECTIVE_DOT_INNER: &str = ".inner";
 pub const DIRECTIVE_DOT_SUPER: &str = ".super";
 pub const DIRECTIVE_DOT_METHOD: &str = ".method";
 pub const DIRECTIVE_DOT_PACKAGE: &str = ".package";
 pub const DIRECTIVE_DOT_CLASS_END: &str = ".class_end";
+pub const DIRECTIVE_DOT_INNER_END: &str = ".inner_end";
 pub const DIRECTIVE_DOT_METHOD_END: &str = ".method_end";
 pub const DIRECTIVE_DOT_CODE_END: &str = ".code_end";
 pub const DIRECTIVE_DOT_CODE: &str = ".code";
 pub const DIRECTIVE_DOT_ANNOTATION: &str = ".annotation";
 
+pub const DIRECTIVE_INNER: &str = "inner";
+pub const DIRECTIVE_INNER_END: &str = "inner_end";
 pub const DIRECTIVE_CLASS: &str = "class";
 pub const DIRECTIVE_SUPER: &str = "super";
 pub const DIRECTIVE_PACKAGE: &str = "package";
@@ -59,6 +63,7 @@ pub const TOKEN_TYPE_LABEL: &str = "label";
 pub enum RnsTokenContext {
     ClassDefinition,
     ClassBody,
+    InnerBody,
     MethodDefinition,
     MethodBody,
     CodeBody,
@@ -73,6 +78,8 @@ pub enum RnsToken {
     // directives
     DotClass(Span),
     DotClassEnd(Span),
+    DotInner(Span),
+    DotInnerEnd(Span),
     DotSuper(Span),
     DotMethod(Span),
     DotMethodEnd(Span),
@@ -95,6 +102,7 @@ impl Display for RnsTokenContext {
         match self {
             RnsTokenContext::ClassDefinition => write!(f, "class definition"),
             RnsTokenContext::ClassBody => write!(f, "class body"),
+            RnsTokenContext::InnerBody => write!(f, "inner body"),
             RnsTokenContext::MethodDefinition => write!(f, "method definition"),
             RnsTokenContext::MethodBody => write!(f, "method body"),
             RnsTokenContext::CodeBody => write!(f, "code body"),
@@ -108,6 +116,8 @@ impl Display for RnsTokenContext {
 impl RnsToken {
     pub fn token_name(&self) -> &'static str {
         match self {
+            RnsToken::DotInner(_) => DIRECTIVE_DOT_INNER,
+            RnsToken::DotInnerEnd(_) => DIRECTIVE_DOT_INNER_END,
             RnsToken::DotClass(_) => DIRECTIVE_DOT_CLASS,
             RnsToken::DotSuper(_) => DIRECTIVE_DOT_SUPER,
             RnsToken::DotMethod(_) => DIRECTIVE_DOT_METHOD,
@@ -130,10 +140,12 @@ impl RnsToken {
     pub fn can_appear_in(&self) -> &[RnsTokenContext] {
         match self {
             RnsToken::DotClass(_) => &[RnsTokenContext::TopLevel],
-            RnsToken::DotSuper(_) => &[RnsTokenContext::ClassBody],
-            RnsToken::DotMethod(_) => &[RnsTokenContext::ClassBody],
-            RnsToken::DotPackage(_) => &[RnsTokenContext::ClassBody],
-            RnsToken::DotClassEnd(_) => &[RnsTokenContext::ClassBody],
+            RnsToken::DotSuper(_)
+            | RnsToken::DotMethod(_)
+            | RnsToken::DotPackage(_)
+            | RnsToken::DotInner(_)
+            | RnsToken::DotClassEnd(_) => &[RnsTokenContext::ClassBody],
+            RnsToken::DotInnerEnd(_) => &[RnsTokenContext::InnerBody],
             RnsToken::DotMethodEnd(_) => &[RnsTokenContext::MethodBody],
             RnsToken::DotCodeEnd(_) => &[RnsTokenContext::CodeBody],
             RnsToken::DotCode(_) => &[RnsTokenContext::MethodBody],
@@ -156,6 +168,8 @@ impl RnsToken {
             RnsToken::DotSuper(_) => RnsTokenKind::DotSuper,
             RnsToken::DotMethod(_) => RnsTokenKind::DotMethod,
             RnsToken::DotClassEnd(_) => RnsTokenKind::DotClassEnd,
+            RnsToken::DotInner(_) => RnsTokenKind::DotInner,
+            RnsToken::DotInnerEnd(_) => RnsTokenKind::DotInnerEnd,
             RnsToken::DotMethodEnd(_) => RnsTokenKind::DotMethodEnd,
             RnsToken::DotPackage(_) => RnsTokenKind::DotPackage,
             RnsToken::DotCodeEnd(_) => RnsTokenKind::DotCodeEnd,
@@ -227,6 +241,8 @@ impl RnsToken {
             DIRECTIVE_CODE_END => Some(RnsToken::DotCodeEnd(span)),
             DIRECTIVE_CODE => Some(RnsToken::DotCode(span)),
             DIRECTIVE_ANNOTATION => Some(RnsToken::DotAnnotation(span)),
+            DIRECTIVE_INNER => Some(RnsToken::DotInner(span)),
+            DIRECTIVE_INNER_END => Some(RnsToken::DotInnerEnd(span)),
             _ => None,
         }
     }
@@ -246,6 +262,8 @@ impl RnsToken {
         match self {
             RnsToken::DotClass(span)
             | RnsToken::DotClassEnd(span)
+            | RnsToken::DotInner(span)
+            | RnsToken::DotInnerEnd(span)
             | RnsToken::DotSuper(span)
             | RnsToken::DotMethod(span)
             | RnsToken::DotMethodEnd(span)
@@ -265,6 +283,8 @@ impl RnsToken {
         match self {
             RnsToken::DotClass(_)
             | RnsToken::DotClassEnd(_)
+            | RnsToken::DotInner(_)
+            | RnsToken::DotInnerEnd(_)
             | RnsToken::DotSuper(_)
             | RnsToken::DotMethod(_)
             | RnsToken::DotMethodEnd(_)

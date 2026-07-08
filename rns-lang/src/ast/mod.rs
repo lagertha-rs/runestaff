@@ -1,12 +1,12 @@
 pub mod flag;
 
-use crate::ast::flag::RnsMethodFlag;
+use crate::ast::flag::{RnsInnerFlag, RnsMethodFlag};
 use crate::diagnostic::Diagnostic;
 use crate::instruction::{InstructionNumericOperand, InstructionSpec};
 use crate::token::type_hint::TypeHint;
 use crate::token::{Span, Spanned};
 use flag::RnsClassFlag;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 pub struct RnsModule {
     pub package: Option<PackageDirective>,
@@ -14,6 +14,7 @@ pub struct RnsModule {
     pub super_dir: Option<SuperDirective>,
     pub diagnostics: Vec<Diagnostic>,
     pub methods: Vec<MethodDirective>,
+    pub inner_classes: Vec<InnerClassDirective>,
 }
 
 pub struct PackageDirective {
@@ -29,20 +30,25 @@ pub struct SuperDirective {
 pub struct ClassDirective {
     pub dir_span: Span,
     pub name: Option<TypeHint>,
-    // TODO: BTreeMap because I need it to be sorted for my snapshot test. investigate impact
-    pub flags: BTreeMap<RnsClassFlag, Span>,
+    pub flags: HashMap<RnsClassFlag, Span>,
+}
+
+pub struct InnerClassDirective {
+    pub dir_span: Span,
+    pub name: Option<TypeHint>,
+    pub flags: HashMap<RnsInnerFlag, Span>,
 }
 
 pub struct MethodDirective {
     pub dir_span: Span,
     pub name: Option<TypeHint>,
     pub descriptor: Option<TypeHint>,
-    pub flags: BTreeMap<RnsMethodFlag, Span>,
+    pub flags: HashMap<RnsMethodFlag, Span>,
     pub code_dir: Option<CodeDirective>,
 }
 
 impl MethodDirective {
-    pub fn new(dir_span: Span, flags: BTreeMap<RnsMethodFlag, Span>) -> Self {
+    pub fn new(dir_span: Span, flags: HashMap<RnsMethodFlag, Span>) -> Self {
         Self {
             dir_span,
             flags,

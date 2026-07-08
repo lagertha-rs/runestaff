@@ -1,7 +1,7 @@
-use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
+use crate::ast::flag::{RnsClassFlag, RnsInnerFlag, RnsMethodFlag};
 use crate::ast::{
-    ClassDirective, CodeDirective, MethodDirective, PackageDirective, RnsInstruction, RnsModule,
-    RnsOperand, SuperDirective,
+    ClassDirective, CodeDirective, InnerClassDirective, MethodDirective, PackageDirective,
+    RnsInstruction, RnsModule, RnsOperand, SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
 use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
@@ -11,8 +11,9 @@ use crate::parser::error::{
 };
 use crate::parser::warning::ParserWarning;
 use crate::token::type_hint::{RefTypeHint, TypeHint, TypeHintKind, TypeHintOperandName};
-use crate::token::{RnsToken, RnsTokenKind, Span, Spanned};
-use std::collections::{BTreeMap, HashMap};
+use crate::token::{RnsFlag, RnsToken, RnsTokenKind, Span, Spanned};
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -51,15 +52,17 @@ struct RnsParser {
     last_span: Span,
 
     diagnostic: Vec<Diagnostic>,
+    reported_errs: ReportedErrs,
 
     class_dir_span: Span,
     class_name: Option<TypeHint>,
-    access_flags: BTreeMap<RnsClassFlag, Span>,
+    access_flags: HashMap<RnsClassFlag, Span>,
     method_dirs: Vec<MethodDirective>,
 
     super_directives: Vec<(Span, TypeHint)>,
     package_directives: Vec<(Span, String)>,
-    reported_errs: ReportedErrs,
+
+    inner_classes: Vec<InnerClassDirective>,
 }
 
 #[allow(dead_code)]
@@ -101,6 +104,7 @@ impl RnsParser {
             package_directives: Vec::new(),
             reported_errs: ReportedErrs::default(),
             access_flags: Default::default(),
+            inner_classes: Vec::new(),
         }
     }
 
@@ -140,12 +144,12 @@ impl RnsParser {
         tokens
     }
 
-    fn parse_access_flags<F: Ord>(
+    fn parse_access_flags<F: Eq + Hash + Ord>(
         &mut self,
         ctx: AccessFlagContext,
-        convert: fn(&crate::token::flag::RnsFlag) -> Option<F>,
-    ) -> BTreeMap<F, Span> {
-        let mut flags: BTreeMap<F, (crate::token::flag::RnsFlag, Vec<Span>)> = BTreeMap::new();
+        convert: fn(&RnsFlag) -> Option<F>,
+    ) -> HashMap<F, Span> {
+        let mut flags: HashMap<F, (RnsFlag, Vec<Span>)> = HashMap::new();
         loop {
             match self.peek_token() {
                 Some(token) if token.is_access_flag() => {
@@ -167,7 +171,9 @@ impl RnsParser {
                 _ => break,
             }
         }
-        flags
+        let mut sorted: Vec<_> = flags.into_iter().collect();
+        sorted.sort_by(|(a, _), (b, _)| a.cmp(b));
+        sorted
             .into_iter()
             .map(|(k, (rns_flag, spans))| {
                 let first_span = spans[0];
@@ -186,11 +192,15 @@ impl RnsParser {
             .collect()
     }
 
-    fn parse_class_access_flags(&mut self) -> BTreeMap<RnsClassFlag, Span> {
+    fn parse_class_access_flags(&mut self) -> HashMap<RnsClassFlag, Span> {
         self.parse_access_flags(AccessFlagContext::Class, |f| f.as_class_flag())
     }
 
-    fn parse_method_access_flags(&mut self) -> BTreeMap<RnsMethodFlag, Span> {
+    fn parse_inner_access_flags(&mut self) -> HashMap<RnsInnerFlag, Span> {
+        self.parse_access_flags(AccessFlagContext::Inner, |f| f.as_inner_flag())
+    }
+
+    fn parse_method_access_flags(&mut self) -> HashMap<RnsMethodFlag, Span> {
         self.parse_access_flags(AccessFlagContext::Method, |f| f.as_method_flag())
     }
 
@@ -858,6 +868,54 @@ impl RnsParser {
         Ok(self.next_token().span())
     }
 
+    fn parse_inner(&mut self) -> InnerClassDirective {
+        let inner_token = self.next_token(); // consume .inner token
+
+        let flags = self.parse_inner_access_flags();
+        let class_name = self
+            .parse_operand_or_type_hint(OperandErrPosContext::InnerName, TypeHintKind::Class)
+            .map_err(|e| self.diagnostic.push(*e))
+            .ok();
+
+        self.verify_trailing_tokens(TrailingTokensErrContext::Inner);
+
+        while let Some(token) = self.tokens.peek() {
+            match token {
+                RnsToken::Newline(_) => {
+                    self.next_token();
+                }
+                RnsToken::DotMethod(_) => {
+                    // TODO: I shouldn't fail fast here, need try to anchor
+                    let method_dir = self.parse_method().unwrap();
+                    self.method_dirs.push(method_dir);
+                }
+                RnsToken::DotSuper(_) => self.parse_super_directive(),
+                RnsToken::DotInnerEnd(_) => {
+                    self.next_token(); // consume .class_end
+                    self.verify_trailing_tokens(TrailingTokensErrContext::InnerEnd);
+                    break;
+                }
+                RnsToken::DotInner(_) => unimplemented!("Not supported yet"),
+                RnsToken::Eof(_) => break,
+                _ => {
+                    let unexpected_error = ParserError::UnexpectedToken(
+                        UnexpectedTokenContext::InnerBody,
+                        self.next_token(),
+                    );
+                    self.diagnostic.push(unexpected_error.into());
+                    // TODO: test unknown_token .super/.method etc.
+                    self.anchor(&[RnsTokenKind::DotMethod, RnsTokenKind::DotSuper]);
+                }
+            }
+        }
+
+        InnerClassDirective {
+            dir_span: inner_token.span(),
+            name: class_name,
+            flags,
+        }
+    }
+
     fn parse_class(&mut self) -> Result<(), Box<Diagnostic>> {
         self.class_dir_span = self.anchor_class_directive()?;
         self.access_flags = self.parse_class_access_flags();
@@ -875,6 +933,7 @@ impl RnsParser {
                     self.next_token();
                 }
                 RnsToken::DotMethod(_) => {
+                    // TODO: I shouldn't fail fast here, need try to anchor
                     let method_dir = self.parse_method()?;
                     self.method_dirs.push(method_dir);
                 }
@@ -885,6 +944,10 @@ impl RnsParser {
                     break;
                 }
                 RnsToken::DotPackage(_) => self.parse_package_directive(),
+                RnsToken::DotInner(_) => {
+                    let inner = self.parse_inner();
+                    self.inner_classes.push(inner);
+                }
                 RnsToken::Eof(_) => break,
                 _ => {
                     let unexpected_error = ParserError::UnexpectedToken(
@@ -893,6 +956,7 @@ impl RnsParser {
                     );
                     self.diagnostic.push(unexpected_error.into());
                     // TODO: test unknown_token .super/.method etc.
+                    // TODO:
                     self.anchor(&[RnsTokenKind::DotMethod, RnsTokenKind::DotSuper]);
                 }
             }
@@ -1002,5 +1066,6 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         super_dir,
         diagnostics: instance.diagnostic,
         methods: instance.method_dirs,
+        inner_classes: instance.inner_classes,
     })
 }
