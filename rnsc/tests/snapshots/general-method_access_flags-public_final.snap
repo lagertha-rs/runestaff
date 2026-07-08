@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-077578c07f9534716b04f78ca1752b5d63b7a6bd67022cfac8adeabcb488f4ee
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodPublicFinal.class
+  Last modified <DATE>; size 116 bytes
+  SHA-256 checksum 077578c07f9534716b04f78ca1752b5d63b7a6bd67022cfac8adeabcb488f4ee
+class MethodPublicFinal
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodPublicFinal
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodPublicFinal
+  #4 = Utf8               MethodPublicFinal
+  #5 = Utf8               main
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  public final void main();
+    descriptor: ()V
+    flags: (0x0011) ACC_PUBLIC, ACC_FINAL
+    Code:
+      stack=1, locals=0, args_size=1
+         0: return
+}

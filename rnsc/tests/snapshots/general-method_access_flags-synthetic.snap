@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-5517d5839c840c6904d5ddc05a0ad8eb538c1cde3c11acbc1e82b5d5b7ec1e2e
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodSynthetic.class
+  Last modified <DATE>; size 116 bytes
+  SHA-256 checksum 5517d5839c840c6904d5ddc05a0ad8eb538c1cde3c11acbc1e82b5d5b7ec1e2e
+class MethodSynthetic
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodSynthetic
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodSynthetic
+  #4 = Utf8               MethodSynthetic
+  #5 = Utf8               helper
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  void helper();
+    descriptor: ()V
+    flags: (0x1000) ACC_SYNTHETIC
+    Code:
+      stack=1, locals=0, args_size=1
+         0: return
+}

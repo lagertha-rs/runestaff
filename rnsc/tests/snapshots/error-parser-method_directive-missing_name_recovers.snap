@@ -1,0 +1,48 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after missing method name error and reports subsequent errors
+; Expected errors: E-016 (missing name), E-007 (unknown token)
+
+.class public MyClass
+.super java/lang/Object
+
+.method public static
+
+     unknown_token ; <- still reported after recovery
+
+.class_end
+----- STDERR -----
+[E-020] Error: missing method name after '.method'
+   ╭─[ test_data/rns_integration/error/parser/method_directive/missing_name_recovers.rns:7:16 ]
+   │
+ 7 │ .method public static
+   │                ───┬──│ 
+   │                   ╰──── the '.method' directive requires a method name as operand
+   │                      │ 
+   │                      ╰─ but method name is missing
+   │ 
+   │ Help: Provide a method name after the '.method' directive, e.g.:
+   │       .method main ()V
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+[E-017] Error: unexpected identifier method body
+   ╭─[ test_data/rns_integration/error/parser/method_directive/missing_name_recovers.rns:9:6 ]
+   │
+ 9 │      unknown_token ; <- still reported after recovery
+   │      ──────┬──────  
+   │            ╰──────── unexpected token
+   │ 
+   │ Help: Check the syntax of the method body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-017
+───╯
+----- JAVAP -----
+not generated

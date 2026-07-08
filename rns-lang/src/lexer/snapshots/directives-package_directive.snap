@@ -1,0 +1,26 @@
+---
+source: rns-lang/src/lexer/snapshot_tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.class public MyClass
+.package com/example/test
+.super java/lang/Object
+
+.class_end
+----- TOKENS -----
+KIND                            | SPAN    | LSP       | TEXT
+----                            | ----    | ---       | ----
+DotClass                        | 0..6    | 0:0..6    | .class
+AccessFlag(public)              | 7..13   | 0:7..13   | public
+Identifier("MyClass")           | 14..21  | 0:14..21  | MyClass
+Newline                         | 21..22  | 0:21..22  | \n
+DotPackage                      | 22..30  | 1:0..8    | .package
+Identifier("com/example/test")  | 31..47  | 1:9..25   | com/example/test
+Newline                         | 47..48  | 1:25..26  | \n
+DotSuper                        | 48..54  | 2:0..6    | .super
+Identifier("java/lang/Object")  | 55..71  | 2:7..23   | java/lang/Object
+Newline                         | 71..72  | 2:23..24  | \n
+Newline                         | 72..73  | 3:0..1    | \n
+DotClassEnd                     | 73..83  | 4:0..10   | .class_end
+Newline                         | 83..84  | 4:10..11  | \n

@@ -1,0 +1,7 @@
+; Tests that parser continues after missing operand error and reports subsequent errors
+; Expected errors: E-005 (missing operand), E-007 (unknown token)
+
+.class public MyClass
+.package
+
+     unknown_token ; <- still reported after recovery

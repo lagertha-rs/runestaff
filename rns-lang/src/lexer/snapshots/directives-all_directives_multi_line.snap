@@ -1,11 +1,12 @@
 ---
-source: rns/src/lexer/snapshot_tests.rs
+source: rns-lang/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
 .class
 .super
 .method
+.package
 .annotation
 .class_end
 .method_end
@@ -20,13 +21,15 @@ DotSuper       | 7..13   | 1:0..6    | .super
 Newline        | 13..14  | 1:6..7    | \n
 DotMethod      | 14..21  | 2:0..7    | .method
 Newline        | 21..22  | 2:7..8    | \n
-DotAnnotation  | 22..33  | 3:0..11   | .annotation
-Newline        | 33..34  | 3:11..12  | \n
-DotClassEnd    | 34..44  | 4:0..10   | .class_end
-Newline        | 44..45  | 4:10..11  | \n
-DotMethodEnd   | 45..56  | 5:0..11   | .method_end
-Newline        | 56..57  | 5:11..12  | \n
-DotCodeEnd     | 57..66  | 6:0..9    | .code_end
-Newline        | 66..67  | 6:9..10   | \n
-DotCode        | 67..72  | 7:0..5    | .code
-Newline        | 72..73  | 7:5..6    | \n
+DotPackage     | 22..30  | 3:0..8    | .package
+Newline        | 30..31  | 3:8..9    | \n
+DotAnnotation  | 31..42  | 4:0..11   | .annotation
+Newline        | 42..43  | 4:11..12  | \n
+DotClassEnd    | 43..53  | 5:0..10   | .class_end
+Newline        | 53..54  | 5:10..11  | \n
+DotMethodEnd   | 54..65  | 6:0..11   | .method_end
+Newline        | 65..66  | 6:11..12  | \n
+DotCodeEnd     | 66..75  | 7:0..9    | .code_end
+Newline        | 75..76  | 7:9..10   | \n
+DotCode        | 76..81  | 8:0..5    | .code
+Newline        | 81..82  | 8:5..6    | \n

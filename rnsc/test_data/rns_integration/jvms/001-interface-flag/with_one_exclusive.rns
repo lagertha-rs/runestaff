@@ -1,3 +1,10 @@
+; Tests JVM spec requirement: interface cannot have mutually exclusive flags
+; Expected warning: JVMS-001 (interface with final flag)
+; This proves:
+;   1. Parser detects interface with final flag (mutually exclusive)
+;   2. Warning identifies the specific conflicting flag
+;   3. Bytecode is still generated (warning, not error)
+
 .class abstract final interface EmptyClass
 .super java/lang/Object
 

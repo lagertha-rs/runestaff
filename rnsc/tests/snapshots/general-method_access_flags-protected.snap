@@ -24,5 +24,30 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-f4995dcaac730fc6165b426e37768c7d1e70a2f4ba725c823ce7776a89ee2139
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodProtected.class
+  Last modified <DATE>; size 116 bytes
+  SHA-256 checksum f4995dcaac730fc6165b426e37768c7d1e70a2f4ba725c823ce7776a89ee2139
+class MethodProtected
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodProtected
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodProtected
+  #4 = Utf8               MethodProtected
+  #5 = Utf8               helper
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  protected void helper();
+    descriptor: ()V
+    flags: (0x0004) ACC_PROTECTED
+    Code:
+      stack=1, locals=0, args_size=1
+         0: return
+}

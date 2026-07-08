@@ -1,3 +1,11 @@
+; Tests JVM spec requirement: interface with abstract but still has mutually exclusive flags
+; Expected warning: JVMS-001 (interface with final/super/enum/module)
+; This proves:
+;   1. Parser correctly identifies interface has abstract flag (no missing abstract warning)
+;   2. Parser still detects all mutually exclusive flags (final, super, enum, module)
+;   3. Only the mutually exclusive flags warning is generated
+;   4. Bytecode is still generated (warning, not error)
+
 .class abstract interface final super enum module EmptyClass
 .super java/lang/Object
 

@@ -1,0 +1,11 @@
+; Tests that parser continues after missing method name error and reports subsequent errors
+; Expected errors: E-016 (missing name), E-007 (unknown token)
+
+.class public MyClass
+.super java/lang/Object
+
+.method public static
+
+     unknown_token ; <- still reported after recovery
+
+.class_end

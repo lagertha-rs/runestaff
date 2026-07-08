@@ -1,3 +1,10 @@
+; Tests JVM spec requirement: interface must be declared abstract
+; Expected warning: JVMS-001 (interface without abstract)
+; This proves:
+;   1. Parser detects interface flag without abstract flag
+;   2. Warning message is clear and references JVM spec
+;   3. Bytecode is still generated (warning, not error)
+
 .class interface EmptyClass
 .super java/lang/Object
 

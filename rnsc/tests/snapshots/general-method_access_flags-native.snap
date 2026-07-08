@@ -18,5 +18,27 @@ expression: "&snapshot_content"
 .class_end
 ----- STDERR -----
 
------ HASH -----
-6ca57678bcf26c7ff8eb7aa5140a9e67bf8520dd92fbf37e89c35baa91a77ccb
+----- JAVAP -----
+Classfile <TEMP_DIR>/MethodNative.class
+  Last modified <DATE>; size 94 bytes
+  SHA-256 checksum 6ca57678bcf26c7ff8eb7aa5140a9e67bf8520dd92fbf37e89c35baa91a77ccb
+class MethodNative
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MethodNative
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 0
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MethodNative
+  #4 = Utf8               MethodNative
+  #5 = Utf8               helper
+  #6 = Utf8               ()V
+  #7 = Utf8               Code
+{
+  native void helper();
+    descriptor: ()V
+    flags: (0x0100) ACC_NATIVE
+}
