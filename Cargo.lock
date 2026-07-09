@@ -577,9 +577,9 @@ dependencies = [
 
 [[package]]
 name = "lvm-class"
-version = "0.3.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "565284c6f4de1b59fa356c3389d0206f8ab32f0b234b9af9f6871abba5104c15"
+checksum = "5cb064bc218c51758256de62c6645a33704be85f8926098549811466ed7ca30b"
 dependencies = [
  "lvm-common",
  "num_enum",
@@ -587,9 +587,9 @@ dependencies = [
 
 [[package]]
 name = "lvm-common"
-version = "0.3.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4836631d6d402d703023efbda5b3847ecb3ea72ee8c1d670e567bf583eb0faf7"
+checksum = "91bb610793a45112a41be727a5bdfc020ed3e93aa5042686181e94736c26c43d"
 dependencies = [
  "num_enum",
  "tracing-subscriber",
