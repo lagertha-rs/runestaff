@@ -6,6 +6,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticTier};
 use crate::instruction::InstructionNumericOperand;
 use crate::token::type_hint::TypeHint;
 use lvm_class::ClassFile;
+use lvm_class::attribute::AttributeKind;
 use lvm_class::flags::ClassFlags;
 use lvm_class::prelude::{
     ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
@@ -136,13 +137,17 @@ impl RnsModule {
                     }
                 }
             }
-            let code_attribute = MethodAttribute::Code(CodeAttribute {
-                max_stack: code_dir.max_stack,
-                max_locals: code_dir.max_locals,
-                code,
-                exception_table: vec![],
-                attributes: vec![],
-            });
+            let attr_name_idx = cp_builder.add_attribute_utf8(AttributeKind::Code);
+            let code_attribute = MethodAttribute::Code {
+                attr_name_idx,
+                code_attr: CodeAttribute {
+                    max_stack: code_dir.max_stack,
+                    max_locals: code_dir.max_locals,
+                    code,
+                    exception_table: vec![],
+                    attributes: vec![],
+                },
+            };
             vec![code_attribute]
         } else {
             // abstract and native methods don't need code
@@ -213,12 +218,8 @@ impl RnsModule {
 
         let rns_methods = std::mem::take(&mut self.methods);
         let mut methods = Vec::with_capacity(rns_methods.len());
-        let mut has_code_attr = false;
 
         for rns_method in rns_methods {
-            if rns_method.code_dir.is_some() {
-                has_code_attr = true;
-            }
             methods.push(self.build_method_directive(&mut cp_builder, rns_method));
         }
 
@@ -228,11 +229,6 @@ impl RnsModule {
             .any(|d| d.tier == DiagnosticTier::SyntaxError)
         {
             return (None, self.diagnostics);
-        }
-
-        if has_code_attr {
-            // TODO: Don't hardcode the attribute name, use/create a const from lvm-class
-            cp_builder.add_utf8("Code");
         }
 
         let class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
@@ -255,7 +251,7 @@ impl RnsModule {
     fn map_lvm_class_finding(&mut self, finding: Finding) {
         match finding {
             Finding::ClassFlag(class_flag_finding) => match class_flag_finding {
-                ClassFlagsFinding::InterfaceWithoutAbstract => {
+                ClassFlagsFinding::InterfaceWithoutAbstract(_) => {
                     let interface_span = self.class_dir.flags[&RnsClassFlag::Interface];
                     self.diagnostics.push(
                         JvmWarning::InterfaceFlagWithMissingAbstract { interface_span }.into(),

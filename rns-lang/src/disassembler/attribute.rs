@@ -14,7 +14,9 @@ pub(crate) fn fmt_method_attribute_rns(
     cp: &ConstantPool,
 ) -> DisasmResult<()> {
     ind.with_indent(|ind| match attribute {
-        MethodAttribute::Code(code) => fmt_code_attribute_rns(code, method_name, ind, cp),
+        MethodAttribute::Code { code_attr, .. } => {
+            fmt_code_attribute_rns(code_attr, method_name, ind, cp)
+        }
         other => Err(DisasmError::UnsupportedMethodAttribute {
             method: method_name.to_string(),
             attribute: format!("{other:?}"),
@@ -50,7 +52,7 @@ fn fmt_code_attribute_rns(
         });
     }
 
-    if let Some(attribute) = code.attributes.first().map(code_attribute_name) {
+    if let Some(attribute) = code.attributes.first().map(|attr| attr.kind().as_str()) {
         return Err(DisasmError::UnsupportedCodeAttribute {
             method: method_name.to_string(),
             attribute,
@@ -59,25 +61,4 @@ fn fmt_code_attribute_rns(
 
     writeln!(ind, "{}", DIRECTIVE_DOT_CODE_END)?;
     Ok(())
-}
-
-fn code_attribute_name(
-    attribute: &lvm_class::attribute::method::CodeAttributeInfo,
-) -> &'static str {
-    match attribute {
-        lvm_class::attribute::method::CodeAttributeInfo::LineNumberTable(_) => "LineNumberTable",
-        lvm_class::attribute::method::CodeAttributeInfo::LocalVariableTable(_) => {
-            "LocalVariableTable"
-        }
-        lvm_class::attribute::method::CodeAttributeInfo::StackMapTable(_) => "StackMapTable",
-        lvm_class::attribute::method::CodeAttributeInfo::LocalVariableTypeTable(_) => {
-            "LocalVariableTypeTable"
-        }
-        lvm_class::attribute::method::CodeAttributeInfo::RuntimeVisibleTypeAnnotations => {
-            "RuntimeVisibleTypeAnnotations"
-        }
-        lvm_class::attribute::method::CodeAttributeInfo::RuntimeInvisibleTypeAnnotations => {
-            "RuntimeInvisibleTypeAnnotations"
-        }
-    }
 }

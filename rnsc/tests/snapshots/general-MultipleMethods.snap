@@ -63,7 +63,7 @@ expression: "&snapshot_content"
 ----- JAVAP -----
 Classfile <TEMP_DIR>/MultipleMethods.class
   Last modified <DATE>; size 383 bytes
-  SHA-256 checksum 250f556d4f0b75d373a1e4938b7d5b4dbdb57e104c142f0378ab229b87c15e8b
+  SHA-256 checksum 4cf69e3650a8b4511eee472aae840b831dfe57bc9f2348762aab289ccaac377d
 class MultipleMethods
   minor version: 0
   major version: 69
@@ -80,25 +80,25 @@ Constant pool:
    #6 = Utf8               ()V
    #7 = Methodref          #1.#8          // java/lang/Object."<init>":()V
    #8 = NameAndType        #5:#6          // "<init>":()V
-   #9 = Utf8               main
-  #10 = Utf8               ([Ljava/lang/String;)V
-  #11 = Fieldref           #12.#13        // java/lang/System.out:Ljava/io/PrintStream;
-  #12 = Class              #14            // java/lang/System
-  #13 = NameAndType        #15:#16        // out:Ljava/io/PrintStream;
-  #14 = Utf8               java/lang/System
-  #15 = Utf8               out
-  #16 = Utf8               Ljava/io/PrintStream;
-  #17 = String             #18            // Hello
-  #18 = Utf8               Hello
-  #19 = Methodref          #20.#21        // java/io/PrintStream.println:(Ljava/lang/String;)V
-  #20 = Class              #22            // java/io/PrintStream
-  #21 = NameAndType        #23:#24        // println:(Ljava/lang/String;)V
-  #22 = Utf8               java/io/PrintStream
-  #23 = Utf8               println
-  #24 = Utf8               (Ljava/lang/String;)V
-  #25 = Utf8               helper
-  #26 = Utf8               ()I
-  #27 = Utf8               Code
+   #9 = Utf8               Code
+  #10 = Utf8               main
+  #11 = Utf8               ([Ljava/lang/String;)V
+  #12 = Fieldref           #13.#14        // java/lang/System.out:Ljava/io/PrintStream;
+  #13 = Class              #15            // java/lang/System
+  #14 = NameAndType        #16:#17        // out:Ljava/io/PrintStream;
+  #15 = Utf8               java/lang/System
+  #16 = Utf8               out
+  #17 = Utf8               Ljava/io/PrintStream;
+  #18 = String             #19            // Hello
+  #19 = Utf8               Hello
+  #20 = Methodref          #21.#22        // java/io/PrintStream.println:(Ljava/lang/String;)V
+  #21 = Class              #23            // java/io/PrintStream
+  #22 = NameAndType        #24:#25        // println:(Ljava/lang/String;)V
+  #23 = Utf8               java/io/PrintStream
+  #24 = Utf8               println
+  #25 = Utf8               (Ljava/lang/String;)V
+  #26 = Utf8               helper
+  #27 = Utf8               ()I
 {
   public MultipleMethods();
     descriptor: ()V
@@ -114,9 +114,9 @@ Constant pool:
     flags: (0x0009) ACC_PUBLIC, ACC_STATIC
     Code:
       stack=2, locals=1, args_size=1
-         0: getstatic     #11                 // Field java/lang/System.out:Ljava/io/PrintStream;
-         3: ldc           #17                 // String Hello
-         5: invokevirtual #19                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         0: getstatic     #12                 // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #18                 // String Hello
+         5: invokevirtual #20                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
          8: return
 
   private int helper();
