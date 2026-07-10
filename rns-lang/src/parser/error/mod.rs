@@ -10,9 +10,9 @@ use crate::diagnostic::{
     Diagnostic, DiagnosticLabel, DiagnosticTier, ERR_CODE_DIR_ATTR, ERR_CODE_EMPTY_FILE,
     ERR_CODE_IDENT_OF_TH_EXPECTED, ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH,
     ERR_CODE_MISSING_TH_IMPLICIT_OP, ERR_CODE_MISSING_TH_OPERAND, ERR_CODE_MULTIPLE_CODE_DIR,
-    ERR_CODE_MULTIPLE_PACKAGE, ERR_CODE_MULTIPLE_SUPER, ERR_CODE_NOT_YET_IMPL,
-    ERR_CODE_NUMERIC_OPERAND_OVERFLOW, ERR_CODE_TH_EXPECTS_NUM, ERR_CODE_UNKNOWN_INSTRUCTION,
-    IntoDiagnostic, docs_note,
+    ERR_CODE_MULTIPLE_MANGLED_NAMES, ERR_CODE_MULTIPLE_PACKAGE, ERR_CODE_MULTIPLE_SUPER,
+    ERR_CODE_NOT_YET_IMPL, ERR_CODE_NUMERIC_OPERAND_OVERFLOW, ERR_CODE_TH_EXPECTS_NUM,
+    ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic, docs_note,
 };
 use crate::instruction::InstructionNumericOperand;
 use crate::token::type_hint::{TypeHint, TypeHintKind, TypeHintOperandName};
@@ -36,6 +36,7 @@ pub(super) enum ParserError {
     // TODO: the messages are total shit
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
     MultiplePackageDefinitions(Vec<(Span, String)>),
+    MultipleMangledNames(Vec<(Span, TypeHint)>),
     TypeHintExpectsNumericOperand {
         type_hint: Spanned<TypeHintKind>,
         rejection: NumericRejection,
@@ -83,6 +84,7 @@ impl IntoDiagnostic for ParserError {
             ParserError::TrailingTokens(_, _, ctx) => ctx.error_code(),
             ParserError::MultipleSuperDefinitions(_) => ERR_CODE_MULTIPLE_SUPER,
             ParserError::MultiplePackageDefinitions(_) => ERR_CODE_MULTIPLE_PACKAGE,
+            ParserError::MultipleMangledNames(_) => ERR_CODE_MULTIPLE_MANGLED_NAMES,
             ParserError::MissingTypeHintOperand { .. } => ERR_CODE_MISSING_TH_OPERAND,
             ParserError::MissingImplicitTypeHintOperand { .. } => ERR_CODE_MISSING_TH_IMPLICIT_OP,
             ParserError::MultipleCodeBlocks { .. } => ERR_CODE_MULTIPLE_CODE_DIR,
@@ -122,6 +124,9 @@ impl IntoDiagnostic for ParserError {
             }
             ParserError::MultipleSuperDefinitions(_) => "multiple .super directives".into(),
             ParserError::MultiplePackageDefinitions(_) => "multiple .package directives".into(),
+            ParserError::MultipleMangledNames(_) => {
+                "multiple .mangled_name directives in inner class".into()
+            }
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
@@ -368,6 +373,27 @@ impl IntoDiagnostic for ParserError {
                 }
                 labels
             }
+            ParserError::MultipleMangledNames(defs) => {
+                let mut labels = Vec::with_capacity(defs.len());
+                labels.push(DiagnosticLabel::context(
+                    defs[0].0.as_range(),
+                    format!(
+                        "first .mangled_name directive defined here with name '{}'",
+                        defs[0].1.value()
+                    ),
+                ));
+
+                for (span, hint) in defs.iter().skip(1) {
+                    labels.push(DiagnosticLabel::at(
+                        span.as_range(),
+                        format!(
+                            "but another .mangled_name directive defined here with name '{}'",
+                            hint.value()
+                        ),
+                    ));
+                }
+                labels
+            }
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
@@ -608,6 +634,10 @@ impl IntoDiagnostic for ParserError {
             ParserError::MultiplePackageDefinitions(_) => Some(
                 "A class can only have one .package directive. Remove the duplicates.".into(),
             ),
+            ParserError::MultipleMangledNames(_) => Some(
+                "An inner class can only have one .mangled_name directive. Remove the duplicates."
+                    .into(),
+            ),
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
@@ -816,6 +846,7 @@ impl IntoDiagnostic for ParserError {
             }
             ParserError::MultipleSuperDefinitions(defs) => defs[1].0,
             ParserError::MultiplePackageDefinitions(defs) => defs[1].0,
+            ParserError::MultipleMangledNames(defs) => defs[1].0,
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::MultipleCodeBlocks { duplicate, .. } => *duplicate,
             ParserError::UnexpectedToken(_, token)

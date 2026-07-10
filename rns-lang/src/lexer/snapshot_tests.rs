@@ -26,6 +26,7 @@ fn format_tokens(tokens: &[RnsToken], source: &str) -> String {
             RnsToken::DotClass(_) => "DotClass".to_string(),
             RnsToken::DotClassEnd(_) => "DotClassEnd".to_string(),
             RnsToken::DotMethod(_) => "DotMethod".to_string(),
+            RnsToken::DotMangledName(_) => "DotMangledName".to_string(),
             RnsToken::DotMethodEnd(_) => "DotMethodEnd".to_string(),
             RnsToken::DotSuper(_) => "DotSuper".to_string(),
             RnsToken::Newline(_) => "Newline".to_string(),

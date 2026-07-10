@@ -2,9 +2,10 @@ use crate::token::flag::RnsFlag;
 use crate::token::type_hint::TypeHintKind;
 use crate::token::{
     DIRECTIVE_DOT_ANNOTATION, DIRECTIVE_DOT_CLASS, DIRECTIVE_DOT_CLASS_END, DIRECTIVE_DOT_CODE,
-    DIRECTIVE_DOT_CODE_END, DIRECTIVE_DOT_INNER, DIRECTIVE_DOT_INNER_END, DIRECTIVE_DOT_METHOD,
-    DIRECTIVE_DOT_METHOD_END, DIRECTIVE_DOT_PACKAGE, DIRECTIVE_DOT_SUPER, TOKEN_TYPE_EOF,
-    TOKEN_TYPE_IDENTIFIER, TOKEN_TYPE_LABEL, TOKEN_TYPE_NEWLINE,
+    DIRECTIVE_DOT_CODE_END, DIRECTIVE_DOT_INNER, DIRECTIVE_DOT_INNER_END,
+    DIRECTIVE_DOT_MANGLED_NAME, DIRECTIVE_DOT_METHOD, DIRECTIVE_DOT_METHOD_END,
+    DIRECTIVE_DOT_PACKAGE, DIRECTIVE_DOT_SUPER, TOKEN_TYPE_EOF, TOKEN_TYPE_IDENTIFIER,
+    TOKEN_TYPE_LABEL, TOKEN_TYPE_NEWLINE,
 };
 use std::fmt::{Display, Formatter};
 
@@ -21,6 +22,7 @@ pub enum RnsTokenKind {
     DotCode,
     DotCodeEnd,
     DotAnnotation,
+    DotMangledName,
     AccessFlag(RnsFlag),
     TypeHint(TypeHintKind),
     Label,
@@ -42,6 +44,7 @@ impl RnsTokenKind {
             RnsTokenKind::DotMethodEnd => DIRECTIVE_DOT_METHOD_END,
             RnsTokenKind::DotCode => DIRECTIVE_DOT_CODE,
             RnsTokenKind::DotCodeEnd => DIRECTIVE_DOT_CODE_END,
+            RnsTokenKind::DotMangledName => DIRECTIVE_DOT_MANGLED_NAME,
             RnsTokenKind::DotAnnotation => DIRECTIVE_DOT_ANNOTATION,
             RnsTokenKind::AccessFlag(flag) => flag.token_name(),
             RnsTokenKind::TypeHint(type_hint) => type_hint.token_name(),

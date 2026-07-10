@@ -83,6 +83,7 @@ pub(in crate::parser) enum OperandErrPosContext {
     SuperName,
     PackageName,
     MethodName,
+    MangledName,
     MethodDescriptor,
     InstructionName,
     InstructionOperand(InstructionSpec),
@@ -147,6 +148,7 @@ impl Display for OperandErrPosContext {
             OperandErrPosContext::MethodName => write!(f, "method name"),
             OperandErrPosContext::MethodDescriptor => write!(f, "method descriptor"),
             OperandErrPosContext::InstructionName => write!(f, "instruction name"),
+            OperandErrPosContext::MangledName => write!(f, "mangled name"),
             OperandErrPosContext::InstructionOperand(spec) => {
                 write!(f, "instruction '{}' operand", spec.opcode)
             }
@@ -164,6 +166,7 @@ impl OperandErrPosContext {
             OperandErrPosContext::PackageName => ".package",
             OperandErrPosContext::MethodName | OperandErrPosContext::MethodDescriptor => ".method",
             OperandErrPosContext::InstructionName => "instruction",
+            OperandErrPosContext::MangledName => ".mangled_name",
             OperandErrPosContext::InstructionOperand(spec) => spec.opcode.as_str(),
         }
     }
