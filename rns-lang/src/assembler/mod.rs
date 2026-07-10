@@ -223,6 +223,8 @@ impl RnsModule {
             methods.push(self.build_method_directive(&mut cp_builder, rns_method));
         }
 
+        self.handle_inner_classes(&mut cp_builder, this_cp_id.unwrap());
+
         if self
             .diagnostics
             .iter()
@@ -246,6 +248,34 @@ impl RnsModule {
         }
 
         (class_file, self.diagnostics)
+    }
+
+    fn handle_inner_classes(&mut self, cp_builder: &mut ConstantPoolBuilder, _this_cp_id: u16) {
+        if self.inner_classes.is_empty() {
+            return;
+        }
+
+        let _nest_members_attr_idx = cp_builder.add_attribute_utf8(AttributeKind::NestMembers);
+        let _inner_classes_attr_idx = cp_builder.add_attribute_utf8(AttributeKind::InnerClasses);
+
+        /*
+        let mut nest_members = Vec::new();
+        let mut inner_classes = Vec::new();
+
+        for inner in self.inner_classes {
+            if let Some(name) = inner.name {
+                let idx = Self::add_type_hint_to_cp(cp_builder, name);
+                nest_members.push(idx);
+                InnerClassEntry {
+                    inner_class_info_index: idx,
+                    outer_class_info_index: this_cp_id,
+                    inner_name_index: 0,       // TODO: handle inner name
+                    inner_class_access_flags: 0, // TODO: handle access flags
+                };
+            }
+        }
+
+         */
     }
 
     fn map_lvm_class_finding(&mut self, finding: Finding) {

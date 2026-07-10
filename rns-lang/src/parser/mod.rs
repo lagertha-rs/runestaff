@@ -52,8 +52,12 @@ struct RnsParser {
     last_span: Span,
 
     diagnostic: Vec<Diagnostic>,
-    reported_errs: ReportedErrs,
+    class_dir: ParsedClassDirective,
+}
 
+#[derive(Default)]
+struct ParsedClassDirective {
+    reported_errs: ReportedErrs,
     class_dir_span: Span,
     class_name: Option<TypeHint>,
     access_flags: HashMap<RnsClassFlag, Span>,
@@ -62,7 +66,17 @@ struct RnsParser {
     super_directives: Vec<(Span, TypeHint)>,
     package_directives: Vec<(Span, String)>,
 
-    inner_classes: Vec<InnerClassDirective>,
+    inner_classes: Vec<ParsedInnerDirective>,
+}
+
+#[derive(Default)]
+struct ParsedInnerDirective {
+    reported_errs: ReportedErrs,
+    dir_span: Span,
+    name: Option<TypeHint>,
+    flags: HashMap<RnsInnerFlag, Span>,
+    super_directives: Vec<(Span, TypeHint)>,
+    mangled_name_dirs: Vec<(Span, TypeHint)>,
 }
 
 #[allow(dead_code)]
@@ -70,9 +84,6 @@ struct RnsParser {
 #[repr(u8)]
 enum ErrKind {
     Super = 0,
-    CodeStack = 1,
-    CodeLocals = 2,
-    Package = 3,
 }
 
 #[derive(Default, Clone, Copy)]
@@ -96,15 +107,7 @@ impl RnsParser {
             last_span: Span::default(),
             last_kind: RnsTokenKind::Eof,
             diagnostic: Vec::new(),
-
-            class_dir_span: Span::default(),
-            class_name: None,
-            method_dirs: Vec::new(),
-            super_directives: Vec::new(),
-            package_directives: Vec::new(),
-            reported_errs: ReportedErrs::default(),
-            access_flags: Default::default(),
-            inner_classes: Vec::new(),
+            class_dir: ParsedClassDirective::default(),
         }
     }
 
@@ -790,18 +793,21 @@ impl RnsParser {
         })
     }
 
-    fn parse_super_directive(&mut self) {
+    // TODO: I don't like the ret type
+    fn parse_super_directive(&mut self) -> Option<(Span, TypeHint)> {
         let super_token = self.next_token(); // consume .super token
 
-        match self.parse_operand_or_type_hint(OperandErrPosContext::SuperName, TypeHintKind::Class)
+        let ret = match self
+            .parse_operand_or_type_hint(OperandErrPosContext::SuperName, TypeHintKind::Class)
         {
-            Ok(super_name) => self.super_directives.push((super_token.span(), super_name)),
+            Ok(super_name) => Some((super_token.span(), super_name)),
             Err(e) => {
-                self.reported_errs.insert(ErrKind::Super);
                 self.diagnostic.push(*e);
+                None
             }
-        }
-        self.verify_trailing_tokens(TrailingTokensErrContext::Super)
+        };
+        self.verify_trailing_tokens(TrailingTokensErrContext::Super);
+        ret
     }
 
     fn parse_package_directive(&mut self) {
@@ -823,11 +829,11 @@ impl RnsParser {
                     );
                 }
 
-                self.package_directives
+                self.class_dir
+                    .package_directives
                     .push((package_token.span(), name_value));
             }
             Err(token) => {
-                self.reported_errs.insert(ErrKind::Package);
                 self.diagnostic.push(
                     ParserError::IdentifierOrHintExpected(
                         self.last_span,
@@ -868,14 +874,17 @@ impl RnsParser {
         Ok(self.next_token().span())
     }
 
-    fn parse_inner(&mut self) -> InnerClassDirective {
+    fn parse_inner(&mut self) -> ParsedInnerDirective {
         let inner_token = self.next_token(); // consume .inner token
 
         let flags = self.parse_inner_access_flags();
+        let mut reported_errs = ReportedErrs::default();
         let class_name = self
             .parse_operand_or_type_hint(OperandErrPosContext::InnerName, TypeHintKind::Class)
             .map_err(|e| self.diagnostic.push(*e))
             .ok();
+        let mut super_directives = Vec::new();
+        let mut mangled_name_dirs = Vec::new();
 
         self.verify_trailing_tokens(TrailingTokensErrContext::Inner);
 
@@ -887,13 +896,33 @@ impl RnsParser {
                 RnsToken::DotMethod(_) => {
                     // TODO: I shouldn't fail fast here, need try to anchor
                     let method_dir = self.parse_method().unwrap();
-                    self.method_dirs.push(method_dir);
+                    self.class_dir.method_dirs.push(method_dir);
                 }
-                RnsToken::DotSuper(_) => self.parse_super_directive(),
                 RnsToken::DotInnerEnd(_) => {
                     self.next_token(); // consume .class_end
                     self.verify_trailing_tokens(TrailingTokensErrContext::InnerEnd);
                     break;
+                }
+                RnsToken::DotSuper(_) => {
+                    if let Some(super_dir) = self.parse_super_directive() {
+                        super_directives.push(super_dir);
+                    } else {
+                        reported_errs.insert(ErrKind::Super);
+                    }
+                }
+                RnsToken::DotMangledName(_) => {
+                    let mangled_name_token = self.next_token(); // consume .inner token
+                    let mangled_name = self
+                        .parse_operand_or_type_hint(
+                            OperandErrPosContext::MangledName,
+                            TypeHintKind::Utf8,
+                        )
+                        .map_err(|e| self.diagnostic.push(*e))
+                        .ok();
+
+                    if let Some(mangled_name) = mangled_name {
+                        mangled_name_dirs.push((mangled_name_token.span(), mangled_name));
+                    }
                 }
                 RnsToken::DotInner(_) => unimplemented!("Not supported yet"),
                 RnsToken::Eof(_) => break,
@@ -909,18 +938,21 @@ impl RnsParser {
             }
         }
 
-        InnerClassDirective {
+        ParsedInnerDirective {
             dir_span: inner_token.span(),
             name: class_name,
+            reported_errs,
             flags,
+            super_directives,
+            mangled_name_dirs,
         }
     }
 
     fn parse_class(&mut self) -> Result<(), Box<Diagnostic>> {
-        self.class_dir_span = self.anchor_class_directive()?;
-        self.access_flags = self.parse_class_access_flags();
+        self.class_dir.class_dir_span = self.anchor_class_directive()?;
+        self.class_dir.access_flags = self.parse_class_access_flags();
 
-        self.class_name = self
+        self.class_dir.class_name = self
             .parse_operand_or_type_hint(OperandErrPosContext::ClassName, TypeHintKind::Class)
             .map_err(|e| self.diagnostic.push(*e))
             .ok();
@@ -935,9 +967,15 @@ impl RnsParser {
                 RnsToken::DotMethod(_) => {
                     // TODO: I shouldn't fail fast here, need try to anchor
                     let method_dir = self.parse_method()?;
-                    self.method_dirs.push(method_dir);
+                    self.class_dir.method_dirs.push(method_dir);
                 }
-                RnsToken::DotSuper(_) => self.parse_super_directive(),
+                RnsToken::DotSuper(_) => {
+                    if let Some(super_dir) = self.parse_super_directive() {
+                        self.class_dir.super_directives.push(super_dir);
+                    } else {
+                        self.class_dir.reported_errs.insert(ErrKind::Super);
+                    }
+                }
                 RnsToken::DotClassEnd(_) => {
                     self.next_token(); // consume .class_end
                     self.verify_trailing_tokens(TrailingTokensErrContext::ClassEnd);
@@ -946,7 +984,7 @@ impl RnsParser {
                 RnsToken::DotPackage(_) => self.parse_package_directive(),
                 RnsToken::DotInner(_) => {
                     let inner = self.parse_inner();
-                    self.inner_classes.push(inner);
+                    self.class_dir.inner_classes.push(inner);
                 }
                 RnsToken::Eof(_) => break,
                 _ => {
@@ -988,16 +1026,18 @@ impl RnsParser {
     }
 
     fn take_super_directive(&mut self) -> Option<SuperDirective> {
-        let mut super_directives = std::mem::take(&mut self.super_directives);
+        let mut super_directives = std::mem::take(&mut self.class_dir.super_directives);
         match super_directives.len() {
             0 => {
                 // If no class name is defined, doesn't make sense to report missing superclass
-                // If problem with super is already report, don't report missing superclass to avoid duplicate errors
-                if self.class_name.is_some() && !self.reported_errs.contains(ErrKind::Super) {
+                // If problem with super is already reported, don't report missing superclass to avoid duplicate errors
+                if self.class_dir.class_name.is_some()
+                    && !self.class_dir.reported_errs.contains(ErrKind::Super)
+                {
                     self.diagnostic.push(
                         ParserWarning::MissingSuperClass {
-                            class_name: self.class_name.clone(),
-                            class_dir_pos: self.class_dir_span,
+                            class_name: self.class_dir.class_name.clone(),
+                            class_dir_pos: self.class_dir.class_dir_span,
                             default: JAVA_LANG_OBJECT,
                         }
                         .into(),
@@ -1026,8 +1066,53 @@ impl RnsParser {
         }
     }
 
+    // TODO: clean up, very similar to take_super_directive
+    fn take_inner_super_directive(
+        &mut self,
+        inner_dir: &mut ParsedInnerDirective,
+    ) -> Option<SuperDirective> {
+        let mut super_directives = std::mem::take(&mut inner_dir.super_directives);
+        match super_directives.len() {
+            0 => {
+                // If no class name is defined, doesn't make sense to report missing superclass
+                // If problem with super is already reported, don't report missing superclass to avoid duplicate errors
+                if inner_dir.name.is_some() && !inner_dir.reported_errs.contains(ErrKind::Super) {
+                    self.diagnostic.push(
+                        // TODO: error should mention it is error in inner?
+                        ParserWarning::MissingSuperClass {
+                            class_name: inner_dir.name.clone(),
+                            class_dir_pos: inner_dir.dir_span,
+                            default: JAVA_LANG_OBJECT,
+                        }
+                        .into(),
+                    );
+                }
+                Some(SuperDirective {
+                    dir_span: None,
+                    name: TypeHint::Class(
+                        None,
+                        Spanned::new(JAVA_LANG_OBJECT.to_string(), Span::default()),
+                    ),
+                })
+            }
+            1 => {
+                let (dir_span, name) = super_directives.swap_remove(0);
+                Some(SuperDirective {
+                    dir_span: Some(dir_span),
+                    name,
+                })
+            }
+            _ => {
+                // TODO: error should mention it is error in inner?
+                self.diagnostic
+                    .push(ParserError::MultipleSuperDefinitions(super_directives).into());
+                None
+            }
+        }
+    }
+
     fn take_package_directive(&mut self) -> Option<PackageDirective> {
-        let mut package_directives = std::mem::take(&mut self.package_directives);
+        let mut package_directives = std::mem::take(&mut self.class_dir.package_directives);
         match package_directives.len() {
             0 => None,
             1 => {
@@ -1046,6 +1131,36 @@ impl RnsParser {
     }
 }
 
+// TODO: clean up
+fn map_inner(
+    instance: &mut RnsParser,
+    mut parsed_inner_directive: ParsedInnerDirective,
+) -> InnerClassDirective {
+    let super_dir = instance.take_inner_super_directive(&mut parsed_inner_directive);
+    let mangled_name_dir = {
+        let mut mangled_vec = std::mem::take(&mut parsed_inner_directive.mangled_name_dirs);
+
+        match mangled_vec.len() {
+            0 => None,
+            1 => Some(mangled_vec.swap_remove(0).1),
+            _ => {
+                instance
+                    .diagnostic
+                    .push(ParserError::MultipleMangledNames(mangled_vec).into());
+                None
+            }
+        }
+    };
+
+    InnerClassDirective {
+        dir_span: parsed_inner_directive.dir_span,
+        name: parsed_inner_directive.name,
+        super_dir,
+        mangled_name_dir,
+        flags: parsed_inner_directive.flags,
+    }
+}
+
 pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Diagnostic>> {
     let mut instance = RnsParser::from_tokens(tokens.into_iter().peekable(), eof_span);
 
@@ -1053,19 +1168,27 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         instance.diagnostic.push(*e);
         return Err(instance.diagnostic);
     }
+
+    let parsed_inner_classes = std::mem::take(&mut instance.class_dir.inner_classes);
+    let inner_classes = parsed_inner_classes
+        .into_iter()
+        .map(|c| map_inner(&mut instance, c))
+        .collect();
+
     let package = instance.take_package_directive();
     let super_dir = instance.take_super_directive();
     let class_dir = ClassDirective {
-        dir_span: instance.class_dir_span,
-        name: instance.class_name.take(),
-        flags: instance.access_flags,
+        dir_span: instance.class_dir.class_dir_span,
+        name: instance.class_dir.class_name.take(),
+        flags: instance.class_dir.access_flags,
     };
+
     Ok(RnsModule {
         package,
         class_dir,
         super_dir,
         diagnostics: instance.diagnostic,
-        methods: instance.method_dirs,
-        inner_classes: instance.inner_classes,
+        methods: instance.class_dir.method_dirs,
+        inner_classes,
     })
 }

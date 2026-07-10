@@ -20,6 +20,7 @@ pub const DIRECTIVE_DOT_METHOD_END: &str = ".method_end";
 pub const DIRECTIVE_DOT_CODE_END: &str = ".code_end";
 pub const DIRECTIVE_DOT_CODE: &str = ".code";
 pub const DIRECTIVE_DOT_ANNOTATION: &str = ".annotation";
+pub const DIRECTIVE_DOT_MANGLED_NAME: &str = ".mangled_name";
 
 pub const DIRECTIVE_INNER: &str = "inner";
 pub const DIRECTIVE_INNER_END: &str = "inner_end";
@@ -32,6 +33,7 @@ pub const DIRECTIVE_METHOD_END: &str = "method_end";
 pub const DIRECTIVE_CODE_END: &str = "code_end";
 pub const DIRECTIVE_CODE: &str = "code";
 pub const DIRECTIVE_ANNOTATION: &str = "annotation";
+pub const DIRECTIVE_MANGLED_NAME: &str = "mangled_name";
 
 pub const FLAG_PUBLIC: &str = "public";
 pub const FLAG_STATIC: &str = "static";
@@ -87,6 +89,7 @@ pub enum RnsToken {
     DotCodeEnd(Span),
     DotAnnotation(Span),
     DotPackage(Span),
+    DotMangledName(Span),
 
     Label(Spanned<String>),
     AccessFlag(Spanned<RnsFlag>),
@@ -133,6 +136,7 @@ impl RnsToken {
             RnsToken::Label(_) => TOKEN_TYPE_LABEL,
             RnsToken::Newline(_) => TOKEN_TYPE_NEWLINE,
             RnsToken::Eof(_) => TOKEN_TYPE_EOF,
+            RnsToken::DotMangledName(_) => DIRECTIVE_DOT_MANGLED_NAME,
         }
     }
 
@@ -156,6 +160,7 @@ impl RnsToken {
                 RnsTokenContext::ClassDefinition,
                 RnsTokenContext::MethodDefinition,
             ],
+            RnsToken::DotMangledName(_) => &[RnsTokenContext::InnerBody],
             RnsToken::Newline(_) | RnsToken::Eof(_) => &[RnsTokenContext::Contextless],
             RnsToken::TypeHint(_) | RnsToken::Identifier(_) => &[RnsTokenContext::Operand],
             RnsToken::Label(_) => &[RnsTokenContext::CodeBody],
@@ -175,6 +180,7 @@ impl RnsToken {
             RnsToken::DotCodeEnd(_) => RnsTokenKind::DotCodeEnd,
             RnsToken::DotCode(_) => RnsTokenKind::DotCode,
             RnsToken::DotAnnotation(_) => RnsTokenKind::DotAnnotation,
+            RnsToken::DotMangledName(_) => RnsTokenKind::DotMangledName,
             RnsToken::AccessFlag(spanned) => RnsTokenKind::AccessFlag(spanned.value),
             RnsToken::TypeHint(spanned) => RnsTokenKind::TypeHint(spanned.value),
             RnsToken::Identifier(_) => RnsTokenKind::Identifier,
@@ -199,6 +205,10 @@ impl RnsToken {
                 | RnsToken::DotCode(_)
                 | RnsToken::DotCodeEnd(_)
                 | RnsToken::DotAnnotation(_)
+                | RnsToken::DotPackage(_)
+                | RnsToken::DotInner(_)
+                | RnsToken::DotInnerEnd(_)
+                | RnsToken::DotMangledName(_)
         )
     }
 
@@ -211,7 +221,11 @@ impl RnsToken {
             | (RnsToken::DotMethodEnd(_), RnsTokenKind::DotMethodEnd)
             | (RnsToken::DotCode(_), RnsTokenKind::DotCode)
             | (RnsToken::DotCodeEnd(_), RnsTokenKind::DotCodeEnd)
-            | (RnsToken::DotAnnotation(_), RnsTokenKind::DotAnnotation) => true,
+            | (RnsToken::DotAnnotation(_), RnsTokenKind::DotAnnotation)
+            | (RnsToken::DotPackage(_), RnsTokenKind::DotPackage)
+            | (RnsToken::DotInner(_), RnsTokenKind::DotInner)
+            | (RnsToken::DotInnerEnd(_), RnsTokenKind::DotInnerEnd)
+            | (RnsToken::DotMangledName(_), RnsTokenKind::DotMangledName) => true,
             (RnsToken::AccessFlag(spanned), RnsTokenKind::AccessFlag(expected_flag)) => {
                 spanned.value == expected_flag
             }
@@ -243,6 +257,7 @@ impl RnsToken {
             DIRECTIVE_ANNOTATION => Some(RnsToken::DotAnnotation(span)),
             DIRECTIVE_INNER => Some(RnsToken::DotInner(span)),
             DIRECTIVE_INNER_END => Some(RnsToken::DotInnerEnd(span)),
+            DIRECTIVE_MANGLED_NAME => Some(RnsToken::DotMangledName(span)),
             _ => None,
         }
     }
@@ -270,6 +285,7 @@ impl RnsToken {
             | RnsToken::DotCode(span)
             | RnsToken::DotCodeEnd(span)
             | RnsToken::DotAnnotation(span)
+            | RnsToken::DotMangledName(span)
             | RnsToken::DotPackage(span)
             | RnsToken::Newline(span)
             | RnsToken::Eof(span) => *span,
@@ -291,6 +307,7 @@ impl RnsToken {
             | RnsToken::DotAnnotation(_)
             | RnsToken::DotCode(_)
             | RnsToken::DotPackage(_)
+            | RnsToken::DotMangledName(_)
             | RnsToken::DotCodeEnd(_) => TOKEN_TYPE_DIRECTIVE,
             RnsToken::AccessFlag(_) => TOKEN_TYPE_ACCESS_FLAG,
             RnsToken::Identifier(_) => TOKEN_TYPE_IDENTIFIER,

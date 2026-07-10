@@ -36,6 +36,8 @@ pub struct ClassDirective {
 pub struct InnerClassDirective {
     pub dir_span: Span,
     pub name: Option<TypeHint>,
+    pub super_dir: Option<SuperDirective>,
+    pub mangled_name_dir: Option<TypeHint>,
     pub flags: HashMap<RnsInnerFlag, Span>,
 }
 

@@ -43,6 +43,7 @@ pub const ERR_CODE_INVALID_INNER_FLAG: &str = "E-031";
 pub const ERR_CODE_INNER_TRAILING_TOK: &str = "E-032";
 pub const ERR_CODE_INNER_END_TRAILING_TOK: &str = "E-033";
 pub const ERR_CODE_UNEXPECTED_TOKEN_IN_INNER: &str = "E-034";
+pub const ERR_CODE_MULTIPLE_MANGLED_NAMES: &str = "E-035";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {
