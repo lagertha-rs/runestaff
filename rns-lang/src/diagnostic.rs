@@ -44,6 +44,15 @@ pub const ERR_CODE_INNER_TRAILING_TOK: &str = "E-032";
 pub const ERR_CODE_INNER_END_TRAILING_TOK: &str = "E-033";
 pub const ERR_CODE_UNEXPECTED_TOKEN_IN_INNER: &str = "E-034";
 pub const ERR_CODE_MULTIPLE_MANGLED_NAMES: &str = "E-035";
+pub const ERR_CODE_INNER_CLASSES_ATTR_END_TRAILING_TOK: &str = "E-036";
+pub const ERR_CODE_UNEXPECTED_TOKEN_IN_INNER_CLASSES_ATTR: &str = "E-037";
+pub const ERR_CODE_INNER_CLASS_TRAILING_TOK: &str = "E-038";
+pub const ERR_CODE_OUTER_CLASS_TRAILING_TOK: &str = "E-039";
+pub const ERR_CODE_INNER_NAME_TRAILING_TOK: &str = "E-040";
+pub const ERR_CODE_FLAGS_TRAILING_TOK: &str = "E-041";
+pub const ERR_CODE_MULTIPLE_INNER_CLASS: &str = "E-042";
+pub const ERR_CODE_MULTIPLE_OUTER_CLASS: &str = "E-043";
+pub const ERR_CODE_MULTIPLE_INNER_NAME: &str = "E-044";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {
