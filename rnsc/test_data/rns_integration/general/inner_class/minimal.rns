@@ -1,0 +1,10 @@
+; Tests minimal inner class declaration.
+; Expected: success, generates outer class with InnerClasses attribute
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner Inner
+.inner_end
+
+.class_end

@@ -98,20 +98,20 @@ fn assert_stdout_empty(stdout: &str) {
     );
 }
 
-fn find_class_file_in_dir(dir: &Path) -> Option<PathBuf> {
+fn find_class_files_in_dir(dir: &Path) -> Vec<PathBuf> {
+    let mut class_files = Vec::new();
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                if let Some(found) = find_class_file_in_dir(&path) {
-                    return Some(found);
-                }
+                class_files.extend(find_class_files_in_dir(&path));
             } else if path.extension().is_some_and(|ext| ext == "class") {
-                return Some(path);
+                class_files.push(path);
             }
         }
     }
-    None
+    class_files.sort();
+    class_files
 }
 
 fn normalize_javap_output(javap_output: &str, temp_dir: &Path) -> String {
@@ -129,20 +129,52 @@ fn normalize_javap_output(javap_output: &str, temp_dir: &Path) -> String {
 
 fn process_assembly_result(output: &Output, output_dir: &Path) -> (String, String) {
     if output.status.success() {
-        if let Some(class_file) = find_class_file_in_dir(output_dir) {
-            let javap_output = get_javap_output(&class_file);
+        let class_files = find_class_files_in_dir(output_dir);
+        if class_files.is_empty() {
+            return ("not generated".to_string(), "not generated".to_string());
+        }
+
+        let mut dis_parts = Vec::new();
+        let mut javap_parts = Vec::new();
+
+        for class_file in &class_files {
+            // Get relative path from output_dir for labeling
+            let relative = class_file
+                .strip_prefix(output_dir)
+                .unwrap_or(class_file)
+                .to_string_lossy()
+                .trim_end_matches(".class")
+                .to_string();
+
+            // Disassemble
+            let dis_output = {
+                let mut cmd = cargo_bin_cmd!("rnsc");
+                cmd.arg("dis").arg(class_file);
+                let out = cmd.output().expect("Failed to execute disassemble");
+                String::from_utf8(out.stdout).expect("Failed to read disassemble output")
+            };
+
+            // Javap
+            let javap_output = get_javap_output(class_file);
             let normalized_javap = normalize_javap_output(&javap_output, output_dir);
 
-            let disassembled = {
-                let mut cmd = cargo_bin_cmd!("rnsc");
-                cmd.arg("dis").arg(&class_file);
-                let dis_output = cmd.output().expect("Failed to execute disassemble");
-                String::from_utf8(dis_output.stdout).expect("Failed to read disassemble output")
-            };
-            (disassembled, normalized_javap)
-        } else {
-            ("not generated".to_string(), "not generated".to_string())
+            if class_files.len() > 1 {
+                dis_parts.push(format!("## {} ##\n{}", relative, dis_output.trim_end()));
+                javap_parts.push(format!(
+                    "## {} ##\n{}",
+                    relative,
+                    normalized_javap.trim_end()
+                ));
+            } else {
+                dis_parts.push(dis_output.trim_end().to_string());
+                javap_parts.push(normalized_javap.trim_end().to_string());
+            }
         }
+
+        let disassembled = dis_parts.join("\n\n");
+        let javap = javap_parts.join("\n\n");
+
+        (disassembled, javap)
     } else {
         ("not generated".to_string(), "not generated".to_string())
     }
@@ -155,7 +187,7 @@ fn verify_assembly_behavior(disassembled: &str, hash: &str, output: &Output, out
             "Expected non-zero exit code when 'not generated' appears"
         );
         assert!(
-            find_class_file_in_dir(output_dir).is_none(),
+            find_class_files_in_dir(output_dir).is_empty(),
             "Class file should not exist when assembly fails"
         );
     } else {
@@ -163,14 +195,17 @@ fn verify_assembly_behavior(disassembled: &str, hash: &str, output: &Output, out
             output.status.success(),
             "Expected zero exit code when class is generated"
         );
-        if let Some(class_file) = find_class_file_in_dir(output_dir) {
-            let file_size = fs::metadata(&class_file)
+        let class_files = find_class_files_in_dir(output_dir);
+        assert!(
+            !class_files.is_empty(),
+            "Class file should exist on success"
+        );
+        for class_file in &class_files {
+            let file_size = fs::metadata(class_file)
                 .expect("Class file should exist on success")
                 .len();
             assert!(file_size > 0, "Class file should have content on success");
-            fs::remove_file(&class_file).ok();
-        } else {
-            panic!("Class file should exist on success");
+            fs::remove_file(class_file).ok();
         }
     }
 }

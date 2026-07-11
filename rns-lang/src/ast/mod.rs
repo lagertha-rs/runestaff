@@ -39,6 +39,7 @@ pub struct InnerClassDirective {
     pub super_dir: Option<SuperDirective>,
     pub mangled_name_dir: Option<TypeHint>,
     pub flags: HashMap<RnsClassFlag, Span>,
+    pub methods: Vec<MethodDirective>,
 }
 
 pub struct InnerClassesAttrDirective {
