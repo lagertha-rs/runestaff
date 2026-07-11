@@ -1,11 +1,10 @@
 pub mod flag;
 
-use crate::ast::flag::{RnsInnerFlag, RnsMethodFlag};
+use crate::ast::flag::{RnsClassFlag, RnsInnerFlag, RnsMethodFlag};
 use crate::diagnostic::Diagnostic;
 use crate::instruction::{InstructionNumericOperand, InstructionSpec};
 use crate::token::type_hint::TypeHint;
 use crate::token::{Span, Spanned};
-use flag::RnsClassFlag;
 use std::collections::HashMap;
 
 pub struct RnsModule {
@@ -15,6 +14,7 @@ pub struct RnsModule {
     pub diagnostics: Vec<Diagnostic>,
     pub methods: Vec<MethodDirective>,
     pub inner_classes: Vec<InnerClassDirective>,
+    pub inner_classes_attrs: Vec<InnerClassesAttrDirective>,
 }
 
 pub struct PackageDirective {
@@ -38,7 +38,15 @@ pub struct InnerClassDirective {
     pub name: Option<TypeHint>,
     pub super_dir: Option<SuperDirective>,
     pub mangled_name_dir: Option<TypeHint>,
+    pub flags: HashMap<RnsClassFlag, Span>,
+}
+
+pub struct InnerClassesAttrDirective {
+    pub dir_span: Span,
+    pub inner_class: Option<TypeHint>,
+    pub outer_class: Option<TypeHint>,
     pub flags: HashMap<RnsInnerFlag, Span>,
+    pub inner_name: Option<TypeHint>,
 }
 
 pub struct MethodDirective {

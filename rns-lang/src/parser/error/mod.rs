@@ -10,7 +10,8 @@ use crate::diagnostic::{
     Diagnostic, DiagnosticLabel, DiagnosticTier, ERR_CODE_DIR_ATTR, ERR_CODE_EMPTY_FILE,
     ERR_CODE_IDENT_OF_TH_EXPECTED, ERR_CODE_INSTR_REQUIRES_EXPLICIT_TH,
     ERR_CODE_MISSING_TH_IMPLICIT_OP, ERR_CODE_MISSING_TH_OPERAND, ERR_CODE_MULTIPLE_CODE_DIR,
-    ERR_CODE_MULTIPLE_MANGLED_NAMES, ERR_CODE_MULTIPLE_PACKAGE, ERR_CODE_MULTIPLE_SUPER,
+    ERR_CODE_MULTIPLE_INNER_CLASS, ERR_CODE_MULTIPLE_INNER_NAME, ERR_CODE_MULTIPLE_MANGLED_NAMES,
+    ERR_CODE_MULTIPLE_OUTER_CLASS, ERR_CODE_MULTIPLE_PACKAGE, ERR_CODE_MULTIPLE_SUPER,
     ERR_CODE_NOT_YET_IMPL, ERR_CODE_NUMERIC_OPERAND_OVERFLOW, ERR_CODE_TH_EXPECTS_NUM,
     ERR_CODE_UNKNOWN_INSTRUCTION, IntoDiagnostic, docs_note,
 };
@@ -37,6 +38,9 @@ pub(super) enum ParserError {
     MultipleSuperDefinitions(Vec<(Span, TypeHint)>),
     MultiplePackageDefinitions(Vec<(Span, String)>),
     MultipleMangledNames(Vec<(Span, TypeHint)>),
+    MultipleInnerClassRefs(Vec<(Span, TypeHint)>),
+    MultipleOuterClassRefs(Vec<(Span, TypeHint)>),
+    MultipleInnerNames(Vec<(Span, TypeHint)>),
     TypeHintExpectsNumericOperand {
         type_hint: Spanned<TypeHintKind>,
         rejection: NumericRejection,
@@ -85,6 +89,9 @@ impl IntoDiagnostic for ParserError {
             ParserError::MultipleSuperDefinitions(_) => ERR_CODE_MULTIPLE_SUPER,
             ParserError::MultiplePackageDefinitions(_) => ERR_CODE_MULTIPLE_PACKAGE,
             ParserError::MultipleMangledNames(_) => ERR_CODE_MULTIPLE_MANGLED_NAMES,
+            ParserError::MultipleInnerClassRefs(_) => ERR_CODE_MULTIPLE_INNER_CLASS,
+            ParserError::MultipleOuterClassRefs(_) => ERR_CODE_MULTIPLE_OUTER_CLASS,
+            ParserError::MultipleInnerNames(_) => ERR_CODE_MULTIPLE_INNER_NAME,
             ParserError::MissingTypeHintOperand { .. } => ERR_CODE_MISSING_TH_OPERAND,
             ParserError::MissingImplicitTypeHintOperand { .. } => ERR_CODE_MISSING_TH_IMPLICIT_OP,
             ParserError::MultipleCodeBlocks { .. } => ERR_CODE_MULTIPLE_CODE_DIR,
@@ -126,6 +133,15 @@ impl IntoDiagnostic for ParserError {
             ParserError::MultiplePackageDefinitions(_) => "multiple .package directives".into(),
             ParserError::MultipleMangledNames(_) => {
                 "multiple .mangled_name directives in inner class".into()
+            }
+            ParserError::MultipleInnerClassRefs(_) => {
+                "multiple .inner_class directives in inner_classes_attr".into()
+            }
+            ParserError::MultipleOuterClassRefs(_) => {
+                "multiple .outer_class directives in inner_classes_attr".into()
+            }
+            ParserError::MultipleInnerNames(_) => {
+                "multiple .inner_name directives in inner_classes_attr".into()
             }
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
@@ -394,6 +410,69 @@ impl IntoDiagnostic for ParserError {
                 }
                 labels
             }
+            ParserError::MultipleInnerClassRefs(defs) => {
+                let mut labels = Vec::with_capacity(defs.len());
+                labels.push(DiagnosticLabel::context(
+                    defs[0].0.as_range(),
+                    format!(
+                        "first .inner_class directive defined here with class '{}'",
+                        defs[0].1.value()
+                    ),
+                ));
+
+                for (span, hint) in defs.iter().skip(1) {
+                    labels.push(DiagnosticLabel::at(
+                        span.as_range(),
+                        format!(
+                            "but another .inner_class directive defined here with class '{}'",
+                            hint.value()
+                        ),
+                    ));
+                }
+                labels
+            }
+            ParserError::MultipleOuterClassRefs(defs) => {
+                let mut labels = Vec::with_capacity(defs.len());
+                labels.push(DiagnosticLabel::context(
+                    defs[0].0.as_range(),
+                    format!(
+                        "first .outer_class directive defined here with class '{}'",
+                        defs[0].1.value()
+                    ),
+                ));
+
+                for (span, hint) in defs.iter().skip(1) {
+                    labels.push(DiagnosticLabel::at(
+                        span.as_range(),
+                        format!(
+                            "but another .outer_class directive defined here with class '{}'",
+                            hint.value()
+                        ),
+                    ));
+                }
+                labels
+            }
+            ParserError::MultipleInnerNames(defs) => {
+                let mut labels = Vec::with_capacity(defs.len());
+                labels.push(DiagnosticLabel::context(
+                    defs[0].0.as_range(),
+                    format!(
+                        "first .inner_name directive defined here with name '{}'",
+                        defs[0].1.value()
+                    ),
+                ));
+
+                for (span, hint) in defs.iter().skip(1) {
+                    labels.push(DiagnosticLabel::at(
+                        span.as_range(),
+                        format!(
+                            "but another .inner_name directive defined here with name '{}'",
+                            hint.value()
+                        ),
+                    ));
+                }
+                labels
+            }
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
@@ -638,6 +717,18 @@ impl IntoDiagnostic for ParserError {
                 "An inner class can only have one .mangled_name directive. Remove the duplicates."
                     .into(),
             ),
+            ParserError::MultipleInnerClassRefs(_) => Some(
+                "An inner_classes_attr block can only have one .inner_class directive. Remove the duplicates."
+                    .into(),
+            ),
+            ParserError::MultipleOuterClassRefs(_) => Some(
+                "An inner_classes_attr block can only have one .outer_class directive. Remove the duplicates."
+                    .into(),
+            ),
+            ParserError::MultipleInnerNames(_) => Some(
+                "An inner_classes_attr block can only have one .inner_name directive. Remove the duplicates."
+                    .into(),
+            ),
             ParserError::TypeHintExpectsNumericOperand {
                 type_hint,
                 rejection,
@@ -847,6 +938,9 @@ impl IntoDiagnostic for ParserError {
             ParserError::MultipleSuperDefinitions(defs) => defs[1].0,
             ParserError::MultiplePackageDefinitions(defs) => defs[1].0,
             ParserError::MultipleMangledNames(defs) => defs[1].0,
+            ParserError::MultipleInnerClassRefs(defs) => defs[1].0,
+            ParserError::MultipleOuterClassRefs(defs) => defs[1].0,
+            ParserError::MultipleInnerNames(defs) => defs[1].0,
             ParserError::TrailingTokens(_, tokens, _) => tokens[0].span(),
             ParserError::MultipleCodeBlocks { duplicate, .. } => *duplicate,
             ParserError::UnexpectedToken(_, token)

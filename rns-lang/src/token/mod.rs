@@ -11,6 +11,12 @@ pub mod type_hint;
 
 pub const DIRECTIVE_DOT_CLASS: &str = ".class";
 pub const DIRECTIVE_DOT_INNER: &str = ".inner";
+pub const DIRECTIVE_DOT_INNER_CLASSES_ATTR: &str = ".inner_classes_attr";
+pub const DIRECTIVE_DOT_INNER_CLASSES_ATTR_END: &str = ".inner_classes_attr_end";
+pub const DIRECTIVE_DOT_INNER_CLASS: &str = ".inner_class";
+pub const DIRECTIVE_DOT_OUTER_CLASS: &str = ".outer_class";
+pub const DIRECTIVE_DOT_FLAGS: &str = ".flags";
+pub const DIRECTIVE_DOT_INNER_NAME: &str = ".inner_name";
 pub const DIRECTIVE_DOT_SUPER: &str = ".super";
 pub const DIRECTIVE_DOT_METHOD: &str = ".method";
 pub const DIRECTIVE_DOT_PACKAGE: &str = ".package";
@@ -24,6 +30,12 @@ pub const DIRECTIVE_DOT_MANGLED_NAME: &str = ".mangled_name";
 
 pub const DIRECTIVE_INNER: &str = "inner";
 pub const DIRECTIVE_INNER_END: &str = "inner_end";
+pub const DIRECTIVE_INNER_CLASSES_ATTR: &str = "inner_classes_attr";
+pub const DIRECTIVE_INNER_CLASSES_ATTR_END: &str = "inner_classes_attr_end";
+pub const DIRECTIVE_INNER_CLASS: &str = "inner_class";
+pub const DIRECTIVE_OUTER_CLASS: &str = "outer_class";
+pub const DIRECTIVE_FLAGS: &str = "flags";
+pub const DIRECTIVE_INNER_NAME: &str = "inner_name";
 pub const DIRECTIVE_CLASS: &str = "class";
 pub const DIRECTIVE_SUPER: &str = "super";
 pub const DIRECTIVE_PACKAGE: &str = "package";
@@ -66,6 +78,7 @@ pub enum RnsTokenContext {
     ClassDefinition,
     ClassBody,
     InnerBody,
+    InnerClassesAttrBody,
     MethodDefinition,
     MethodBody,
     CodeBody,
@@ -82,6 +95,12 @@ pub enum RnsToken {
     DotClassEnd(Span),
     DotInner(Span),
     DotInnerEnd(Span),
+    DotInnerClassesAttr(Span),
+    DotInnerClassesAttrEnd(Span),
+    DotInnerClass(Span),
+    DotOuterClass(Span),
+    DotFlags(Span),
+    DotInnerName(Span),
     DotSuper(Span),
     DotMethod(Span),
     DotMethodEnd(Span),
@@ -106,6 +125,7 @@ impl Display for RnsTokenContext {
             RnsTokenContext::ClassDefinition => write!(f, "class definition"),
             RnsTokenContext::ClassBody => write!(f, "class body"),
             RnsTokenContext::InnerBody => write!(f, "inner body"),
+            RnsTokenContext::InnerClassesAttrBody => write!(f, "inner_classes_attr body"),
             RnsTokenContext::MethodDefinition => write!(f, "method definition"),
             RnsTokenContext::MethodBody => write!(f, "method body"),
             RnsTokenContext::CodeBody => write!(f, "code body"),
@@ -121,6 +141,12 @@ impl RnsToken {
         match self {
             RnsToken::DotInner(_) => DIRECTIVE_DOT_INNER,
             RnsToken::DotInnerEnd(_) => DIRECTIVE_DOT_INNER_END,
+            RnsToken::DotInnerClassesAttr(_) => DIRECTIVE_DOT_INNER_CLASSES_ATTR,
+            RnsToken::DotInnerClassesAttrEnd(_) => DIRECTIVE_DOT_INNER_CLASSES_ATTR_END,
+            RnsToken::DotInnerClass(_) => DIRECTIVE_DOT_INNER_CLASS,
+            RnsToken::DotOuterClass(_) => DIRECTIVE_DOT_OUTER_CLASS,
+            RnsToken::DotFlags(_) => DIRECTIVE_DOT_FLAGS,
+            RnsToken::DotInnerName(_) => DIRECTIVE_DOT_INNER_NAME,
             RnsToken::DotClass(_) => DIRECTIVE_DOT_CLASS,
             RnsToken::DotSuper(_) => DIRECTIVE_DOT_SUPER,
             RnsToken::DotMethod(_) => DIRECTIVE_DOT_METHOD,
@@ -148,8 +174,14 @@ impl RnsToken {
             | RnsToken::DotMethod(_)
             | RnsToken::DotPackage(_)
             | RnsToken::DotInner(_)
+            | RnsToken::DotInnerClassesAttr(_)
             | RnsToken::DotClassEnd(_) => &[RnsTokenContext::ClassBody],
             RnsToken::DotInnerEnd(_) => &[RnsTokenContext::InnerBody],
+            RnsToken::DotInnerClassesAttrEnd(_) => &[RnsTokenContext::InnerClassesAttrBody],
+            RnsToken::DotInnerClass(_)
+            | RnsToken::DotOuterClass(_)
+            | RnsToken::DotFlags(_)
+            | RnsToken::DotInnerName(_) => &[RnsTokenContext::InnerClassesAttrBody],
             RnsToken::DotMethodEnd(_) => &[RnsTokenContext::MethodBody],
             RnsToken::DotCodeEnd(_) => &[RnsTokenContext::CodeBody],
             RnsToken::DotCode(_) => &[RnsTokenContext::MethodBody],
@@ -175,6 +207,12 @@ impl RnsToken {
             RnsToken::DotClassEnd(_) => RnsTokenKind::DotClassEnd,
             RnsToken::DotInner(_) => RnsTokenKind::DotInner,
             RnsToken::DotInnerEnd(_) => RnsTokenKind::DotInnerEnd,
+            RnsToken::DotInnerClassesAttr(_) => RnsTokenKind::DotInnerClassesAttr,
+            RnsToken::DotInnerClassesAttrEnd(_) => RnsTokenKind::DotInnerClassesAttrEnd,
+            RnsToken::DotInnerClass(_) => RnsTokenKind::DotInnerClass,
+            RnsToken::DotOuterClass(_) => RnsTokenKind::DotOuterClass,
+            RnsToken::DotFlags(_) => RnsTokenKind::DotFlags,
+            RnsToken::DotInnerName(_) => RnsTokenKind::DotInnerName,
             RnsToken::DotMethodEnd(_) => RnsTokenKind::DotMethodEnd,
             RnsToken::DotPackage(_) => RnsTokenKind::DotPackage,
             RnsToken::DotCodeEnd(_) => RnsTokenKind::DotCodeEnd,
@@ -208,6 +246,12 @@ impl RnsToken {
                 | RnsToken::DotPackage(_)
                 | RnsToken::DotInner(_)
                 | RnsToken::DotInnerEnd(_)
+                | RnsToken::DotInnerClassesAttr(_)
+                | RnsToken::DotInnerClassesAttrEnd(_)
+                | RnsToken::DotInnerClass(_)
+                | RnsToken::DotOuterClass(_)
+                | RnsToken::DotFlags(_)
+                | RnsToken::DotInnerName(_)
                 | RnsToken::DotMangledName(_)
         )
     }
@@ -225,6 +269,12 @@ impl RnsToken {
             | (RnsToken::DotPackage(_), RnsTokenKind::DotPackage)
             | (RnsToken::DotInner(_), RnsTokenKind::DotInner)
             | (RnsToken::DotInnerEnd(_), RnsTokenKind::DotInnerEnd)
+            | (RnsToken::DotInnerClassesAttr(_), RnsTokenKind::DotInnerClassesAttr)
+            | (RnsToken::DotInnerClassesAttrEnd(_), RnsTokenKind::DotInnerClassesAttrEnd)
+            | (RnsToken::DotInnerClass(_), RnsTokenKind::DotInnerClass)
+            | (RnsToken::DotOuterClass(_), RnsTokenKind::DotOuterClass)
+            | (RnsToken::DotFlags(_), RnsTokenKind::DotFlags)
+            | (RnsToken::DotInnerName(_), RnsTokenKind::DotInnerName)
             | (RnsToken::DotMangledName(_), RnsTokenKind::DotMangledName) => true,
             (RnsToken::AccessFlag(spanned), RnsTokenKind::AccessFlag(expected_flag)) => {
                 spanned.value == expected_flag
@@ -257,6 +307,12 @@ impl RnsToken {
             DIRECTIVE_ANNOTATION => Some(RnsToken::DotAnnotation(span)),
             DIRECTIVE_INNER => Some(RnsToken::DotInner(span)),
             DIRECTIVE_INNER_END => Some(RnsToken::DotInnerEnd(span)),
+            DIRECTIVE_INNER_CLASSES_ATTR => Some(RnsToken::DotInnerClassesAttr(span)),
+            DIRECTIVE_INNER_CLASSES_ATTR_END => Some(RnsToken::DotInnerClassesAttrEnd(span)),
+            DIRECTIVE_INNER_CLASS => Some(RnsToken::DotInnerClass(span)),
+            DIRECTIVE_OUTER_CLASS => Some(RnsToken::DotOuterClass(span)),
+            DIRECTIVE_FLAGS => Some(RnsToken::DotFlags(span)),
+            DIRECTIVE_INNER_NAME => Some(RnsToken::DotInnerName(span)),
             DIRECTIVE_MANGLED_NAME => Some(RnsToken::DotMangledName(span)),
             _ => None,
         }
@@ -279,6 +335,12 @@ impl RnsToken {
             | RnsToken::DotClassEnd(span)
             | RnsToken::DotInner(span)
             | RnsToken::DotInnerEnd(span)
+            | RnsToken::DotInnerClassesAttr(span)
+            | RnsToken::DotInnerClassesAttrEnd(span)
+            | RnsToken::DotInnerClass(span)
+            | RnsToken::DotOuterClass(span)
+            | RnsToken::DotFlags(span)
+            | RnsToken::DotInnerName(span)
             | RnsToken::DotSuper(span)
             | RnsToken::DotMethod(span)
             | RnsToken::DotMethodEnd(span)
@@ -301,6 +363,12 @@ impl RnsToken {
             | RnsToken::DotClassEnd(_)
             | RnsToken::DotInner(_)
             | RnsToken::DotInnerEnd(_)
+            | RnsToken::DotInnerClassesAttr(_)
+            | RnsToken::DotInnerClassesAttrEnd(_)
+            | RnsToken::DotInnerClass(_)
+            | RnsToken::DotOuterClass(_)
+            | RnsToken::DotFlags(_)
+            | RnsToken::DotInnerName(_)
             | RnsToken::DotSuper(_)
             | RnsToken::DotMethod(_)
             | RnsToken::DotMethodEnd(_)

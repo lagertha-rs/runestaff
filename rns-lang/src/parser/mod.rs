@@ -1,7 +1,7 @@
 use crate::ast::flag::{RnsClassFlag, RnsInnerFlag, RnsMethodFlag};
 use crate::ast::{
-    ClassDirective, CodeDirective, InnerClassDirective, MethodDirective, PackageDirective,
-    RnsInstruction, RnsModule, RnsOperand, SuperDirective,
+    ClassDirective, CodeDirective, InnerClassDirective, InnerClassesAttrDirective, MethodDirective,
+    PackageDirective, RnsInstruction, RnsModule, RnsOperand, SuperDirective,
 };
 use crate::diagnostic::Diagnostic;
 use crate::instruction::{INSTRUCTION_SPECS, InstructionOperand};
@@ -67,6 +67,7 @@ struct ParsedClassDirective {
     package_directives: Vec<(Span, String)>,
 
     inner_classes: Vec<ParsedInnerDirective>,
+    inner_classes_attrs: Vec<ParsedInnerClassesAttrDirective>,
 }
 
 #[derive(Default)]
@@ -74,9 +75,18 @@ struct ParsedInnerDirective {
     reported_errs: ReportedErrs,
     dir_span: Span,
     name: Option<TypeHint>,
-    flags: HashMap<RnsInnerFlag, Span>,
+    flags: HashMap<RnsClassFlag, Span>,
     super_directives: Vec<(Span, TypeHint)>,
     mangled_name_dirs: Vec<(Span, TypeHint)>,
+}
+
+#[derive(Default)]
+struct ParsedInnerClassesAttrDirective {
+    dir_span: Span,
+    inner_class_dirs: Vec<(Span, TypeHint)>,
+    outer_class_dirs: Vec<(Span, TypeHint)>,
+    flags: HashMap<RnsInnerFlag, Span>,
+    inner_name_dirs: Vec<(Span, TypeHint)>,
 }
 
 #[allow(dead_code)]
@@ -199,8 +209,8 @@ impl RnsParser {
         self.parse_access_flags(AccessFlagContext::Class, |f| f.as_class_flag())
     }
 
-    fn parse_inner_access_flags(&mut self) -> HashMap<RnsInnerFlag, Span> {
-        self.parse_access_flags(AccessFlagContext::Inner, |f| f.as_inner_flag())
+    fn parse_inner_classes_attr_flags(&mut self) -> HashMap<RnsInnerFlag, Span> {
+        self.parse_access_flags(AccessFlagContext::InnerClassesAttr, |f| f.as_inner_flag())
     }
 
     fn parse_method_access_flags(&mut self) -> HashMap<RnsMethodFlag, Span> {
@@ -877,7 +887,7 @@ impl RnsParser {
     fn parse_inner(&mut self) -> ParsedInnerDirective {
         let inner_token = self.next_token(); // consume .inner token
 
-        let flags = self.parse_inner_access_flags();
+        let flags = self.parse_class_access_flags();
         let mut reported_errs = ReportedErrs::default();
         let class_name = self
             .parse_operand_or_type_hint(OperandErrPosContext::InnerName, TypeHintKind::Class)
@@ -925,6 +935,10 @@ impl RnsParser {
                     }
                 }
                 RnsToken::DotInner(_) => unimplemented!("Not supported yet"),
+                RnsToken::DotInnerClassesAttr(_) => {
+                    let attr = self.parse_inner_classes_attr();
+                    self.class_dir.inner_classes_attrs.push(attr);
+                }
                 RnsToken::Eof(_) => break,
                 _ => {
                     let unexpected_error = ParserError::UnexpectedToken(
@@ -945,6 +959,102 @@ impl RnsParser {
             flags,
             super_directives,
             mangled_name_dirs,
+        }
+    }
+
+    fn parse_inner_classes_attr(&mut self) -> ParsedInnerClassesAttrDirective {
+        let attr_token = self.next_token(); // consume .inner_classes_attr token
+        let mut inner_class_dirs = Vec::new();
+        let mut outer_class_dirs = Vec::new();
+        let mut flags = HashMap::new();
+        let mut inner_name_dirs = Vec::new();
+
+        self.verify_trailing_tokens(TrailingTokensErrContext::InnerClassesAttrEnd);
+
+        while let Some(token) = self.tokens.peek() {
+            match token {
+                RnsToken::Newline(_) => {
+                    self.next_token();
+                }
+                RnsToken::DotInnerClassesAttrEnd(_) => {
+                    self.next_token(); // consume .inner_classes_attr_end
+                    self.verify_trailing_tokens(TrailingTokensErrContext::InnerClassesAttrEnd);
+                    break;
+                }
+                RnsToken::DotInnerClass(_) => {
+                    let inner_class_token = self.next_token();
+                    let inner_class = self
+                        .parse_operand_or_type_hint(
+                            OperandErrPosContext::InnerClassRef,
+                            TypeHintKind::Class,
+                        )
+                        .map_err(|e| self.diagnostic.push(*e))
+                        .ok();
+
+                    if let Some(inner_class) = inner_class {
+                        inner_class_dirs.push((inner_class_token.span(), inner_class));
+                    }
+                    self.verify_trailing_tokens(TrailingTokensErrContext::InnerClassRef);
+                }
+                RnsToken::DotOuterClass(_) => {
+                    let outer_class_token = self.next_token();
+                    let outer_class = self
+                        .parse_operand_or_type_hint(
+                            OperandErrPosContext::OuterClassRef,
+                            TypeHintKind::Class,
+                        )
+                        .map_err(|e| self.diagnostic.push(*e))
+                        .ok();
+
+                    if let Some(outer_class) = outer_class {
+                        outer_class_dirs.push((outer_class_token.span(), outer_class));
+                    }
+                    self.verify_trailing_tokens(TrailingTokensErrContext::OuterClassRef);
+                }
+                RnsToken::DotFlags(_) => {
+                    self.next_token(); // consume .flags token
+                    flags = self.parse_inner_classes_attr_flags();
+                    self.verify_trailing_tokens(TrailingTokensErrContext::Flags);
+                }
+                RnsToken::DotInnerName(_) => {
+                    let inner_name_token = self.next_token();
+                    let inner_name = self
+                        .parse_operand_or_type_hint(
+                            OperandErrPosContext::InnerAttrName,
+                            TypeHintKind::Utf8,
+                        )
+                        .map_err(|e| self.diagnostic.push(*e))
+                        .ok();
+
+                    if let Some(inner_name) = inner_name {
+                        inner_name_dirs.push((inner_name_token.span(), inner_name));
+                    }
+                    self.verify_trailing_tokens(TrailingTokensErrContext::InnerName);
+                }
+                RnsToken::Eof(_) => break,
+                _ => {
+                    let unexpected_error = ParserError::UnexpectedToken(
+                        UnexpectedTokenContext::InnerClassesAttrBody,
+                        self.next_token(),
+                    );
+                    self.diagnostic.push(unexpected_error.into());
+                    self.anchor(&[
+                        RnsTokenKind::DotInnerClass,
+                        RnsTokenKind::DotOuterClass,
+                        RnsTokenKind::DotFlags,
+                        RnsTokenKind::DotInnerName,
+                        RnsTokenKind::DotInnerClassesAttrEnd,
+                    ]);
+                }
+            }
+        }
+
+        ParsedInnerClassesAttrDirective {
+            dir_span: attr_token.span(),
+            inner_class_dirs,
+            outer_class_dirs,
+            flags,
+            inner_name_dirs,
         }
     }
 
@@ -985,6 +1095,10 @@ impl RnsParser {
                 RnsToken::DotInner(_) => {
                     let inner = self.parse_inner();
                     self.class_dir.inner_classes.push(inner);
+                }
+                RnsToken::DotInnerClassesAttr(_) => {
+                    let attr = self.parse_inner_classes_attr();
+                    self.class_dir.inner_classes_attrs.push(attr);
                 }
                 RnsToken::Eof(_) => break,
                 _ => {
@@ -1161,6 +1275,61 @@ fn map_inner(
     }
 }
 
+fn map_inner_classes_attr(
+    instance: &mut RnsParser,
+    mut parsed: ParsedInnerClassesAttrDirective,
+) -> InnerClassesAttrDirective {
+    let inner_class = {
+        let mut vec = std::mem::take(&mut parsed.inner_class_dirs);
+        match vec.len() {
+            0 => None,
+            1 => Some(vec.swap_remove(0).1),
+            _ => {
+                instance
+                    .diagnostic
+                    .push(ParserError::MultipleInnerClassRefs(vec).into());
+                None
+            }
+        }
+    };
+
+    let outer_class = {
+        let mut vec = std::mem::take(&mut parsed.outer_class_dirs);
+        match vec.len() {
+            0 => None,
+            1 => Some(vec.swap_remove(0).1),
+            _ => {
+                instance
+                    .diagnostic
+                    .push(ParserError::MultipleOuterClassRefs(vec).into());
+                None
+            }
+        }
+    };
+
+    let inner_name = {
+        let mut vec = std::mem::take(&mut parsed.inner_name_dirs);
+        match vec.len() {
+            0 => None,
+            1 => Some(vec.swap_remove(0).1),
+            _ => {
+                instance
+                    .diagnostic
+                    .push(ParserError::MultipleInnerNames(vec).into());
+                None
+            }
+        }
+    };
+
+    InnerClassesAttrDirective {
+        dir_span: parsed.dir_span,
+        inner_class,
+        outer_class,
+        flags: parsed.flags,
+        inner_name,
+    }
+}
+
 pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Diagnostic>> {
     let mut instance = RnsParser::from_tokens(tokens.into_iter().peekable(), eof_span);
 
@@ -1173,6 +1342,12 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
     let inner_classes = parsed_inner_classes
         .into_iter()
         .map(|c| map_inner(&mut instance, c))
+        .collect();
+
+    let parsed_inner_classes_attrs = std::mem::take(&mut instance.class_dir.inner_classes_attrs);
+    let inner_classes_attrs = parsed_inner_classes_attrs
+        .into_iter()
+        .map(|c| map_inner_classes_attr(&mut instance, c))
         .collect();
 
     let package = instance.take_package_directive();
@@ -1190,5 +1365,6 @@ pub fn parse(tokens: Vec<RnsToken>, eof_span: Span) -> Result<RnsModule, Vec<Dia
         diagnostics: instance.diagnostic,
         methods: instance.class_dir.method_dirs,
         inner_classes,
+        inner_classes_attrs,
     })
 }

@@ -68,6 +68,38 @@ pub enum RnsInnerFlag {
     Enum,
 }
 
+impl RnsInnerFlag {
+    pub fn jvm_spec_name(&self) -> &'static str {
+        match self {
+            RnsInnerFlag::Public => JVMS_PUBLIC_FLAG_NAME,
+            RnsInnerFlag::Private => JVMS_PRIVATE_FLAG_NAME,
+            RnsInnerFlag::Protected => JVMS_PROTECTED_FLAG_NAME,
+            RnsInnerFlag::Static => JVMS_STATIC_FLAG_NAME,
+            RnsInnerFlag::Final => JVMS_FINAL_FLAG_NAME,
+            RnsInnerFlag::Interface => JVMS_INTERFACE_FLAG_NAME,
+            RnsInnerFlag::Abstract => JVMS_ABSTRACT_FLAG_NAME,
+            RnsInnerFlag::Synthetic => JVMS_SYNTHETIC_FLAG_NAME,
+            RnsInnerFlag::Annotation => JVMS_ANNOTATION_FLAG_NAME,
+            RnsInnerFlag::Enum => JVMS_ENUM_FLAG_NAME,
+        }
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            RnsInnerFlag::Public => FLAG_PUBLIC,
+            RnsInnerFlag::Private => FLAG_PRIVATE,
+            RnsInnerFlag::Protected => FLAG_PROTECTED,
+            RnsInnerFlag::Static => FLAG_STATIC,
+            RnsInnerFlag::Final => FLAG_FINAL,
+            RnsInnerFlag::Interface => FLAG_INTERFACE,
+            RnsInnerFlag::Abstract => FLAG_ABSTRACT,
+            RnsInnerFlag::Synthetic => FLAG_SYNTHETIC,
+            RnsInnerFlag::Annotation => FLAG_ANNOTATION,
+            RnsInnerFlag::Enum => FLAG_ENUM,
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Hash, PartialOrd, Ord)]
 pub enum RnsMethodFlag {
     Public,

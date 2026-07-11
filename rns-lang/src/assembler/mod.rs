@@ -1,12 +1,12 @@
 use crate::assembler::error::AssemblerError;
 use crate::assembler::jvm_warning::JvmWarning;
-use crate::ast::flag::{RnsClassFlag, RnsMethodFlag};
+use crate::ast::flag::{RnsClassFlag, RnsInnerFlag, RnsMethodFlag};
 use crate::ast::{MethodDirective, RnsModule, RnsOperand};
 use crate::diagnostic::{Diagnostic, DiagnosticTier};
 use crate::instruction::InstructionNumericOperand;
 use crate::token::type_hint::TypeHint;
 use lvm_class::ClassFile;
-use lvm_class::attribute::AttributeKind;
+use lvm_class::attribute::{AttributeKind, ClassAttribute, InnerClassEntry};
 use lvm_class::flags::ClassFlags;
 use lvm_class::prelude::{
     ClassFileBuilder, CodeAttribute, ConstantPoolBuilder, MethodAttribute, MethodFlags, MethodInfo,
@@ -57,6 +57,25 @@ impl RnsModule {
                 RnsMethodFlag::Abstract => res |= 0x0400,
                 RnsMethodFlag::Strict => res |= 0x0800,
                 RnsMethodFlag::Synthetic => res |= 0x1000,
+            }
+        }
+        res
+    }
+
+    fn build_inner_class_flags(flags: &HashMap<RnsInnerFlag, crate::token::Span>) -> u16 {
+        let mut res = 0u16;
+        for flag in flags.keys() {
+            match flag {
+                RnsInnerFlag::Public => res |= 0x0001,
+                RnsInnerFlag::Private => res |= 0x0002,
+                RnsInnerFlag::Protected => res |= 0x0004,
+                RnsInnerFlag::Static => res |= 0x0008,
+                RnsInnerFlag::Final => res |= 0x0010,
+                RnsInnerFlag::Interface => res |= 0x0200,
+                RnsInnerFlag::Abstract => res |= 0x0400,
+                RnsInnerFlag::Synthetic => res |= 0x1000,
+                RnsInnerFlag::Annotation => res |= 0x2000,
+                RnsInnerFlag::Enum => res |= 0x4000,
             }
         }
         res
@@ -223,7 +242,8 @@ impl RnsModule {
             methods.push(self.build_method_directive(&mut cp_builder, rns_method));
         }
 
-        self.handle_inner_classes(&mut cp_builder, this_cp_id.unwrap());
+        let inner_classes_attr =
+            self.handle_inner_classes(&mut cp_builder, this_cp_id.unwrap(), &package);
 
         if self
             .diagnostics
@@ -233,12 +253,17 @@ impl RnsModule {
             return (None, self.diagnostics);
         }
 
-        let class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
+        let mut class_file = ClassFileBuilder::new(0, 69, cp_builder.build()) // TODO: allow specifying version in jasm
             .access_flags(class_flags) // TODO: set access flags based on parsed flags
             .this_class(this_cp_id)
             .super_class(super_cp_id)
             .methods(methods)
             .build();
+
+        // Add InnerClasses attribute if present
+        if let (Some(attr), Some(ref mut cf)) = (inner_classes_attr, class_file.as_mut()) {
+            cf.attributes.push(attr);
+        }
 
         if let Some(class_file) = &class_file {
             let findings = class_file.verify();
@@ -250,32 +275,97 @@ impl RnsModule {
         (class_file, self.diagnostics)
     }
 
-    fn handle_inner_classes(&mut self, cp_builder: &mut ConstantPoolBuilder, _this_cp_id: u16) {
-        if self.inner_classes.is_empty() {
-            return;
+    fn handle_inner_classes(
+        &mut self,
+        cp_builder: &mut ConstantPoolBuilder,
+        this_cp_id: u16,
+        package: &str,
+    ) -> Option<ClassAttribute> {
+        let has_inner_classes = !self.inner_classes.is_empty();
+        let has_explicit_attrs = !self.inner_classes_attrs.is_empty();
+
+        if !has_inner_classes && !has_explicit_attrs {
+            return None;
         }
 
-        let _nest_members_attr_idx = cp_builder.add_attribute_utf8(AttributeKind::NestMembers);
-        let _inner_classes_attr_idx = cp_builder.add_attribute_utf8(AttributeKind::InnerClasses);
+        let attr_name_idx = cp_builder.add_attribute_utf8(AttributeKind::InnerClasses);
+        let mut entries = Vec::new();
 
-        /*
-        let mut nest_members = Vec::new();
-        let mut inner_classes = Vec::new();
+        // Auto-generate entries from .inner directives (like javac)
+        for inner in &self.inner_classes {
+            if let Some(name) = &inner.name {
+                // inner_name_index is the simple name (the .inner operand)
+                let inner_simple_name = name.value();
+                let inner_name_index = cp_builder.add_utf8(&inner_simple_name);
 
-        for inner in self.inner_classes {
-            if let Some(name) = inner.name {
-                let idx = Self::add_type_hint_to_cp(cp_builder, name);
-                nest_members.push(idx);
-                InnerClassEntry {
-                    inner_class_info_index: idx,
-                    outer_class_info_index: this_cp_id,
-                    inner_name_index: 0,       // TODO: handle inner name
-                    inner_class_access_flags: 0, // TODO: handle access flags
+                // inner_class_info_index is the mangled name
+                // Use .mangled_name if provided, otherwise build as {outer_full_name}${inner_name}
+                let mangled_class_name = if let Some(mangled) = &inner.mangled_name_dir {
+                    mangled.value().to_string()
+                } else {
+                    let outer_class_name = self
+                        .class_dir
+                        .name
+                        .as_ref()
+                        .map(|n| n.value())
+                        .unwrap_or_default();
+                    let outer_full_name = if package.is_empty() {
+                        outer_class_name.to_string()
+                    } else {
+                        format!("{}/{}", package, outer_class_name)
+                    };
+                    format!("{}${}", outer_full_name, inner_simple_name)
                 };
+                let inner_class_info_index = cp_builder.add_class(&mangled_class_name);
+
+                // .inner uses RnsClassFlag, but InnerClasses attr needs RnsInnerFlag-compatible flags
+                // For auto-generated entries, we use 0 (no special flags) since .inner doesn't have
+                // the attribute-level flags (private/protected/static etc.)
+                let access_flags = 0u16;
+
+                entries.push(InnerClassEntry {
+                    inner_class_info_index,
+                    outer_class_info_index: this_cp_id,
+                    inner_name_index,
+                    inner_class_access_flags: access_flags,
+                });
             }
         }
 
-         */
+        // Add explicit entries from .inner_classes_attr directives
+        for attr in &self.inner_classes_attrs {
+            let inner_class_info_index = attr
+                .inner_class
+                .as_ref()
+                .map(|h| Self::add_type_hint_to_cp(cp_builder, h.clone()))
+                .unwrap_or(0);
+
+            let outer_class_info_index = attr
+                .outer_class
+                .as_ref()
+                .map(|h| Self::add_type_hint_to_cp(cp_builder, h.clone()))
+                .unwrap_or(0);
+
+            let inner_name_index = attr
+                .inner_name
+                .as_ref()
+                .map(|h| Self::add_type_hint_to_cp(cp_builder, h.clone()))
+                .unwrap_or(0);
+
+            let access_flags = Self::build_inner_class_flags(&attr.flags);
+
+            entries.push(InnerClassEntry {
+                inner_class_info_index,
+                outer_class_info_index,
+                inner_name_index,
+                inner_class_access_flags: access_flags,
+            });
+        }
+
+        Some(ClassAttribute::InnerClasses {
+            attr_name_idx,
+            classes: entries,
+        })
     }
 
     fn map_lvm_class_finding(&mut self, finding: Finding) {
