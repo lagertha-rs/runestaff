@@ -78,6 +78,7 @@ struct ParsedInnerDirective {
     flags: HashMap<RnsClassFlag, Span>,
     super_directives: Vec<(Span, TypeHint)>,
     mangled_name_dirs: Vec<(Span, TypeHint)>,
+    method_dirs: Vec<MethodDirective>,
 }
 
 #[derive(Default)]
@@ -895,6 +896,7 @@ impl RnsParser {
             .ok();
         let mut super_directives = Vec::new();
         let mut mangled_name_dirs = Vec::new();
+        let mut method_dirs = Vec::new();
 
         self.verify_trailing_tokens(TrailingTokensErrContext::Inner);
 
@@ -906,10 +908,10 @@ impl RnsParser {
                 RnsToken::DotMethod(_) => {
                     // TODO: I shouldn't fail fast here, need try to anchor
                     let method_dir = self.parse_method().unwrap();
-                    self.class_dir.method_dirs.push(method_dir);
+                    method_dirs.push(method_dir);
                 }
                 RnsToken::DotInnerEnd(_) => {
-                    self.next_token(); // consume .class_end
+                    self.next_token(); // consume .inner_end
                     self.verify_trailing_tokens(TrailingTokensErrContext::InnerEnd);
                     break;
                 }
@@ -921,7 +923,7 @@ impl RnsParser {
                     }
                 }
                 RnsToken::DotMangledName(_) => {
-                    let mangled_name_token = self.next_token(); // consume .inner token
+                    let mangled_name_token = self.next_token(); // consume .mangled_name token
                     let mangled_name = self
                         .parse_operand_or_type_hint(
                             OperandErrPosContext::MangledName,
@@ -959,6 +961,7 @@ impl RnsParser {
             flags,
             super_directives,
             mangled_name_dirs,
+            method_dirs,
         }
     }
 
@@ -1272,6 +1275,7 @@ fn map_inner(
         super_dir,
         mangled_name_dir,
         flags: parsed_inner_directive.flags,
+        methods: parsed_inner_directive.method_dirs,
     }
 }
 

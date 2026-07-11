@@ -1,0 +1,87 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## OuterClass$Inner ##
+.class OuterClass$Inner
+.super java/lang/Object
+
+.class_end
+
+## OuterClass ##
+.class public OuterClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests minimal inner class declaration.
+; Expected: success, generates outer class with InnerClasses attribute
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner Inner
+.inner_end
+
+.class_end
+----- STDERR -----
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/general/inner_class/minimal.rns:7:1 ]
+   │
+ 7 │ .inner Inner
+   │ ───┬──  
+   │    ╰──── class 'Inner' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- JAVAP -----
+## OuterClass$Inner ##
+Classfile <TEMP_DIR>/OuterClass$Inner.class
+  Last modified <DATE>; size 123 bytes
+  SHA-256 checksum 17a30e7ab44a5c8e585f94de0a8d0e5dd84e6a8990847deb4f52f97dbcfb99b2
+class OuterClass$Inner
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // OuterClass$Inner
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // OuterClass$Inner
+  #4 = Utf8               OuterClass$Inner
+  #5 = Class              #6              // OuterClass
+  #6 = Utf8               OuterClass
+  #7 = Utf8               Inner
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // Inner=class OuterClass$Inner of class OuterClass
+
+## OuterClass ##
+Classfile <TEMP_DIR>/OuterClass.class
+  Last modified <DATE>; size 123 bytes
+  SHA-256 checksum f51a9dc47b4fbaa73283871583ea04404bfabcc4773f7b3bcebfa3dca0cd55fa
+public class OuterClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // OuterClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // OuterClass
+  #4 = Utf8               OuterClass
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               Inner
+  #7 = Class              #8              // OuterClass$Inner
+  #8 = Utf8               OuterClass$Inner
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // Inner=class OuterClass$Inner of class OuterClass
