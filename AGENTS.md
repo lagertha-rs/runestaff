@@ -75,6 +75,8 @@ If a test produces only warnings or assembles silently, it MUST NOT be in `error
 | `missing_operand.rns` | Required operand missing |
 | `missing_operand_recovers.rns` | Missing operand + subsequent error |
 | `outside_class_before.rns` | Directive before `.class` rejected |
+| `outside_inner.rns` | Directive outside `.inner` body (but in class body) rejected |
+| `outside_inner_classes_attr.rns` | Sub-directive outside `.inner_classes_attr` body rejected |
 | `*_as_name.rns` | Invalid tokens used as operands (access_flag, directive, label, numeric, string, type_hint) |
 | `trailing_token(s).rns` | Extra tokens after directive |
 | `trailing_token(s)_recovers.rns` | Trailing tokens + subsequent error |
@@ -175,6 +177,20 @@ Defined in `rns-lang/src/diagnostic.rs`. Each code is unique.
 | E-028 | ERR_CODE_NUMERIC_OPERAND_OVERFLOW | Numeric operand overflow |
 | E-029 | ERR_CODE_PACKAGE_TRAILING_TOK | Trailing tokens after `.package` |
 | E-030 | ERR_CODE_MULTIPLE_PACKAGE | Multiple `.package` directives |
+| E-031 | ERR_CODE_INVALID_INNER_FLAG | Invalid access flag in `.flags` (inner_classes_attr) |
+| E-032 | ERR_CODE_INNER_TRAILING_TOK | Trailing tokens after `.inner` |
+| E-033 | ERR_CODE_INNER_END_TRAILING_TOK | Trailing tokens after `.inner_end` |
+| E-034 | ERR_CODE_UNEXPECTED_TOKEN_IN_INNER | Unexpected token inside `.inner` body |
+| E-035 | ERR_CODE_MULTIPLE_MANGLED_NAMES | Multiple `.mangled_name` directives |
+| E-036 | ERR_CODE_INNER_CLASSES_ATTR_END_TRAILING_TOK | Trailing tokens after `.inner_classes_attr_end` |
+| E-037 | ERR_CODE_UNEXPECTED_TOKEN_IN_INNER_CLASSES_ATTR | Unexpected token inside `.inner_classes_attr` body |
+| E-038 | ERR_CODE_INNER_CLASS_TRAILING_TOK | Trailing tokens after `.inner_class` |
+| E-039 | ERR_CODE_OUTER_CLASS_TRAILING_TOK | Trailing tokens after `.outer_class` |
+| E-040 | ERR_CODE_INNER_NAME_TRAILING_TOK | Trailing tokens after `.inner_name` |
+| E-041 | ERR_CODE_FLAGS_TRAILING_TOK | Trailing tokens after `.flags` |
+| E-042 | ERR_CODE_MULTIPLE_INNER_CLASS | Multiple `.inner_class` directives |
+| E-043 | ERR_CODE_MULTIPLE_OUTER_CLASS | Multiple `.outer_class` directives |
+| E-044 | ERR_CODE_MULTIPLE_INNER_NAME | Multiple `.inner_name` directives |
 
 ### Warning codes
 
@@ -232,4 +248,6 @@ CLI tests live in `rnsc/test_data/cli_integration/`. Each fixture assembled twic
 5. Add `outside_class_before.rns` if directive must appear inside class body
 6. When a directive can also appear inside `.inner` or `.inner_classes_attr` body, add the same test matrix for each context (e.g. `inner_directive/`, `inner_classes_attr_directive/`)
 7. Suppress W-001 noise: always add `.super java/lang/Object` to test fixtures that declare classes (both `.class` and `.inner` blocks) unless the test is specifically about missing super
-8. Run `cargo test --workspace` then `cargo insta review` to accept snapshots
+8. Update `RnsToken::can_appear_in()` in `rns-lang/src/token/mod.rs` if the directive is valid in multiple contexts (e.g. `.inner_classes_attr` is valid in both `ClassBody` and `InnerBody`)
+9. When a sub-directive only appears inside a block directive (e.g. `.inner_class` only inside `.inner_classes_attr`), add an `outside_<block>.rns` test proving it's rejected outside its block
+10. Run `cargo test --workspace` then `cargo insta review` to accept snapshots
