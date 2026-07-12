@@ -1,0 +1,119 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## OuterClass$First ##
+.class OuterClass$First
+.super java/lang/Object
+
+.class_end
+
+## OuterClass$Second ##
+.class OuterClass$Second
+.super java/lang/Object
+
+.class_end
+
+## OuterClass ##
+.class public OuterClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests multiple inner classes in the same outer class.
+; Expected: success, one .class file per inner class + InnerClasses attribute
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner First
+    .super java/lang/Object
+.inner_end
+
+.inner Second
+    .super java/lang/Object
+.inner_end
+
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+## OuterClass$First ##
+Classfile <TEMP_DIR>/OuterClass$First.class
+  Last modified <DATE>; size 123 bytes
+  SHA-256 checksum 6729b93723173c2708cdf5efc815d14de3531431cb34cdeb582ed84f1c50841f
+class OuterClass$First
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // OuterClass$First
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // OuterClass$First
+  #4 = Utf8               OuterClass$First
+  #5 = Class              #6              // OuterClass
+  #6 = Utf8               OuterClass
+  #7 = Utf8               First
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // First=class OuterClass$First of class OuterClass
+
+## OuterClass$Second ##
+Classfile <TEMP_DIR>/OuterClass$Second.class
+  Last modified <DATE>; size 125 bytes
+  SHA-256 checksum 9e9667f68bbff5af3bc517756d29f2023046db8198d0ca12ad08aa725ae64f70
+class OuterClass$Second
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // OuterClass$Second
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // OuterClass$Second
+  #4 = Utf8               OuterClass$Second
+  #5 = Class              #6              // OuterClass
+  #6 = Utf8               OuterClass
+  #7 = Utf8               Second
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // Second=class OuterClass$Second of class OuterClass
+
+## OuterClass ##
+Classfile <TEMP_DIR>/OuterClass.class
+  Last modified <DATE>; size 163 bytes
+  SHA-256 checksum 5afe26092b84af226fda0a0ab4c77cd62b759c91ad2758dd03aa323a4f309440
+public class OuterClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // OuterClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+   #1 = Class              #2             // java/lang/Object
+   #2 = Utf8               java/lang/Object
+   #3 = Class              #4             // OuterClass
+   #4 = Utf8               OuterClass
+   #5 = Utf8               InnerClasses
+   #6 = Utf8               First
+   #7 = Class              #8             // OuterClass$First
+   #8 = Utf8               OuterClass$First
+   #9 = Utf8               Second
+  #10 = Class              #11            // OuterClass$Second
+  #11 = Utf8               OuterClass$Second
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // First=class OuterClass$First of class OuterClass
+  #9= #10 of #3;                          // Second=class OuterClass$Second of class OuterClass

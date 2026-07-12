@@ -1,0 +1,11 @@
+; Tests inner class with class-level access flags.
+; Expected: success, inner class file shows ACC_PUBLIC | ACC_FINAL
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner public final StaticNested
+    .super java/lang/Object
+.inner_end
+
+.class_end

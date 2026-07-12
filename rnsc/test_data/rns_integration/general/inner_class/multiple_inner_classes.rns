@@ -1,0 +1,15 @@
+; Tests multiple inner classes in the same outer class.
+; Expected: success, one .class file per inner class + InnerClasses attribute
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner First
+    .super java/lang/Object
+.inner_end
+
+.inner Second
+    .super java/lang/Object
+.inner_end
+
+.class_end

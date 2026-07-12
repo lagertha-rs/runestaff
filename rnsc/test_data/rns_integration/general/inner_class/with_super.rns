@@ -1,0 +1,11 @@
+; Tests inner class with explicit .super directive.
+; Expected: success, inner class has correct super class
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner Inner
+    .super com/profs/CustomParent
+.inner_end
+
+.class_end

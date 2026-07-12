@@ -1,0 +1,99 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## OuterClass$Inner ##
+.class OuterClass$Inner
+.super java/lang/Object
+
+.method public static main ()V
+    .code stack 1 locals 1
+      return
+    .code_end
+.method_end
+.class_end
+
+## OuterClass ##
+.class public OuterClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests inner class with a method.
+; Expected: success, inner class file has the method
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .method public static main ()V
+        .code stack 1 locals 1
+            return
+        .code_end
+    .method_end
+.inner_end
+
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+## OuterClass$Inner ##
+Classfile <TEMP_DIR>/OuterClass$Inner.class
+  Last modified <DATE>; size 170 bytes
+  SHA-256 checksum 49ac88d601f5996c30e6f2bea5257af7870a5732157a4c5358398dcec83b2459
+class OuterClass$Inner
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // OuterClass$Inner
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 1, attributes: 1
+Constant pool:
+   #1 = Class              #2             // java/lang/Object
+   #2 = Utf8               java/lang/Object
+   #3 = Class              #4             // OuterClass$Inner
+   #4 = Utf8               OuterClass$Inner
+   #5 = Class              #6             // OuterClass
+   #6 = Utf8               OuterClass
+   #7 = Utf8               Inner
+   #8 = Utf8               InnerClasses
+   #9 = Utf8               main
+  #10 = Utf8               ()V
+  #11 = Utf8               Code
+{
+  public static void main();
+    descriptor: ()V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=1, locals=1, args_size=0
+         0: return
+}
+InnerClasses:
+  #7= #3 of #5;                           // Inner=class OuterClass$Inner of class OuterClass
+
+## OuterClass ##
+Classfile <TEMP_DIR>/OuterClass.class
+  Last modified <DATE>; size 123 bytes
+  SHA-256 checksum f51a9dc47b4fbaa73283871583ea04404bfabcc4773f7b3bcebfa3dca0cd55fa
+public class OuterClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // OuterClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // OuterClass
+  #4 = Utf8               OuterClass
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               Inner
+  #7 = Class              #8              // OuterClass$Inner
+  #8 = Utf8               OuterClass$Inner
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // Inner=class OuterClass$Inner of class OuterClass
