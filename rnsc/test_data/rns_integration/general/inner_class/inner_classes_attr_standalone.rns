@@ -1,0 +1,13 @@
+; Tests .inner_classes_attr without .inner block generates standalone InnerClasses entry.
+
+.class public Main
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main
+    .outer_class com/profs/Main
+    .flags public static
+    .inner_name NestedClass
+.inner_classes_attr_end
+
+.class_end

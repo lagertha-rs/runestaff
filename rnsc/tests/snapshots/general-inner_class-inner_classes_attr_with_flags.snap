@@ -1,0 +1,94 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## Main$NestedClass ##
+.class Main$NestedClass
+.super java/lang/Object
+
+.class_end
+
+## Main ##
+.class public Main
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests .inner_classes_attr with .flags sets access flags correctly in javap.
+
+.class public Main
+.super java/lang/Object
+
+.inner NestedClass
+.inner_end
+
+.inner_classes_attr
+    .inner_class Main
+    .outer_class Main
+    .flags private static final
+    .inner_name NestedClass
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[W-001] Warning: missing super directive
+   ╭─[ test_data/rns_integration/general/inner_class/inner_classes_attr_with_flags.rns:6:1 ]
+   │
+ 6 │ .inner NestedClass
+   │ ───┬──  
+   │    ╰──── class 'NestedClass' is missing a '.super' directive
+   │ 
+   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
+───╯
+----- JAVAP -----
+## Main$NestedClass ##
+Classfile <TEMP_DIR>/Main$NestedClass.class
+  Last modified <DATE>; size 123 bytes
+  SHA-256 checksum 84a41f30ff82351e85704e8eb7e3ffb3ae396d1b700cde63e5a33985d600ec17
+class Main$NestedClass
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // Main$NestedClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // Main$NestedClass
+  #4 = Utf8               Main$NestedClass
+  #5 = Class              #6              // Main
+  #6 = Utf8               Main
+  #7 = Utf8               NestedClass
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // NestedClass=class Main$NestedClass of class Main
+
+## Main ##
+Classfile <TEMP_DIR>/Main.class
+  Last modified <DATE>; size 131 bytes
+  SHA-256 checksum 7c9455812a500b0da556a619c8a168b9daad55747dedec2bccb9bc339047f4ff
+public class Main
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // Main
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // Main
+  #4 = Utf8               Main
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               NestedClass
+  #7 = Class              #8              // Main$NestedClass
+  #8 = Utf8               Main$NestedClass
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // NestedClass=class Main$NestedClass of class Main
+  private static final #6= #3 of #3;      // NestedClass=class Main of class Main

@@ -1,0 +1,16 @@
+; Tests .inner_classes_attr with .flags sets access flags correctly in javap.
+
+.class public Main
+.super java/lang/Object
+
+.inner NestedClass
+.inner_end
+
+.inner_classes_attr
+    .inner_class Main
+    .outer_class Main
+    .flags private static final
+    .inner_name NestedClass
+.inner_classes_attr_end
+
+.class_end

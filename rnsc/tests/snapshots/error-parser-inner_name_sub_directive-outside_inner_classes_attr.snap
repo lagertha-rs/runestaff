@@ -1,0 +1,31 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that .inner_name outside .inner_classes_attr body is detected.
+; Expected error: E-007 (unexpected token in class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_name NestedClass
+
+.class_end
+----- STDERR -----
+[E-007] Error: unexpected directive class body
+   ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/outside_inner_classes_attr.rns:7:1 ]
+   │
+ 7 │ .inner_name NestedClass
+   │ ─────┬─────  
+   │      ╰─────── unexpected token
+   │ 
+   │ Help: Check the syntax of the class body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-007
+───╯
+----- JAVAP -----
+not generated

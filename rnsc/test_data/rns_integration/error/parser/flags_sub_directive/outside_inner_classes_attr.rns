@@ -1,0 +1,9 @@
+; Tests that .flags outside .inner_classes_attr body is detected.
+; Expected error: E-007 (unexpected token in class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.flags public
+
+.class_end
