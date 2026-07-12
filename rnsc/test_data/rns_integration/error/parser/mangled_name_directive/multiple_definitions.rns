@@ -1,0 +1,13 @@
+; Tests that multiple .mangled_name directives are detected and reported.
+; Expected error: E-035 (multiple mangled names)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name FirstName
+    .mangled_name SecondName
+.inner_end
+
+.class_end

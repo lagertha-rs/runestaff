@@ -1,0 +1,12 @@
+; Tests that missing operand after .mangled_name is detected and reported.
+; Expected error: E-020 (missing implicit type hint operand)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name
+.inner_end
+
+.class_end

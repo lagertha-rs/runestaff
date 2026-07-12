@@ -1,0 +1,15 @@
+; Tests that parser continues after multiple definitions error and reports subsequent errors
+; Expected errors: E-035 (multiple mangled names), E-034 (unexpected token in inner body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name FirstName
+    .mangled_name SecondName
+
+    unknown_token ; <- E-034, still reported after recovery
+.inner_end
+
+.class_end

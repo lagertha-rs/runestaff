@@ -1,0 +1,12 @@
+; Tests that an access flag used as mangled name produces a warning.
+; Expected: reserved-like identifier warning
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name public
+.inner_end
+
+.class_end

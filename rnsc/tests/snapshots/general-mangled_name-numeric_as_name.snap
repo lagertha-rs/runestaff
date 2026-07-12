@@ -1,0 +1,81 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## 12345 ##
+.class 12345
+.super java/lang/Object
+
+.class_end
+
+## MyClass ##
+.class public MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a numeric value used as mangled name is handled.
+; Expected: the number is treated as an identifier, no diagnostics
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name 12345
+.inner_end
+
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+## 12345 ##
+Classfile <TEMP_DIR>/12345.class
+  Last modified <DATE>; size 109 bytes
+  SHA-256 checksum d87b0191c62118605ed50ef876d8bfc2d94d313b83864b5cdf04c996b1201ab7
+class 12345
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // 12345
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // "12345"
+  #4 = Utf8               12345
+  #5 = Class              #6              // MyClass
+  #6 = Utf8               MyClass
+  #7 = Utf8               Inner
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // Inner=class "12345" of class MyClass
+
+## MyClass ##
+Classfile <TEMP_DIR>/MyClass.class
+  Last modified <DATE>; size 109 bytes
+  SHA-256 checksum 806e3819bcb63930d434305fad34d35d38eb9570701203bd731aa09b32caae14
+public class MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyClass
+  #4 = Utf8               MyClass
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               Inner
+  #7 = Class              #8              // "12345"
+  #8 = Utf8               12345
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // Inner=class "12345" of class MyClass

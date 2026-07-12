@@ -1,0 +1,9 @@
+; Tests that .mangled_name outside inner body is detected.
+; Expected error: E-007 (unexpected token in class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.mangled_name SomeName
+
+.class_end

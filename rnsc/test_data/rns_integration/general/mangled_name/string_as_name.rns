@@ -1,0 +1,12 @@
+; Tests that a quoted string used as mangled name is handled.
+; Expected: the quoted string is treated as an identifier, no diagnostics
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name "MyMangledName"
+.inner_end
+
+.class_end

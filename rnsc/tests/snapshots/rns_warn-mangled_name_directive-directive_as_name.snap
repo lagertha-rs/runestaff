@@ -1,0 +1,81 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## .super ##
+.class .super
+.super java/lang/Object
+
+.class_end
+
+## MyClass ##
+.class public MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a directive used as mangled name produces a warning.
+; Expected: reserved-like identifier warning
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name .super
+.inner_end
+
+.class_end
+----- STDERR -----
+[TODO] Warning: TODO: reserved-like identifier used as name
+----- JAVAP -----
+## .super ##
+Classfile <TEMP_DIR>/.super.class
+  Last modified <DATE>; size 110 bytes
+  SHA-256 checksum c27e230a66748190490e839f2821963fa65a6774d20935d1c5183bb13d5fd47a
+class .super
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // .super
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // ".super"
+  #4 = Utf8               .super
+  #5 = Class              #6              // MyClass
+  #6 = Utf8               MyClass
+  #7 = Utf8               Inner
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // Inner=class ".super" of class MyClass
+
+## MyClass ##
+Classfile <TEMP_DIR>/MyClass.class
+  Last modified <DATE>; size 110 bytes
+  SHA-256 checksum c2ecd899cc8e93be562e97e5e670d36c52f84e24a52be36ace744bf2a7e65b95
+public class MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyClass
+  #4 = Utf8               MyClass
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               Inner
+  #7 = Class              #8              // ".super"
+  #8 = Utf8               .super
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // Inner=class ".super" of class MyClass
