@@ -1,0 +1,15 @@
+; Tests that .inner_classes_attr can appear inside .inner body.
+; Expected: success, no errors
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .inner_classes_attr
+        .inner_class com/profs/Main$Inner
+        .outer_class com/profs/Main
+    .inner_classes_attr_end
+.inner_end
+
+.class_end

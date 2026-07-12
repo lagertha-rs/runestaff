@@ -1,0 +1,13 @@
+; Tests that unexpected token inside .inner_classes_attr body is detected and reported.
+; Expected error: E-037 (unexpected token in inner_classes_attr body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+
+     unknown_token
+
+.inner_classes_attr_end
+
+.class_end

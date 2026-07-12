@@ -1,0 +1,48 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after trailing tokens error and reports subsequent errors
+; Expected errors: E-036 (trailing tokens), E-007 (unknown token in class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+.inner_classes_attr_end trailing_tokens
+
+     unknown_token ; <- E-007, still reported after recovery
+
+.class_end
+----- STDERR -----
+[E-036] Error: unexpected trailing tokens after inner_classes_attr definition end
+   ╭─[ test_data/rns_integration/error/parser/inner_classes_attr_directive/attr_end_trailing_tokens_recovers.rns:8:25 ]
+   │
+ 8 │ .inner_classes_attr_end trailing_tokens
+   │                        │───────┬───────  
+   │                        ╰───────────────── expected end of inner_classes_attr definition end here
+   │                                │         
+   │                                ╰───────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-036
+───╯
+[E-007] Error: unexpected identifier class body
+    ╭─[ test_data/rns_integration/error/parser/inner_classes_attr_directive/attr_end_trailing_tokens_recovers.rns:10:6 ]
+    │
+ 10 │      unknown_token ; <- E-007, still reported after recovery
+    │      ──────┬──────  
+    │            ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-007
+────╯
+----- JAVAP -----
+not generated

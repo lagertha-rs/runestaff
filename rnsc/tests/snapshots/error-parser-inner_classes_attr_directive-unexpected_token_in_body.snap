@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that unexpected token inside .inner_classes_attr body is detected and reported.
+; Expected error: E-037 (unexpected token in inner_classes_attr body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+
+     unknown_token
+
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-037] Error: unexpected identifier inner_classes_attr body
+   ╭─[ test_data/rns_integration/error/parser/inner_classes_attr_directive/unexpected_token_in_body.rns:9:6 ]
+   │
+ 9 │      unknown_token
+   │      ──────┬──────  
+   │            ╰──────── unexpected token
+   │ 
+   │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-037
+───╯
+----- JAVAP -----
+not generated

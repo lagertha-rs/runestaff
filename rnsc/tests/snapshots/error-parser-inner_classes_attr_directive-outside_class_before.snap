@@ -1,0 +1,33 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that .inner_classes_attr directive before .class is detected as unexpected token.
+; Expected error: E-008 (unexpected token before class definition)
+; The .inner_classes_attr directive is only valid inside a class body, not before it.
+
+.inner_classes_attr
+.inner_classes_attr_end
+
+.class public MyClass
+.super java/lang/Object
+
+.class_end
+----- STDERR -----
+[E-008] Error: unexpected directive before class definition
+   ╭─[ test_data/rns_integration/error/parser/inner_classes_attr_directive/outside_class_before.rns:5:1 ]
+   │
+ 5 │ .inner_classes_attr
+   │ ─────────┬─────────  
+   │          ╰─────────── valid contexts for .inner_classes_attr directive are: 'class body', 'inner body'.
+   │ 
+   │ Help: Ensure all code is declared inside a '.class' directive.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-008
+───╯
+----- JAVAP -----
+not generated

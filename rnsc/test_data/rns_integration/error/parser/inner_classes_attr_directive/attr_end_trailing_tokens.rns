@@ -1,0 +1,10 @@
+; Tests that trailing tokens after .inner_classes_attr_end are detected and reported.
+; Expected error: E-036 (inner_classes_attr_end trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+.inner_classes_attr_end trailing_tokens
+
+.class_end
