@@ -1,0 +1,80 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## MyClass$label ##
+.class MyClass$label
+.super java/lang/Object
+
+.class_end
+
+## MyClass ##
+.class public MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a label used as inner class name is handled.
+; Expected: warning about reserved-like identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner label:
+    .super java/lang/Object
+.inner_end
+
+.class_end
+----- STDERR -----
+[TODO] Warning: TODO: reserved-like identifier used as name
+----- JAVAP -----
+## MyClass$label ##
+Classfile <TEMP_DIR>/MyClass$label.class
+  Last modified <DATE>; size 117 bytes
+  SHA-256 checksum 7f5b98e6e4b4afa36fbf9ba86e7e67f05569870f1ec952a1b461d641cd734b9e
+class MyClass$label
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MyClass$label
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyClass$label
+  #4 = Utf8               MyClass$label
+  #5 = Class              #6              // MyClass
+  #6 = Utf8               MyClass
+  #7 = Utf8               label
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // label=class MyClass$label of class MyClass
+
+## MyClass ##
+Classfile <TEMP_DIR>/MyClass.class
+  Last modified <DATE>; size 117 bytes
+  SHA-256 checksum 9198dd687c830f6513d22d66ff7a131be883a080d8b2ec69b042452121eb9e49
+public class MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyClass
+  #4 = Utf8               MyClass
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               label
+  #7 = Class              #8              // MyClass$label
+  #8 = Utf8               MyClass$label
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // label=class MyClass$label of class MyClass

@@ -13,19 +13,12 @@ expression: "&snapshot_content"
 ; Expected: parser error about unexpected token
 
 .class public MyClass
+.super java/lang/Object
 .package 123
 
 .class_end
 ----- STDERR -----
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/package_directive/numeric_as_name.rns:5:1 ]
-   │
- 5 │ .class public MyClass
-   │ ───┬──  
-   │    ╰──── class 'MyClass' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
-───╯
+
 ----- JAVAP -----
 Classfile <TEMP_DIR>/123/MyClass.class
   Last modified <DATE>; size 63 bytes

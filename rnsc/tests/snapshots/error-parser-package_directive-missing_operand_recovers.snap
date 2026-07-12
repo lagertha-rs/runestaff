@@ -9,14 +9,15 @@ not generated
 ; Expected errors: E-005 (missing operand), E-007 (unknown token)
 
 .class public MyClass
+.super java/lang/Object
 .package
 
      unknown_token ; <- still reported after recovery
 ----- STDERR -----
 [E-009] Error: unexpected newline where a package name is required
-   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:5:1 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:6:1 ]
    │
- 5 │ .package
+ 6 │ .package
    │ ────┬───│ 
    │     ╰───── the '.package' directive requires a package name as operand
    │         │ 
@@ -29,9 +30,9 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-009
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:7:6 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:8:6 ]
    │
- 7 │      unknown_token ; <- still reported after recovery
+ 8 │      unknown_token ; <- still reported after recovery
    │      ──────┬──────  
    │            ╰──────── unexpected token
    │ 
@@ -39,15 +40,6 @@ not generated
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-007
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand_recovers.rns:4:1 ]
-   │
- 4 │ .class public MyClass
-   │ ───┬──  
-   │    ╰──── class 'MyClass' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

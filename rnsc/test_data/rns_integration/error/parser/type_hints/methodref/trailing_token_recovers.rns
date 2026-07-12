@@ -1,1 +1,2 @@
-.class @methodref MyClass methodName (I)V trailing
+.class @methodref MyClass add ()V trailing
+.super java/lang/Object

@@ -1,0 +1,80 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## MyClass$.super ##
+.class MyClass$.super
+.super java/lang/Object
+
+.class_end
+
+## MyClass ##
+.class public MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that a directive used as inner class name is handled.
+; Expected: warning about reserved-like identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner .super
+    .super java/lang/Object
+.inner_end
+
+.class_end
+----- STDERR -----
+[TODO] Warning: TODO: reserved-like identifier used as name
+----- JAVAP -----
+## MyClass$.super ##
+Classfile <TEMP_DIR>/MyClass$.super.class
+  Last modified <DATE>; size 119 bytes
+  SHA-256 checksum 48b2d0c2466a7614abf2019945811417417fd1d4a526e95aca0e42a57f56f0d1
+class MyClass$.super
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MyClass$.super
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // "MyClass$.super"
+  #4 = Utf8               MyClass$.super
+  #5 = Class              #6              // MyClass
+  #6 = Utf8               MyClass
+  #7 = Utf8               .super
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // .super=class "MyClass$.super" of class MyClass
+
+## MyClass ##
+Classfile <TEMP_DIR>/MyClass.class
+  Last modified <DATE>; size 119 bytes
+  SHA-256 checksum f90cf62977fe66273e709eb2f6c891d4bac02fb9947564fe9ff99af249350e02
+public class MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyClass
+  #4 = Utf8               MyClass
+  #5 = Utf8               InnerClasses
+  #6 = Utf8               .super
+  #7 = Class              #8              // "MyClass$.super"
+  #8 = Utf8               MyClass$.super
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // .super=class "MyClass$.super" of class MyClass

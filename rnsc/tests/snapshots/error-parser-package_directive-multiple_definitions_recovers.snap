@@ -9,6 +9,7 @@ not generated
 ; Expected errors: E-030 (multiple definitions), E-007 (unknown token)
 
 .class public MyClass
+.super java/lang/Object
 .package com.example
 .package com.other
 
@@ -17,9 +18,9 @@ not generated
 .class_end
 ----- STDERR -----
 [W-002] Warning: package name 'com.example' contains '.' separator
-   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:5:10 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:6:10 ]
    │
- 5 │ .package com.example
+ 6 │ .package com.example
    │          ─────┬─────  
    │               ╰─────── package 'com.example' uses '.' as separator
    │ 
@@ -28,9 +29,9 @@ not generated
    │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
 ───╯
 [W-002] Warning: package name 'com.other' contains '.' separator
-   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:6:10 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:7:10 ]
    │
- 6 │ .package com.other
+ 7 │ .package com.other
    │          ────┬────  
    │              ╰────── package 'com.other' uses '.' as separator
    │ 
@@ -39,9 +40,9 @@ not generated
    │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
 ───╯
 [E-007] Error: unexpected identifier class body
-   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:8:6 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:9:6 ]
    │
- 8 │      unknown_token ; <- still reported after recovery
+ 9 │      unknown_token ; <- still reported after recovery
    │      ──────┬──────  
    │            ╰──────── unexpected token
    │ 
@@ -51,12 +52,12 @@ not generated
    │       https://rune.lagertha-vm.com/errors/E-007
 ───╯
 [E-030] Error: multiple .package directives
-   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:6:1 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:7:1 ]
    │
- 5 │ .package com.example
+ 6 │ .package com.example
    │ ────┬───  
    │     ╰───── first .package directive defined here with package 'com.example'
- 6 │ .package com.other
+ 7 │ .package com.other
    │ ────┬───  
    │     ╰───── but another .package directive defined here with package 'com.other'
    │ 
@@ -64,15 +65,6 @@ not generated
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-030
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/package_directive/multiple_definitions_recovers.rns:4:1 ]
-   │
- 4 │ .class public MyClass
-   │ ───┬──  
-   │    ╰──── class 'MyClass' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

@@ -1,0 +1,11 @@
+; Tests that a label used as inner class name is handled.
+; Expected: warning about reserved-like identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner label:
+    .super java/lang/Object
+.inner_end
+
+.class_end

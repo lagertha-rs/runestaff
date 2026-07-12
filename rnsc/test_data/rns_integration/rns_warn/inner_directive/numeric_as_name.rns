@@ -1,0 +1,11 @@
+; Tests that a numeric value used as inner class name is handled.
+; Expected: the number is treated as an identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner 12345
+    .super java/lang/Object
+.inner_end
+
+.class_end

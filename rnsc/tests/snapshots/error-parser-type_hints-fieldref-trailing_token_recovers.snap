@@ -6,6 +6,7 @@ expression: "&snapshot_content"
 not generated
 ----- INPUT -----
 .class @fieldref MyClass fieldName Ljava/io/PrintStream; trailing
+.super java/lang/Object
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@fieldref'
    ╭─[ test_data/rns_integration/error/parser/type_hints/fieldref/trailing_token_recovers.rns:1:58 ]
@@ -20,15 +21,6 @@ not generated
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-013
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/type_hints/fieldref/trailing_token_recovers.rns:1:1 ]
-   │
- 1 │ .class @fieldref MyClass fieldName Ljava/io/PrintStream; trailing
-   │ ───┬──  
-   │    ╰──── class 'MyClass fieldName Ljava/io/PrintStream;' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

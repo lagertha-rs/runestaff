@@ -3,6 +3,7 @@
 ; The parser should detect that the package name is missing.
 
 .class public MyClass
+.super java/lang/Object
 .package
 
 .class_end

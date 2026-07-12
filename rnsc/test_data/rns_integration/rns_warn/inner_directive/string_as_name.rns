@@ -1,0 +1,11 @@
+; Tests that a string literal used as inner class name is handled.
+; Expected: the quoted string is treated as an identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner "MyInner"
+    .super java/lang/Object
+.inner_end
+
+.class_end

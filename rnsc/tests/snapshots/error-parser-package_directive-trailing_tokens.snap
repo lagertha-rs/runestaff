@@ -10,14 +10,15 @@ not generated
 ; The parser should detect 'trailing_tokens' as unexpected after the package name.
 
 .class public MyClass
+.super java/lang/Object
 .package com.example trailing_tokens
 
 .class_end
 ----- STDERR -----
 [W-002] Warning: package name 'com.example' contains '.' separator
-   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:6:10 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:7:10 ]
    │
- 6 │ .package com.example trailing_tokens
+ 7 │ .package com.example trailing_tokens
    │          ─────┬─────  
    │               ╰─────── package 'com.example' uses '.' as separator
    │ 
@@ -26,9 +27,9 @@ not generated
    │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
 ───╯
 [E-029] Error: unexpected trailing tokens after package definition
-   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:6:22 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:7:22 ]
    │
- 6 │ .package com.example trailing_tokens
+ 7 │ .package com.example trailing_tokens
    │                     │───────┬───────  
    │                     ╰───────────────── expected end of package definition here
    │                             │         
@@ -38,15 +39,6 @@ not generated
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-029
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/package_directive/trailing_tokens.rns:5:1 ]
-   │
- 5 │ .class public MyClass
-   │ ───┬──  
-   │    ╰──── class 'MyClass' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

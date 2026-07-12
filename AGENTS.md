@@ -56,6 +56,14 @@ Integration tests for successful assembly call `javap -v -p` on generated `.clas
 | `rns_warn/` | Assembler/parser warning tests |
 | `integration_to_be_migrated/` | Legacy — don't add new tests here |
 
+**Test directory placement rules:**
+
+- `error/parser/` — only tests that produce at least one **syntax error** (E-XXX). Snapshot shows `not generated` for DISASSEMBLED/JAVAP.
+- `rns_warn/` — tests that produce only **warnings** (W-XXX, JVMS-XXX). May assemble successfully.
+- `general/` — tests that assemble **successfully** with **zero diagnostics** (no errors, no warnings).
+
+If a test produces only warnings or assembles silently, it MUST NOT be in `error/parser/`.
+
 ### Test naming convention (per directive/feature)
 
 | Pattern | Purpose |
@@ -220,6 +228,8 @@ CLI tests live in `rnsc/test_data/cli_integration/`. Each fixture assembled twic
    - `missing_operand.rns` + `missing_operand_recovers.rns` (if applicable)
    - `multiple_definitions.rns` + `multiple_definitions_recovers.rns` (if applicable)
    - `trailing_tokens.rns` + `trailing_tokens_recovers.rns`
-   - `*_as_name.rns` variants
+   - `*_as_name.rns` variants (error-producing go in `error/parser/`, warning-only go in `rns_warn/`)
 5. Add `outside_class_before.rns` if directive must appear inside class body
-6. Run `cargo test --workspace` then `cargo insta review` to accept snapshots
+6. When a directive can also appear inside `.inner` or `.inner_classes_attr` body, add the same test matrix for each context (e.g. `inner_directive/`, `inner_classes_attr_directive/`)
+7. Suppress W-001 noise: always add `.super java/lang/Object` to test fixtures that declare classes (both `.class` and `.inner` blocks) unless the test is specifically about missing super
+8. Run `cargo test --workspace` then `cargo insta review` to accept snapshots

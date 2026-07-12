@@ -1,0 +1,13 @@
+; Tests that parser continues after inner_end trailing tokens error and reports subsequent errors
+; Expected errors: E-033 (inner_end trailing tokens), E-007 (unknown token in class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+.inner_end trailing_tokens
+
+     unknown_token ; <- still reported after recovery
+
+.class_end

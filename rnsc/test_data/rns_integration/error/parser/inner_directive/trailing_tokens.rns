@@ -1,0 +1,11 @@
+; Tests that trailing tokens after .inner are detected and reported.
+; Expected error: E-032 (inner trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner trailing_tokens
+    .super java/lang/Object
+.inner_end
+
+.class_end

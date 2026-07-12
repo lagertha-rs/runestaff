@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that trailing tokens after .inner_end are detected and reported.
+; Expected error: E-033 (inner_end trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+.inner_end trailing_tokens
+
+.class_end
+----- STDERR -----
+[E-033] Error: unexpected trailing tokens after inner class definition end
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/inner_end_trailing_tokens.rns:9:12 ]
+   │
+ 9 │ .inner_end trailing_tokens
+   │           │───────┬───────  
+   │           ╰───────────────── expected end of inner class definition end here
+   │                   │         
+   │                   ╰───────── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-033
+───╯
+----- JAVAP -----
+not generated

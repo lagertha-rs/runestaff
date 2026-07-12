@@ -13,30 +13,22 @@ expression: "&snapshot_content"
 ; Expected: parser error about unexpected token
 
 .class public MyClass
+.super java/lang/Object
 .package .super
 
 .class_end
 ----- STDERR -----
 [TODO] Warning: TODO: reserved-like identifier used as name
 [W-002] Warning: package name '.super' contains '.' separator
-   ╭─[ test_data/rns_integration/error/parser/package_directive/directive_as_name_super.rns:6:10 ]
+   ╭─[ test_data/rns_integration/rns_warn/package_directive/directive_as_name_super.rns:7:10 ]
    │
- 6 │ .package .super
+ 7 │ .package .super
    │          ───┬──  
    │             ╰──── package '.super' uses '.' as separator
    │ 
    │ Help: If you intended Java-style package syntax, use '/' instead: '/super'
    │ 
    │ Note: In bytecode, package separators are represented as '/'. The '.' character is used in Java source syntax but will be kept as-is in the bytecode.
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/package_directive/directive_as_name_super.rns:5:1 ]
-   │
- 5 │ .class public MyClass
-   │ ───┬──  
-   │    ╰──── class 'MyClass' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 Classfile <TEMP_DIR>/.super/MyClass.class

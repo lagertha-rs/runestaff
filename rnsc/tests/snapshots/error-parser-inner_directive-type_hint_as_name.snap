@@ -1,0 +1,39 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that a type hint used as inner class name is handled.
+; Expected: warning about reserved-like identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner @utf8
+    .super java/lang/Object
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-014] Error: '@utf8' type hint is missing its utf8 value
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/type_hint_as_name.rns:7:8 ]
+   │
+ 7 │ .inner @utf8
+   │        ──┬──│ 
+   │          ╰──── forces explicit utf8 constant pool type
+   │             │ 
+   │             ╰─ but utf8 value is missing
+   │ 
+   │ Help: Provide the value immediately after the hint:
+   │       @utf8 <utf8_value>
+   │       
+   │       For example:
+   │       @utf8 HelloWorld
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-014
+───╯
+----- JAVAP -----
+not generated

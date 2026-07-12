@@ -3,6 +3,7 @@
 ; Expected: parser error about unexpected token
 
 .class public MyClass
+.super java/lang/Object
 .package "my.package"
 
 .class_end

@@ -1,0 +1,32 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that invalid access flag for inner class is detected and reported.
+; Expected error: E-015 (invalid class access flag)
+; private is not a valid class-level access flag.
+
+.class public MyClass
+.super java/lang/Object
+
+.inner private Inner
+    .super java/lang/Object
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-015] Error: invalid class access flag 'private'
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/invalid_flag.rns:8:8 ]
+   │
+ 8 │ .inner private Inner
+   │        ───┬───  
+   │           ╰───── 'private' is not a valid class access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-015
+───╯
+----- JAVAP -----
+not generated

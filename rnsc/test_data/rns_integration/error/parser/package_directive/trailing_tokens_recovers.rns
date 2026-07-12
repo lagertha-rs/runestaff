@@ -1,4 +1,5 @@
 .class MyClass
+.super java/lang/Object
 .package com.example trailing_tokens
 
      unknown_token ; <- still reported
