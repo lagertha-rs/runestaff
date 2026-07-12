@@ -1,1 +1,3 @@
-.class .super .method .class_end .method_end .code_end .code
+.class .super .method .class_end .method_end .code_end .code .inner .inner_classes_attr
+
+.inner_end .inner_classes_attr_end .inner_class .outer_class .flags .inner_name .mangled_name

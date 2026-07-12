@@ -1,0 +1,26 @@
+---
+source: rns-lang/src/lexer/snapshot_tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.inner_class com/profs/Main$NestedClass
+.outer_class com/profs/Main
+.flags private static final
+.inner_name NestedClass
+----- TOKENS -----
+KIND                                      | SPAN      | LSP       | TEXT
+----                                      | ----      | ---       | ----
+DotInnerClass                             | 0..12     | 0:0..12   | .inner_class
+Identifier("com/profs/Main$NestedClass")  | 13..39    | 0:13..39  | com/profs/Main$NestedClass
+Newline                                   | 39..40    | 0:39..40  | \n
+DotOuterClass                             | 40..52    | 1:0..12   | .outer_class
+Identifier("com/profs/Main")              | 53..67    | 1:13..27  | com/profs/Main
+Newline                                   | 67..68    | 1:27..28  | \n
+DotFlags                                  | 68..74    | 2:0..6    | .flags
+AccessFlag(private)                       | 75..82    | 2:7..14   | private
+AccessFlag(static)                        | 83..89    | 2:15..21  | static
+AccessFlag(final)                         | 90..95    | 2:22..27  | final
+Newline                                   | 95..96    | 2:27..28  | \n
+DotInnerName                              | 96..107   | 3:0..11   | .inner_name
+Identifier("NestedClass")                 | 108..119  | 3:12..23  | NestedClass
+Newline                                   | 119..120  | 3:23..24  | \n

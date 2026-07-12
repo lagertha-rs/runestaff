@@ -1,0 +1,4 @@
+.inner_class com/profs/Main$NestedClass
+.outer_class com/profs/Main
+.flags private static final
+.inner_name NestedClass

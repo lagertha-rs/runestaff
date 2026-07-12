@@ -1,0 +1,14 @@
+---
+source: rns-lang/src/lexer/snapshot_tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.inner_classes_attr
+.inner_classes_attr_end
+----- TOKENS -----
+KIND                    | SPAN    | LSP       | TEXT
+----                    | ----    | ---       | ----
+DotInnerClassesAttr     | 0..19   | 0:0..19   | .inner_classes_attr
+Newline                 | 19..20  | 0:19..20  | \n
+DotInnerClassesAttrEnd  | 20..43  | 1:0..23   | .inner_classes_attr_end
+Newline                 | 43..44  | 1:23..24  | \n
