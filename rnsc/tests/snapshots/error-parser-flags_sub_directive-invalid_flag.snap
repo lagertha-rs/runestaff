@@ -1,0 +1,32 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that invalid access flag inside .flags is detected and reported.
+; Expected error: E-031 (invalid inner_classes_attr access flag)
+; synchronized is not a valid inner class attribute flag.
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .flags synchronized
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-031] Error: invalid inner_classes_attr flags access flag 'synchronized'
+   ╭─[ test_data/rns_integration/error/parser/flags_sub_directive/invalid_flag.rns:9:12 ]
+   │
+ 9 │     .flags synchronized
+   │            ──────┬─────  
+   │                  ╰─────── 'synchronized' is not a valid inner_classes_attr flags access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-031
+───╯
+----- JAVAP -----
+not generated

@@ -1,0 +1,51 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after multiple definitions and reports subsequent errors
+; Expected errors: E-044 (multiple definitions), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name First
+    .inner_name Second
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-037] Error: unexpected identifier inner_classes_attr body
+    ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/multiple_definitions_recovers.rns:11:5 ]
+    │
+ 11 │     unknown_token ; <- E-037
+    │     ──────┬──────  
+    │           ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-037
+────╯
+[E-044] Error: multiple .inner_name directives in inner_classes_attr
+   ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/multiple_definitions_recovers.rns:9:5 ]
+   │
+ 8 │     .inner_name First
+   │     ─────┬─────  
+   │          ╰─────── first .inner_name directive defined here with name 'First'
+ 9 │     .inner_name Second
+   │     ─────┬─────  
+   │          ╰─────── but another .inner_name directive defined here with name 'Second'
+   │ 
+   │ Help: An inner_classes_attr block can only have one .inner_name directive. Remove the duplicates.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-044
+───╯
+----- JAVAP -----
+not generated

@@ -1,0 +1,13 @@
+; Tests that parser continues after trailing tokens and reports subsequent errors
+; Expected errors: E-038 (trailing tokens), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main$Inner trailing
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end

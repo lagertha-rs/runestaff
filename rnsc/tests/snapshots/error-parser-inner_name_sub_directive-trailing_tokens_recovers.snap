@@ -1,0 +1,49 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after trailing tokens and reports subsequent errors
+; Expected errors: E-040 (trailing tokens), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name MyInner trailing
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-040] Error: unexpected trailing tokens after .inner_name directive
+   ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/trailing_tokens_recovers.rns:8:25 ]
+   │
+ 8 │     .inner_name MyInner trailing
+   │                        │────┬───  
+   │                        ╰────────── expected end of .inner_name directive here
+   │                             │     
+   │                             ╰───── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-040
+───╯
+[E-037] Error: unexpected identifier inner_classes_attr body
+    ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/trailing_tokens_recovers.rns:10:5 ]
+    │
+ 10 │     unknown_token ; <- E-037
+    │     ──────┬──────  
+    │           ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-037
+────╯
+----- JAVAP -----
+not generated

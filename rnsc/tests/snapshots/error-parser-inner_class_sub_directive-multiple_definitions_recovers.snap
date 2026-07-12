@@ -1,0 +1,51 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after multiple definitions and reports subsequent errors
+; Expected errors: E-042 (multiple definitions), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main$Inner
+    .inner_class com/profs/Main$Other
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-037] Error: unexpected identifier inner_classes_attr body
+    ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/multiple_definitions_recovers.rns:11:5 ]
+    │
+ 11 │     unknown_token ; <- E-037
+    │     ──────┬──────  
+    │           ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-037
+────╯
+[E-042] Error: multiple .inner_class directives in inner_classes_attr
+   ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/multiple_definitions_recovers.rns:9:5 ]
+   │
+ 8 │     .inner_class com/profs/Main$Inner
+   │     ──────┬─────  
+   │           ╰─────── first .inner_class directive defined here with class 'com/profs/Main$Inner'
+ 9 │     .inner_class com/profs/Main$Other
+   │     ──────┬─────  
+   │           ╰─────── but another .inner_class directive defined here with class 'com/profs/Main$Other'
+   │ 
+   │ Help: An inner_classes_attr block can only have one .inner_class directive. Remove the duplicates.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-042
+───╯
+----- JAVAP -----
+not generated

@@ -1,0 +1,11 @@
+; Tests that trailing tokens after .flags are detected and reported.
+; Expected error: E-041 (flags trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .flags public trailing
+.inner_classes_attr_end
+
+.class_end

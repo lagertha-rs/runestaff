@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that trailing tokens after .flags are detected and reported.
+; Expected error: E-041 (flags trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .flags public trailing
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-041] Error: unexpected trailing tokens after .flags directive
+   ╭─[ test_data/rns_integration/error/parser/flags_sub_directive/trailing_tokens.rns:8:19 ]
+   │
+ 8 │     .flags public trailing
+   │                  │────┬───  
+   │                  ╰────────── expected end of .flags directive here
+   │                       │     
+   │                       ╰───── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-041
+───╯
+----- JAVAP -----
+not generated

@@ -1,0 +1,14 @@
+; Tests that parser continues after multiple definitions and reports subsequent errors
+; Expected errors: E-044 (multiple definitions), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name First
+    .inner_name Second
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end

@@ -1,0 +1,12 @@
+; Tests that multiple .outer_class directives are detected and reported.
+; Expected error: E-043 (multiple outer class refs)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .outer_class com/profs/Main
+    .outer_class com/profs/Other
+.inner_classes_attr_end
+
+.class_end

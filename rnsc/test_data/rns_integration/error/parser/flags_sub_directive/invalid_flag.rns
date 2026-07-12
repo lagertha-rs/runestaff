@@ -1,0 +1,12 @@
+; Tests that invalid access flag inside .flags is detected and reported.
+; Expected error: E-031 (invalid inner_classes_attr access flag)
+; synchronized is not a valid inner class attribute flag.
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .flags synchronized
+.inner_classes_attr_end
+
+.class_end

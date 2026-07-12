@@ -1,0 +1,45 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after invalid flag and reports subsequent errors
+; Expected errors: E-031 (invalid flag), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .flags synchronized
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-031] Error: invalid inner_classes_attr flags access flag 'synchronized'
+   ╭─[ test_data/rns_integration/error/parser/flags_sub_directive/invalid_flag_recovers.rns:8:12 ]
+   │
+ 8 │     .flags synchronized
+   │            ──────┬─────  
+   │                  ╰─────── 'synchronized' is not a valid inner_classes_attr flags access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-031
+───╯
+[E-037] Error: unexpected identifier inner_classes_attr body
+    ╭─[ test_data/rns_integration/error/parser/flags_sub_directive/invalid_flag_recovers.rns:10:5 ]
+    │
+ 10 │     unknown_token ; <- E-037
+    │     ──────┬──────  
+    │           ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-037
+────╯
+----- JAVAP -----
+not generated

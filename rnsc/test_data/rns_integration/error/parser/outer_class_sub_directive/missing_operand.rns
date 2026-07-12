@@ -1,0 +1,11 @@
+; Tests that missing operand after .outer_class is detected and reported.
+; Expected error: E-020 (missing implicit type hint operand)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .outer_class
+.inner_classes_attr_end
+
+.class_end

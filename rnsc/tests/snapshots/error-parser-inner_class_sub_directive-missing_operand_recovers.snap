@@ -1,0 +1,50 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after missing operand and reports subsequent errors
+; Expected errors: E-020 (missing operand), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-020] Error: missing class name after '.inner_class'
+   ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/missing_operand_recovers.rns:8:5 ]
+   │
+ 8 │     .inner_class
+   │     ──────┬─────│ 
+   │           ╰─────── the '.inner_class' directive requires a inner class reference as operand
+   │                 │ 
+   │                 ╰─ but class name is missing
+   │ 
+   │ Help: Provide a inner class reference after the '.inner_class' directive, e.g.:
+   │       .inner_class <class_name>
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+[E-037] Error: unexpected identifier inner_classes_attr body
+    ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/missing_operand_recovers.rns:10:5 ]
+    │
+ 10 │     unknown_token ; <- E-037
+    │     ──────┬──────  
+    │           ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-037
+────╯
+----- JAVAP -----
+not generated

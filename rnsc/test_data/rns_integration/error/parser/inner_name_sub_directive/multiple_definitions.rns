@@ -1,0 +1,12 @@
+; Tests that multiple .inner_name directives are detected and reported.
+; Expected error: E-044 (multiple inner names)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name First
+    .inner_name Second
+.inner_classes_attr_end
+
+.class_end

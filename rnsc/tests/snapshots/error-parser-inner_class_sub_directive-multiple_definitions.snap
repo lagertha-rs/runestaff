@@ -1,0 +1,37 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that multiple .inner_class directives are detected and reported.
+; Expected error: E-042 (multiple inner class refs)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main$Inner
+    .inner_class com/profs/Main$Other
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-042] Error: multiple .inner_class directives in inner_classes_attr
+   ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/multiple_definitions.rns:9:5 ]
+   │
+ 8 │     .inner_class com/profs/Main$Inner
+   │     ──────┬─────  
+   │           ╰─────── first .inner_class directive defined here with class 'com/profs/Main$Inner'
+ 9 │     .inner_class com/profs/Main$Other
+   │     ──────┬─────  
+   │           ╰─────── but another .inner_class directive defined here with class 'com/profs/Main$Other'
+   │ 
+   │ Help: An inner_classes_attr block can only have one .inner_class directive. Remove the duplicates.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-042
+───╯
+----- JAVAP -----
+not generated
