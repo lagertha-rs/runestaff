@@ -33,5 +33,17 @@ not generated
     │ Note: For more details see:
     │       https://rune.lagertha-vm.com/errors/E-034
 ────╯
+[E-007] Error: unexpected identifier class body
+    ╭─[ test_data/rns_integration/error/parser/inner_directive/unexpected_token_in_body_recovers.rns:13:6 ]
+    │
+ 13 │      unknown_token_after_end ; <- E-007 after inner_end
+    │      ───────────┬───────────  
+    │                 ╰───────────── unexpected token
+    │ 
+    │ Help: Check the syntax of the class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-007
+────╯
 ----- JAVAP -----
 not generated
