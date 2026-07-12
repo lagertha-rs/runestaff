@@ -1,0 +1,16 @@
+; Tests inner class with a method.
+; Expected: success, inner class file has the method
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .method public static main ()V
+        .code stack 1 locals 1
+            return
+        .code_end
+    .method_end
+.inner_end
+
+.class_end
