@@ -949,7 +949,11 @@ impl RnsParser {
                     );
                     self.diagnostic.push(unexpected_error.into());
                     // TODO: test unknown_token .super/.method etc.
-                    self.anchor(&[RnsTokenKind::DotMethod, RnsTokenKind::DotSuper]);
+                    self.anchor(&[
+                        RnsTokenKind::DotMethod,
+                        RnsTokenKind::DotSuper,
+                        RnsTokenKind::DotInnerEnd,
+                    ]);
                 }
             }
         }
