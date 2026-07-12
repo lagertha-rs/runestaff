@@ -174,8 +174,10 @@ impl RnsToken {
             | RnsToken::DotMethod(_)
             | RnsToken::DotPackage(_)
             | RnsToken::DotInner(_)
-            | RnsToken::DotInnerClassesAttr(_)
             | RnsToken::DotClassEnd(_) => &[RnsTokenContext::ClassBody],
+            RnsToken::DotInnerClassesAttr(_) => {
+                &[RnsTokenContext::ClassBody, RnsTokenContext::InnerBody]
+            }
             RnsToken::DotInnerEnd(_) => &[RnsTokenContext::InnerBody],
             RnsToken::DotInnerClassesAttrEnd(_) => &[RnsTokenContext::InnerClassesAttrBody],
             RnsToken::DotInnerClass(_)

@@ -1,0 +1,89 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+## MyClass$Inner ##
+.class MyClass$Inner
+.super java/lang/Object
+
+.class_end
+
+## MyClass ##
+.class public MyClass
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that .inner_classes_attr can appear inside .inner body.
+; Expected: success, no errors
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .inner_classes_attr
+        .inner_class com/profs/Main$Inner
+        .outer_class com/profs/Main
+    .inner_classes_attr_end
+.inner_end
+
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+## MyClass$Inner ##
+Classfile <TEMP_DIR>/MyClass$Inner.class
+  Last modified <DATE>; size 117 bytes
+  SHA-256 checksum d0b0cd7d5f89cd9caf934d415baf7dc1b300f2453a4b3eabe064c7815ac7e9ed
+class MyClass$Inner
+  minor version: 0
+  major version: 69
+  flags: (0x0000)
+  this_class: #3                          // MyClass$Inner
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // MyClass$Inner
+  #4 = Utf8               MyClass$Inner
+  #5 = Class              #6              // MyClass
+  #6 = Utf8               MyClass
+  #7 = Utf8               Inner
+  #8 = Utf8               InnerClasses
+{
+}
+InnerClasses:
+  #7= #3 of #5;                           // Inner=class MyClass$Inner of class MyClass
+
+## MyClass ##
+Classfile <TEMP_DIR>/MyClass.class
+  Last modified <DATE>; size 171 bytes
+  SHA-256 checksum 5a8ba7fab85e9af96461effac4bc0b766da2f91365a3033890b1e58c8daccb00
+public class MyClass
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // MyClass
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+   #1 = Class              #2             // java/lang/Object
+   #2 = Utf8               java/lang/Object
+   #3 = Class              #4             // MyClass
+   #4 = Utf8               MyClass
+   #5 = Utf8               InnerClasses
+   #6 = Utf8               Inner
+   #7 = Class              #8             // MyClass$Inner
+   #8 = Utf8               MyClass$Inner
+   #9 = Class              #10            // com/profs/Main$Inner
+  #10 = Utf8               com/profs/Main$Inner
+  #11 = Class              #12            // com/profs/Main
+  #12 = Utf8               com/profs/Main
+{
+}
+InnerClasses:
+  #6= #7 of #3;                           // Inner=class MyClass$Inner of class MyClass
+  #9 of #11;                              // class com/profs/Main$Inner of class com/profs/Main

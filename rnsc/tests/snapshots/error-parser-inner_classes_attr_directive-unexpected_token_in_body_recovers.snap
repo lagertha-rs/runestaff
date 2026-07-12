@@ -1,0 +1,48 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after unexpected token and reports subsequent errors
+; Expected errors: E-037 (unexpected token), E-007 (unknown token after end)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+
+     unknown_token ; <- E-037
+.inner_classes_attr_end
+
+     unknown_token_after_end ; <- E-007 after inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-037] Error: unexpected identifier inner_classes_attr body
+   ╭─[ test_data/rns_integration/error/parser/inner_classes_attr_directive/unexpected_token_in_body_recovers.rns:9:6 ]
+   │
+ 9 │      unknown_token ; <- E-037
+   │      ──────┬──────  
+   │            ╰──────── unexpected token
+   │ 
+   │ Help: Check the syntax of the inner_classes_attr body and ensure all tokens are valid.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-037
+───╯
+[E-007] Error: unexpected identifier class body
+    ╭─[ test_data/rns_integration/error/parser/inner_classes_attr_directive/unexpected_token_in_body_recovers.rns:12:6 ]
+    │
+ 12 │      unknown_token_after_end ; <- E-007 after inner_classes_attr_end
+    │      ───────────┬───────────  
+    │                 ╰───────────── unexpected token
+    │ 
+    │ Help: Check the syntax of the class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-007
+────╯
+----- JAVAP -----
+not generated
