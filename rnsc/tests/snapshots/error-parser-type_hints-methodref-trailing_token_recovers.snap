@@ -5,30 +5,22 @@ expression: "&snapshot_content"
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
-.class @methodref MyClass methodName (I)V trailing
+.class @methodref MyClass add ()V trailing
+.super java/lang/Object
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@methodref'
-   ╭─[ test_data/rns_integration/error/parser/type_hints/methodref/trailing_token_recovers.rns:1:43 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/methodref/trailing_token_recovers.rns:1:35 ]
    │
- 1 │ .class @methodref MyClass methodName (I)V trailing
-   │        ─────┬────                         ────┬───  
-   │             ╰─────────────────────────────────────── '@methodref' type hint takes 3 operands
-   │                                               │     
-   │                                               ╰───── but found 1 trailing token
+ 1 │ .class @methodref MyClass add ()V trailing
+   │        ─────┬────                 ────┬───  
+   │             ╰─────────────────────────────── '@methodref' type hint takes 3 operands
+   │                                       │     
+   │                                       ╰───── but found 1 trailing token
    │ 
    │ Help: Remove the trailing tokens or move them to a valid context.
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-013
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/type_hints/methodref/trailing_token_recovers.rns:1:1 ]
-   │
- 1 │ .class @methodref MyClass methodName (I)V trailing
-   │ ───┬──  
-   │    ╰──── class 'MyClass methodName (I)V' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

@@ -1,0 +1,11 @@
+; Tests that trailing tokens after .inner_end are detected and reported.
+; Expected error: E-033 (inner_end trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+.inner_end trailing_tokens
+
+.class_end

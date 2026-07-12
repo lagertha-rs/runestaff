@@ -1,0 +1,14 @@
+; Tests that unexpected token inside .inner body is detected and reported.
+; Expected error: E-034 (unexpected token in inner class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+
+     unknown_token
+
+.inner_end
+
+.class_end

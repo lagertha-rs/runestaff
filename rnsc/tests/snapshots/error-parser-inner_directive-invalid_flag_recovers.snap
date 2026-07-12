@@ -1,0 +1,45 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after invalid flag error and reports subsequent errors
+; Expected errors: E-015 (invalid flag), E-034 (unexpected token in inner body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner private Inner
+    .super java/lang/Object
+
+     unknown_token ; <- E-034, still reported after recovery
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-015] Error: invalid class access flag 'private'
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/invalid_flag_recovers.rns:7:8 ]
+   │
+ 7 │ .inner private Inner
+   │        ───┬───  
+   │           ╰───── 'private' is not a valid class access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-015
+───╯
+[E-034] Error: unexpected identifier inner class body
+    ╭─[ test_data/rns_integration/error/parser/inner_directive/invalid_flag_recovers.rns:10:6 ]
+    │
+ 10 │      unknown_token ; <- E-034, still reported after recovery
+    │      ──────┬──────  
+    │            ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-034
+────╯
+----- JAVAP -----
+not generated

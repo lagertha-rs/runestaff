@@ -1,0 +1,11 @@
+; Tests that a type hint used as inner class name is handled.
+; Expected: warning about reserved-like identifier
+
+.class public MyClass
+.super java/lang/Object
+
+.inner @utf8
+    .super java/lang/Object
+.inner_end
+
+.class_end

@@ -1,0 +1,12 @@
+; Tests that invalid access flag for inner class is detected and reported.
+; Expected error: E-015 (invalid class access flag)
+; private is not a valid class-level access flag.
+
+.class public MyClass
+.super java/lang/Object
+
+.inner private Inner
+    .super java/lang/Object
+.inner_end
+
+.class_end

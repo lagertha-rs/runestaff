@@ -5,30 +5,22 @@ expression: "&snapshot_content"
 ----- DISASSEMBLED -----
 not generated
 ----- INPUT -----
-.class @string value unexpected_second_operand ; <- this error shouldn't block no superclass warn
+.class @string "Hello" unexpected_second_operand
+.super java/lang/Object
 ----- STDERR -----
 [E-013] Error: unexpected trailing tokens after type hint '@string'
-   ╭─[ test_data/rns_integration/error/parser/type_hints/string/trailing_token_recovers.rns:1:22 ]
+   ╭─[ test_data/rns_integration/error/parser/type_hints/string/trailing_token_recovers.rns:1:24 ]
    │
- 1 │ .class @string value unexpected_second_operand ; <- this error shouldn't block no superclass warn
-   │        ───┬───       ────────────┬────────────  
-   │           ╰───────────────────────────────────── '@string' type hint takes 1 operand
-   │                                  │              
-   │                                  ╰────────────── but found 1 trailing token
+ 1 │ .class @string "Hello" unexpected_second_operand
+   │        ───┬───         ────────────┬────────────  
+   │           ╰─────────────────────────────────────── '@string' type hint takes 1 operand
+   │                                    │              
+   │                                    ╰────────────── but found 1 trailing token
    │ 
    │ Help: Remove the trailing tokens or move them to a valid context.
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-013
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/type_hints/string/trailing_token_recovers.rns:1:1 ]
-   │
- 1 │ .class @string value unexpected_second_operand ; <- this error shouldn't block no superclass warn
-   │ ───┬──  
-   │    ╰──── class 'value' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

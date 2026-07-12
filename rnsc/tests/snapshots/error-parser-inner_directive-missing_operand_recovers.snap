@@ -1,0 +1,50 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after missing operand error and reports subsequent errors
+; Expected errors: E-020 (missing operand), E-034 (unexpected token in inner body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner
+    .super java/lang/Object
+
+     unknown_token ; <- E-034, still reported after recovery
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-020] Error: missing class name after '.inner'
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/missing_operand_recovers.rns:7:1 ]
+   │
+ 7 │ .inner
+   │ ───┬──│ 
+   │    ╰──── the '.inner' directive requires a inner name as operand
+   │       │ 
+   │       ╰─ but class name is missing
+   │ 
+   │ Help: Provide a inner name after the '.inner' directive, e.g.:
+   │       .inner <class_name>
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+[E-034] Error: unexpected identifier inner class body
+    ╭─[ test_data/rns_integration/error/parser/inner_directive/missing_operand_recovers.rns:10:6 ]
+    │
+ 10 │      unknown_token ; <- E-034, still reported after recovery
+    │      ──────┬──────  
+    │            ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-034
+────╯
+----- JAVAP -----
+not generated

@@ -3,6 +3,7 @@
 ; The parser should detect 'trailing_tokens' as unexpected after the package name.
 
 .class public MyClass
+.super java/lang/Object
 .package com.example trailing_tokens
 
 .class_end

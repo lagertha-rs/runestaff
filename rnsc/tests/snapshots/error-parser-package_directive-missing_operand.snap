@@ -10,14 +10,15 @@ not generated
 ; The parser should detect that the package name is missing.
 
 .class public MyClass
+.super java/lang/Object
 .package
 
 .class_end
 ----- STDERR -----
 [E-009] Error: unexpected newline where a package name is required
-   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand.rns:6:1 ]
+   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand.rns:7:1 ]
    │
- 6 │ .package
+ 7 │ .package
    │ ────┬───│ 
    │     ╰───── the '.package' directive requires a package name as operand
    │         │ 
@@ -28,15 +29,6 @@ not generated
    │ 
    │ Note: For more details see:
    │       https://rune.lagertha-vm.com/errors/E-009
-───╯
-[W-001] Warning: missing super directive
-   ╭─[ test_data/rns_integration/error/parser/package_directive/missing_operand.rns:5:1 ]
-   │
- 5 │ .class public MyClass
-   │ ───┬──  
-   │    ╰──── class 'MyClass' is missing a '.super' directive
-   │ 
-   │ Note: The .super directive is required to specify the superclass. Defaulting to 'java/lang/Object'.
 ───╯
 ----- JAVAP -----
 not generated

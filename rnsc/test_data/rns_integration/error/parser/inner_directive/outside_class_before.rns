@@ -1,0 +1,12 @@
+; Tests that .inner directive before .class is detected as unexpected token.
+; Expected error: E-008 (unexpected token before class definition)
+; The .inner directive is only valid inside a class body, not before it.
+
+.inner Inner
+    .super java/lang/Object
+.inner_end
+
+.class public MyClass
+.super java/lang/Object
+
+.class_end

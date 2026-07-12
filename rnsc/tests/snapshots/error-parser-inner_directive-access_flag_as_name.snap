@@ -1,0 +1,46 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that an access flag used as inner class name is handled.
+; Expected: warning about reserved-like identifier, class name becomes the flag name
+
+.class public MyClass
+.super java/lang/Object
+
+.inner static
+    .super java/lang/Object
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-015] Error: invalid class access flag 'static'
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/access_flag_as_name.rns:7:8 ]
+   │
+ 7 │ .inner static
+   │        ───┬──  
+   │           ╰──── 'static' is not a valid class access flag
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-015
+───╯
+[E-020] Error: missing class name after '.inner'
+   ╭─[ test_data/rns_integration/error/parser/inner_directive/access_flag_as_name.rns:7:8 ]
+   │
+ 7 │ .inner static
+   │        ───┬──│ 
+   │           ╰──── the '.inner' directive requires a inner name as operand
+   │              │ 
+   │              ╰─ but class name is missing
+   │ 
+   │ Help: Provide a inner name after the '.inner' directive, e.g.:
+   │       .inner <class_name>
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+----- JAVAP -----
+not generated

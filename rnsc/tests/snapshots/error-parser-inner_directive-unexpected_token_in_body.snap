@@ -1,0 +1,36 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that unexpected token inside .inner body is detected and reported.
+; Expected error: E-034 (unexpected token in inner class body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+
+     unknown_token
+
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-034] Error: unexpected identifier inner class body
+    ╭─[ test_data/rns_integration/error/parser/inner_directive/unexpected_token_in_body.rns:10:6 ]
+    │
+ 10 │      unknown_token
+    │      ──────┬──────  
+    │            ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-034
+────╯
+----- JAVAP -----
+not generated

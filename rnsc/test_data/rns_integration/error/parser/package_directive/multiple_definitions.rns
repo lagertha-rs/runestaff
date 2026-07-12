@@ -3,6 +3,7 @@
 ; The parser should detect the second .package as a duplicate.
 
 .class public MyClass
+.super java/lang/Object
 .package com.example
 .package com.other
 
