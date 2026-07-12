@@ -1,0 +1,12 @@
+; Tests that a type hint used as mangled name operand is handled.
+; Expected error: E-014 (missing type hint operand)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name @utf8
+.inner_end
+
+.class_end

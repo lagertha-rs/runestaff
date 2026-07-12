@@ -927,7 +927,7 @@ impl RnsParser {
                     let mangled_name = self
                         .parse_operand_or_type_hint(
                             OperandErrPosContext::MangledName,
-                            TypeHintKind::Utf8,
+                            TypeHintKind::Class,
                         )
                         .map_err(|e| self.diagnostic.push(*e))
                         .ok();

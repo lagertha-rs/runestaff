@@ -1,0 +1,52 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that parser continues after multiple definitions error and reports subsequent errors
+; Expected errors: E-035 (multiple mangled names), E-034 (unexpected token in inner body)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name FirstName
+    .mangled_name SecondName
+
+    unknown_token ; <- E-034, still reported after recovery
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-034] Error: unexpected identifier inner class body
+    ╭─[ test_data/rns_integration/error/parser/mangled_name_directive/multiple_definitions_recovers.rns:12:5 ]
+    │
+ 12 │     unknown_token ; <- E-034, still reported after recovery
+    │     ──────┬──────  
+    │           ╰──────── unexpected token
+    │ 
+    │ Help: Check the syntax of the inner class body and ensure all tokens are valid.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-034
+────╯
+[E-035] Error: multiple .mangled_name directives in inner class
+    ╭─[ test_data/rns_integration/error/parser/mangled_name_directive/multiple_definitions_recovers.rns:10:5 ]
+    │
+  9 │     .mangled_name FirstName
+    │     ──────┬──────  
+    │           ╰──────── first .mangled_name directive defined here with name 'FirstName'
+ 10 │     .mangled_name SecondName
+    │     ──────┬──────  
+    │           ╰──────── but another .mangled_name directive defined here with name 'SecondName'
+    │ 
+    │ Help: An inner class can only have one .mangled_name directive. Remove the duplicates.
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-035
+────╯
+----- JAVAP -----
+not generated

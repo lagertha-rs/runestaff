@@ -1,0 +1,40 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that a type hint used as mangled name operand is handled.
+; Expected error: E-014 (missing type hint operand)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name @utf8
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-014] Error: '@utf8' type hint is missing its utf8 value
+   ╭─[ test_data/rns_integration/error/parser/mangled_name_directive/type_hint_as_name.rns:9:19 ]
+   │
+ 9 │     .mangled_name @utf8
+   │                   ──┬──│ 
+   │                     ╰──── forces explicit utf8 constant pool type
+   │                        │ 
+   │                        ╰─ but utf8 value is missing
+   │ 
+   │ Help: Provide the value immediately after the hint:
+   │       @utf8 <utf8_value>
+   │       
+   │       For example:
+   │       @utf8 HelloWorld
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-014
+───╯
+----- JAVAP -----
+not generated
