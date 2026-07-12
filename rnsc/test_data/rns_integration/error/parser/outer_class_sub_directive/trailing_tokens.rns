@@ -1,0 +1,11 @@
+; Tests that trailing tokens after .outer_class are detected and reported.
+; Expected error: E-039 (outer_class trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .outer_class com/profs/Main trailing
+.inner_classes_attr_end
+
+.class_end

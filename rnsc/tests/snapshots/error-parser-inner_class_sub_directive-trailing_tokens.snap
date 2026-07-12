@@ -1,0 +1,35 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that trailing tokens after .inner_class are detected and reported.
+; Expected error: E-038 (inner_class trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main$Inner trailing
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-038] Error: unexpected trailing tokens after .inner_class directive
+   ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/trailing_tokens.rns:8:39 ]
+   │
+ 8 │     .inner_class com/profs/Main$Inner trailing
+   │                                      │────┬───  
+   │                                      ╰────────── expected end of .inner_class directive here
+   │                                           │     
+   │                                           ╰───── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-038
+───╯
+----- JAVAP -----
+not generated

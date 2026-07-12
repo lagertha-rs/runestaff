@@ -1,0 +1,14 @@
+; Tests that parser continues after multiple definitions and reports subsequent errors
+; Expected errors: E-043 (multiple definitions), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .outer_class com/profs/Main
+    .outer_class com/profs/Other
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end

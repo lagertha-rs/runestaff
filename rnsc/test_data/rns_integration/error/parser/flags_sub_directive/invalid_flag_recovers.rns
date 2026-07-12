@@ -1,0 +1,13 @@
+; Tests that parser continues after invalid flag and reports subsequent errors
+; Expected errors: E-031 (invalid flag), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .flags synchronized
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end

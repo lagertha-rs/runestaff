@@ -1,0 +1,36 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that missing operand after .inner_class is detected and reported.
+; Expected error: E-020 (missing implicit type hint operand)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-020] Error: missing class name after '.inner_class'
+   ╭─[ test_data/rns_integration/error/parser/inner_class_sub_directive/missing_operand.rns:8:5 ]
+   │
+ 8 │     .inner_class
+   │     ──────┬─────│ 
+   │           ╰─────── the '.inner_class' directive requires a inner class reference as operand
+   │                 │ 
+   │                 ╰─ but class name is missing
+   │ 
+   │ Help: Provide a inner class reference after the '.inner_class' directive, e.g.:
+   │       .inner_class <class_name>
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+----- JAVAP -----
+not generated

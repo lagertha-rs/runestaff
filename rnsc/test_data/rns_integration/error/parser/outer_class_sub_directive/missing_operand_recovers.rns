@@ -1,0 +1,13 @@
+; Tests that parser continues after missing operand and reports subsequent errors
+; Expected errors: E-020 (missing operand), E-037 (unexpected token)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .outer_class
+
+    unknown_token ; <- E-037
+.inner_classes_attr_end
+
+.class_end

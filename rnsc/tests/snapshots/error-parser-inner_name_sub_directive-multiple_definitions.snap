@@ -1,0 +1,37 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that multiple .inner_name directives are detected and reported.
+; Expected error: E-044 (multiple inner names)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name First
+    .inner_name Second
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-044] Error: multiple .inner_name directives in inner_classes_attr
+   ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/multiple_definitions.rns:9:5 ]
+   │
+ 8 │     .inner_name First
+   │     ─────┬─────  
+   │          ╰─────── first .inner_name directive defined here with name 'First'
+ 9 │     .inner_name Second
+   │     ─────┬─────  
+   │          ╰─────── but another .inner_name directive defined here with name 'Second'
+   │ 
+   │ Help: An inner_classes_attr block can only have one .inner_name directive. Remove the duplicates.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-044
+───╯
+----- JAVAP -----
+not generated

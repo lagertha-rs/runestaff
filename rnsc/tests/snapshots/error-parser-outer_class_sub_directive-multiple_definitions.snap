@@ -1,0 +1,37 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that multiple .outer_class directives are detected and reported.
+; Expected error: E-043 (multiple outer class refs)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .outer_class com/profs/Main
+    .outer_class com/profs/Other
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-043] Error: multiple .outer_class directives in inner_classes_attr
+   ╭─[ test_data/rns_integration/error/parser/outer_class_sub_directive/multiple_definitions.rns:9:5 ]
+   │
+ 8 │     .outer_class com/profs/Main
+   │     ──────┬─────  
+   │           ╰─────── first .outer_class directive defined here with class 'com/profs/Main'
+ 9 │     .outer_class com/profs/Other
+   │     ──────┬─────  
+   │           ╰─────── but another .outer_class directive defined here with class 'com/profs/Other'
+   │ 
+   │ Help: An inner_classes_attr block can only have one .outer_class directive. Remove the duplicates.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-043
+───╯
+----- JAVAP -----
+not generated

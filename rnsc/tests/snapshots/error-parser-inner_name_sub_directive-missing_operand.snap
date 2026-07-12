@@ -1,0 +1,36 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that missing operand after .inner_name is detected and reported.
+; Expected error: E-020 (missing implicit type hint operand)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+[E-020] Error: missing utf8 value after '.inner_name'
+   ╭─[ test_data/rns_integration/error/parser/inner_name_sub_directive/missing_operand.rns:8:5 ]
+   │
+ 8 │     .inner_name
+   │     ─────┬─────│ 
+   │          ╰─────── the '.inner_name' directive requires a inner attribute name as operand
+   │                │ 
+   │                ╰─ but utf8 value is missing
+   │ 
+   │ Help: Provide a inner attribute name after the '.inner_name' directive, e.g.:
+   │       .inner_name <utf8_value>
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+----- JAVAP -----
+not generated

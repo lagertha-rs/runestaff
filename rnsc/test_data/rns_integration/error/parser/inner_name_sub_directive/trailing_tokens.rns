@@ -1,0 +1,11 @@
+; Tests that trailing tokens after .inner_name are detected and reported.
+; Expected error: E-040 (inner_name trailing tokens)
+
+.class public MyClass
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_name MyInner trailing
+.inner_classes_attr_end
+
+.class_end
