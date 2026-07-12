@@ -1,17 +1,30 @@
 ---
-source: rns/src/lexer/snapshot_tests.rs
+source: rns-lang/src/lexer/snapshot_tests.rs
 expression: formatted
 ---
 ----- SOURCE -----
-.class .super .method .class_end .method_end .code_end .code
+.class .super .method .class_end .method_end .code_end .code .inner .inner_classes_attr
+
+.inner_end .inner_classes_attr_end .inner_class .outer_class .flags .inner_name .mangled_name
 ----- TOKENS -----
-KIND          | SPAN    | LSP       | TEXT
-----          | ----    | ---       | ----
-DotClass      | 0..6    | 0:0..6    | .class
-DotSuper      | 7..13   | 0:7..13   | .super
-DotMethod     | 14..21  | 0:14..21  | .method
-DotClassEnd   | 22..32  | 0:22..32  | .class_end
-DotMethodEnd  | 33..44  | 0:33..44  | .method_end
-DotCodeEnd    | 45..54  | 0:45..54  | .code_end
-DotCode       | 55..60  | 0:55..60  | .code
-Newline       | 60..61  | 0:60..61  | \n
+KIND                    | SPAN      | LSP       | TEXT
+----                    | ----      | ---       | ----
+DotClass                | 0..6      | 0:0..6    | .class
+DotSuper                | 7..13     | 0:7..13   | .super
+DotMethod               | 14..21    | 0:14..21  | .method
+DotClassEnd             | 22..32    | 0:22..32  | .class_end
+DotMethodEnd            | 33..44    | 0:33..44  | .method_end
+DotCodeEnd              | 45..54    | 0:45..54  | .code_end
+DotCode                 | 55..60    | 0:55..60  | .code
+DotInner                | 61..67    | 0:61..67  | .inner
+DotInnerClassesAttr     | 68..87    | 0:68..87  | .inner_classes_attr
+Newline                 | 87..88    | 0:87..88  | \n
+Newline                 | 88..89    | 1:0..1    | \n
+DotInnerEnd             | 89..99    | 2:0..10   | .inner_end
+DotInnerClassesAttrEnd  | 100..123  | 2:11..34  | .inner_classes_attr_end
+DotInnerClass           | 124..136  | 2:35..47  | .inner_class
+DotOuterClass           | 137..149  | 2:48..60  | .outer_class
+DotFlags                | 150..156  | 2:61..67  | .flags
+DotInnerName            | 157..168  | 2:68..79  | .inner_name
+DotMangledName          | 169..182  | 2:80..93  | .mangled_name
+Newline                 | 182..183  | 2:93..94  | \n

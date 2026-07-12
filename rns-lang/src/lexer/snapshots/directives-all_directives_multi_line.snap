@@ -12,24 +12,51 @@ expression: formatted
 .method_end
 .code_end
 .code
+.inner
+.inner_end
+.inner_classes_attr
+.inner_classes_attr_end
+.inner_class
+.outer_class
+.flags
+.inner_name
+.mangled_name
 ----- TOKENS -----
-KIND           | SPAN    | LSP       | TEXT
-----           | ----    | ---       | ----
-DotClass       | 0..6    | 0:0..6    | .class
-Newline        | 6..7    | 0:6..7    | \n
-DotSuper       | 7..13   | 1:0..6    | .super
-Newline        | 13..14  | 1:6..7    | \n
-DotMethod      | 14..21  | 2:0..7    | .method
-Newline        | 21..22  | 2:7..8    | \n
-DotPackage     | 22..30  | 3:0..8    | .package
-Newline        | 30..31  | 3:8..9    | \n
-DotAnnotation  | 31..42  | 4:0..11   | .annotation
-Newline        | 42..43  | 4:11..12  | \n
-DotClassEnd    | 43..53  | 5:0..10   | .class_end
-Newline        | 53..54  | 5:10..11  | \n
-DotMethodEnd   | 54..65  | 6:0..11   | .method_end
-Newline        | 65..66  | 6:11..12  | \n
-DotCodeEnd     | 66..75  | 7:0..9    | .code_end
-Newline        | 75..76  | 7:9..10   | \n
-DotCode        | 76..81  | 8:0..5    | .code
-Newline        | 81..82  | 8:5..6    | \n
+KIND                    | SPAN      | LSP        | TEXT
+----                    | ----      | ---        | ----
+DotClass                | 0..6      | 0:0..6     | .class
+Newline                 | 6..7      | 0:6..7     | \n
+DotSuper                | 7..13     | 1:0..6     | .super
+Newline                 | 13..14    | 1:6..7     | \n
+DotMethod               | 14..21    | 2:0..7     | .method
+Newline                 | 21..22    | 2:7..8     | \n
+DotPackage              | 22..30    | 3:0..8     | .package
+Newline                 | 30..31    | 3:8..9     | \n
+DotAnnotation           | 31..42    | 4:0..11    | .annotation
+Newline                 | 42..43    | 4:11..12   | \n
+DotClassEnd             | 43..53    | 5:0..10    | .class_end
+Newline                 | 53..54    | 5:10..11   | \n
+DotMethodEnd            | 54..65    | 6:0..11    | .method_end
+Newline                 | 65..66    | 6:11..12   | \n
+DotCodeEnd              | 66..75    | 7:0..9     | .code_end
+Newline                 | 75..76    | 7:9..10    | \n
+DotCode                 | 76..81    | 8:0..5     | .code
+Newline                 | 81..82    | 8:5..6     | \n
+DotInner                | 82..88    | 9:0..6     | .inner
+Newline                 | 88..89    | 9:6..7     | \n
+DotInnerEnd             | 89..99    | 10:0..10   | .inner_end
+Newline                 | 99..100   | 10:10..11  | \n
+DotInnerClassesAttr     | 100..119  | 11:0..19   | .inner_classes_attr
+Newline                 | 119..120  | 11:19..20  | \n
+DotInnerClassesAttrEnd  | 120..143  | 12:0..23   | .inner_classes_attr_end
+Newline                 | 143..144  | 12:23..24  | \n
+DotInnerClass           | 144..156  | 13:0..12   | .inner_class
+Newline                 | 156..157  | 13:12..13  | \n
+DotOuterClass           | 157..169  | 14:0..12   | .outer_class
+Newline                 | 169..170  | 14:12..13  | \n
+DotFlags                | 170..176  | 15:0..6    | .flags
+Newline                 | 176..177  | 15:6..7    | \n
+DotInnerName            | 177..188  | 16:0..11   | .inner_name
+Newline                 | 188..189  | 16:11..12  | \n
+DotMangledName          | 189..202  | 17:0..13   | .mangled_name
+Newline                 | 202..203  | 17:13..14  | \n

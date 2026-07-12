@@ -1,0 +1,16 @@
+---
+source: rns-lang/src/lexer/snapshot_tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.inner public Inner
+.inner_end
+----- TOKENS -----
+KIND                 | SPAN    | LSP       | TEXT
+----                 | ----    | ---       | ----
+DotInner             | 0..6    | 0:0..6    | .inner
+AccessFlag(public)   | 7..13   | 0:7..13   | public
+Identifier("Inner")  | 14..19  | 0:14..19  | Inner
+Newline              | 19..20  | 0:19..20  | \n
+DotInnerEnd          | 20..30  | 1:0..10   | .inner_end
+Newline              | 30..31  | 1:10..11  | \n

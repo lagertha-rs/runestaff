@@ -1,0 +1,12 @@
+---
+source: rns-lang/src/lexer/snapshot_tests.rs
+expression: formatted
+---
+----- SOURCE -----
+.mangled_name com/profs/Main$NestedClass
+----- TOKENS -----
+KIND                                      | SPAN    | LSP       | TEXT
+----                                      | ----    | ---       | ----
+DotMangledName                            | 0..13   | 0:0..13   | .mangled_name
+Identifier("com/profs/Main$NestedClass")  | 14..40  | 0:14..40  | com/profs/Main$NestedClass
+Newline                                   | 40..41  | 0:40..41  | \n
