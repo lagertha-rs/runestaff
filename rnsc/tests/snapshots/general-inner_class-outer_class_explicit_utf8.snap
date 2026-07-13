@@ -1,0 +1,49 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public Main
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that .outer_class with explicit @utf8 type hint stores outer class ref as Utf8 instead of Class.
+; Expected: success, javap shows Utf8 entry for outer class ref
+
+.class public Main
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main
+    .outer_class @utf8 com/profs/Main
+    .flags public static
+    .inner_name NestedClass
+.inner_classes_attr_end
+
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+Classfile <TEMP_DIR>/Main.class
+  Last modified <DATE>; size 121 bytes
+  SHA-256 checksum 4db1126f7d0386518a8fb8d7336f95d6c6fe3680ee463ffae8887dd5c40855fa
+public class Main
+  minor version: 0
+  major version: 69
+  flags: (0x0001) ACC_PUBLIC
+  this_class: #3                          // Main
+  super_class: #1                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 0, attributes: 1
+Constant pool:
+  #1 = Class              #2              // java/lang/Object
+  #2 = Utf8               java/lang/Object
+  #3 = Class              #4              // Main
+  #4 = Utf8               Main
+  #5 = Utf8               InnerClasses
+  #6 = Class              #7              // com/profs/Main
+  #7 = Utf8               com/profs/Main
+  #8 = Utf8               NestedClass
+{
+}
+Error: Not a ClassEntry at index: 7

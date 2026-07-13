@@ -1,0 +1,12 @@
+; Tests that .super inside .inner with explicit @utf8 type hint overrides implicit @class.
+; Note: javap fails to parse because super_class must be Class entry per JVM spec.
+; Expected: success, javap fails
+
+.class public OuterClass
+.super java/lang/Object
+
+.inner Inner
+    .super @utf8 java/lang/Object
+.inner_end
+
+.class_end

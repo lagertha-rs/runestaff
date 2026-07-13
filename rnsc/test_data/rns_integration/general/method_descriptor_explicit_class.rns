@@ -1,0 +1,13 @@
+; Tests that .method descriptor with explicit @class type hint overrides implicit @utf8.
+; Note: javap fails to parse because method descriptor must be Utf8 entry per JVM spec.
+; Expected: success, javap fails
+
+.class public MyClass
+.super java/lang/Object
+
+.method public main @class someDescriptor
+    .code stack 1 locals 1
+      return
+    .code_end
+.method_end
+.class_end

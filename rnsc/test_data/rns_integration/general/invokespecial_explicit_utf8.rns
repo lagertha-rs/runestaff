@@ -1,0 +1,14 @@
+; Tests that invokespecial with explicit @utf8 type hint stores operand as Utf8 instead of Methodref.
+; Expected: success, javap shows Utf8 entry for invokespecial operand
+
+.class public MyClass
+.super java/lang/Object
+
+.method public <init> ()V
+    .code stack 1 locals 1
+      aload_0
+      invokespecial @utf8 some_value
+      return
+    .code_end
+.method_end
+.class_end
