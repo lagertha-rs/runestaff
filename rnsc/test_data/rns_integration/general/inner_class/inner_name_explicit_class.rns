@@ -1,0 +1,14 @@
+; Tests that .inner_name with explicit @class type hint stores inner name as Class instead of Utf8.
+; Expected: success, javap shows Class entry for inner name
+
+.class public Main
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class com/profs/Main
+    .outer_class com/profs/Main
+    .flags public static
+    .inner_name @class NestedClass
+.inner_classes_attr_end
+
+.class_end

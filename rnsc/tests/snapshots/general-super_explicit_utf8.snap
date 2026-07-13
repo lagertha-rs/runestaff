@@ -1,0 +1,36 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public MyClass
+.super java/lang/Object
+
+.method public <init> ()V
+    .code stack 10 locals 10
+      aload_0
+      invokespecial java/lang/Object <init> ()V
+      return
+    .code_end
+.method_end
+.class_end
+----- INPUT -----
+; Tests that .super with explicit @utf8 type hint overrides implicit @class.
+; Note: javap fails to parse because super_class must be Class entry per JVM spec.
+; Expected: success, javap fails
+
+.class public MyClass
+.super @utf8 java/lang/Object
+
+.method public <init> ()V
+    .code stack 10 locals 10
+      aload_0
+      invokespecial java/lang/Object <init> ()V
+      return
+    .code_end
+.method_end
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+javap failed

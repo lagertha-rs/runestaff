@@ -1,0 +1,14 @@
+; Tests that .inner_class with explicit @utf8 type hint stores inner class ref as Utf8 instead of Class.
+; Expected: success, javap shows Utf8 entry for inner class ref
+
+.class public Main
+.super java/lang/Object
+
+.inner_classes_attr
+    .inner_class @utf8 com/profs/Main
+    .outer_class com/profs/Main
+    .flags public static
+    .inner_name NestedClass
+.inner_classes_attr_end
+
+.class_end
