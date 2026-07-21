@@ -1,0 +1,52 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that .method name with explicit @class type hint overrides implicit @utf8.
+; Note: This produces E-013 because @class consumes the method name, leaving descriptor as trailing.
+; Expected: error E-013 (trailing tokens after type hint)
+
+.class public MyClass
+.super java/lang/Object
+
+.method public @class main ()V
+    .code stack 1 locals 1
+      return
+    .code_end
+.method_end
+.class_end
+----- STDERR -----
+[E-013] Error: unexpected trailing tokens after type hint '@class'
+   ╭─[ test_data/rns_integration/error/parser/method_directive/method_name_explicit_class.rns:8:28 ]
+   │
+ 8 │ .method public @class main ()V
+   │                ───┬──      ─┬─  
+   │                   ╰───────────── '@class' type hint takes 1 operand
+   │                             │   
+   │                             ╰─── but found 1 trailing token
+   │ 
+   │ Help: Remove the trailing tokens or move them to a valid context.
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-013
+───╯
+[E-020] Error: missing method descriptor after '.method'
+   ╭─[ test_data/rns_integration/error/parser/method_directive/method_name_explicit_class.rns:8:28 ]
+   │
+ 8 │ .method public @class main ()V
+   │                            ─┬─│ 
+   │                             ╰─── the '.method' directive requires a method descriptor as operand
+   │                               │ 
+   │                               ╰─ but method descriptor is missing
+   │ 
+   │ Help: Provide a method descriptor after the method name, e.g.:
+   │       .method main ()V
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-020
+───╯
+----- JAVAP -----
+not generated

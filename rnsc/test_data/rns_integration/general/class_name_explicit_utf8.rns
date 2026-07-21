@@ -1,0 +1,6 @@
+; Tests that .class @utf8 creates Utf8 CP entry instead of Class.
+; Expected: success, javap shows Utf8 entry for this_class
+
+.class public @utf8 ClassUtf8
+.super java/lang/Object
+.class_end

@@ -1,0 +1,7 @@
+; Tests that .package with .class @utf8 produces E-045 error.
+; Expected error: E-045
+
+.class public @utf8 MyClass
+.package com/example
+.super java/lang/Object
+.class_end

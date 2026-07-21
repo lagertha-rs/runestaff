@@ -1,0 +1,13 @@
+; Tests that .package with .mangled_name @utf8 produces E-045 error.
+; Expected error: E-045
+
+.class public Outer
+.package com/example
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name @utf8 MyMangled
+.inner_end
+
+.class_end

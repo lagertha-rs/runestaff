@@ -1,0 +1,13 @@
+; Tests that .method name with explicit @class type hint overrides implicit @utf8.
+; Note: This produces E-013 because @class consumes the method name, leaving descriptor as trailing.
+; Expected: error E-013 (trailing tokens after type hint)
+
+.class public MyClass
+.super java/lang/Object
+
+.method public @class main ()V
+    .code stack 1 locals 1
+      return
+    .code_end
+.method_end
+.class_end

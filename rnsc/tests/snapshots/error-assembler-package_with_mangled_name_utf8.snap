@@ -1,0 +1,41 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that .package with .mangled_name @utf8 produces E-045 error.
+; Expected error: E-045
+
+.class public Outer
+.package com/example
+.super java/lang/Object
+
+.inner Inner
+    .super java/lang/Object
+    .mangled_name @utf8 MyMangled
+.inner_end
+
+.class_end
+----- STDERR -----
+[E-045] Error: .package directive conflicts with .mangled_name: 'MyMangled' has type hint '@utf8' but .package requires @class
+    ╭─[ test_data/rns_integration/error/assembler/package_with_mangled_name_utf8.rns:10:19 ]
+    │
+ 10 │     .mangled_name @utf8 MyMangled
+    │                   ──┬──  
+    │                     ╰──── .mangled_name uses '@utf8' type hint, but .package can only be appended to @class entries
+    │
+    ├─[ test_data/rns_integration/error/assembler/package_with_mangled_name_utf8.rns:10:19 ]
+    │
+  5 │ .package com/example
+    │ ────┬───  
+    │     ╰───── .package directive defined here
+    │ 
+    │ Help: Remove the .package directive or change .mangled_name to use @class type hint
+    │ 
+    │ Note: For more details see:
+    │       https://rune.lagertha-vm.com/errors/E-045
+────╯
+----- JAVAP -----
+not generated
