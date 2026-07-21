@@ -264,6 +264,21 @@ impl RnsModule {
             .map(|p| p.name.clone())
             .unwrap_or_default();
 
+        // Validate package conflicts with non-Class type hints
+        if let (Some(package_dir), Some(class_name)) = (&self.package, &self.class_dir.name)
+            && !package.is_empty()
+            && !matches!(class_name, TypeHint::Class(_, _))
+        {
+            let package_span = package_dir.dir_span.unwrap_or_default();
+
+            self.diagnostics
+                .push(Diagnostic::from(AssemblerError::PackageNonClassConflict {
+                    directive_name: ".class",
+                    type_hint: class_name.clone(),
+                    package_span,
+                }));
+        }
+
         let outer_class_name = self
             .class_dir
             .name
@@ -278,7 +293,12 @@ impl RnsModule {
             } else {
                 format!("{}/{}", package, class_name)
             };
-            cp_builder.add_class(&full_name)
+            // Respect explicit type hint if present
+            match &name {
+                TypeHint::Class(_, _) => cp_builder.add_class(&full_name),
+                TypeHint::Utf8(_, _) => cp_builder.add_utf8(&full_name),
+                _ => Self::add_type_hint_to_cp(&mut cp_builder, name),
+            }
         });
 
         let rns_methods = std::mem::take(&mut self.methods);
@@ -354,6 +374,20 @@ impl RnsModule {
                 // inner_class_info_index is the mangled name
                 // Use .mangled_name if provided, otherwise build as {outer_full_name}${inner_name}
                 let mangled_class_name = if let Some(mangled) = &inner.mangled_name_dir {
+                    // Check for package conflict with non-Class mangled name
+                    if !package.is_empty()
+                        && !matches!(mangled, TypeHint::Class(_, _))
+                        && let Some(package_dir) = &self.package
+                    {
+                        let package_span = package_dir.dir_span.unwrap_or_default();
+                        self.diagnostics.push(Diagnostic::from(
+                            AssemblerError::PackageNonClassConflict {
+                                directive_name: ".mangled_name",
+                                type_hint: mangled.clone(),
+                                package_span,
+                            },
+                        ));
+                    }
                     mangled.value().to_string()
                 } else {
                     let outer_full_name = if package.is_empty() {

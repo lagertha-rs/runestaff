@@ -1,0 +1,32 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+not generated
+----- INPUT -----
+; Tests that .package with .class @utf8 produces E-045 error.
+; Expected error: E-045
+
+.class public @utf8 MyClass
+.package com/example
+.super java/lang/Object
+.class_end
+----- STDERR -----
+[E-045] Error: .package directive conflicts with .class: 'MyClass' has type hint '@utf8' but .package requires @class
+   ╭─[ test_data/rns_integration/error/assembler/package_with_class_utf8.rns:4:15 ]
+   │
+ 4 │ .class public @utf8 MyClass
+   │               ──┬──  
+   │                 ╰──── .class uses '@utf8' type hint, but .package can only be appended to @class entries
+ 5 │ .package com/example
+   │ ────┬───  
+   │     ╰───── .package directive defined here
+   │ 
+   │ Help: Remove the .package directive or change .class to use @class type hint
+   │ 
+   │ Note: For more details see:
+   │       https://rune.lagertha-vm.com/errors/E-045
+───╯
+----- JAVAP -----
+not generated

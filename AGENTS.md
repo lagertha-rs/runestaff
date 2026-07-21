@@ -80,6 +80,33 @@ If a test produces only warnings or assembles silently, it MUST NOT be in `error
 | `*_as_name.rns` | Invalid tokens used as operands (access_flag, directive, label, numeric, string, type_hint) |
 | `trailing_token(s).rns` | Extra tokens after directive |
 | `trailing_token(s)_recovers.rns` | Trailing tokens + subsequent error |
+| `*_explicit_<type>.rns` | Explicit type hint overrides for operands with implicit type hints (see below) |
+
+### Explicit type hint override tests
+
+Operands with implicit type hints must have a test in `general/` that uses an explicit type hint different from the implicit one. This proves the assembler accepts arbitrary CP entry types for testing JVM behavior with non-spec-compliant bytecode.
+
+**Implicit type hints and their overrides:**
+
+| Directive/Instruction | Implicit Type | Override Test |
+|---|---|---|
+| `.class <name>` | `@class` | `.class @utf8 <name>` |
+| `.super <name>` | `@class` | `.super @utf8 <name>` |
+| `.inner <name>` | `@class` | `.inner @utf8 <name>` |
+| `.mangled_name <name>` | `@class` | `.mangled_name @utf8 <name>` |
+| `.method <name>` | `@utf8` | `.method @class <name>` |
+| `.method <name> <desc>` | `@utf8` (both) | `.method @class <name> @class <desc>` |
+| `.inner_class <ref>` | `@class` | `.inner_class @utf8 <ref>` |
+| `.outer_class <ref>` | `@class` | `.outer_class @utf8 <ref>` |
+| `.inner_name <name>` | `@utf8` | `.inner_name @class <name>` |
+| `invokespecial <op>` | `@methodref` | `invokespecial @utf8 <value>` |
+| `invokevirtual <op>` | `@methodref` | `invokevirtual @utf8 <value>` |
+| `invokestatic <op>` | `@methodref` | `invokestatic @utf8 <value>` |
+| `getstatic <op>` | `@fieldref` | `getstatic @utf8 <value>` |
+
+**Naming convention:** `<context>_explicit_<type>.rns` where `<type>` is the explicit type hint used (e.g., `class_name_explicit_utf8.rns`, `super_explicit_utf8.rns`, `invokespecial_explicit_utf8.rns`).
+
+**Verification:** Before accepting snapshots, verify the javap output shows the explicit type hint's CP entry type (e.g., `Utf8` instead of `Class` for `.class @utf8`).
 
 ### Recovery test pattern
 
@@ -191,6 +218,7 @@ Defined in `rns-lang/src/diagnostic.rs`. Each code is unique.
 | E-042 | ERR_CODE_MULTIPLE_INNER_CLASS | Multiple `.inner_class` directives |
 | E-043 | ERR_CODE_MULTIPLE_OUTER_CLASS | Multiple `.outer_class` directives |
 | E-044 | ERR_CODE_MULTIPLE_INNER_NAME | Multiple `.inner_name` directives |
+| E-045 | ERR_CODE_PACKAGE_NON_CLASS_CONFLICT | `.package` with non-`@class` type hint on `.class` |
 
 ### Warning codes
 

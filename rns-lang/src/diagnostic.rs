@@ -53,6 +53,7 @@ pub const ERR_CODE_FLAGS_TRAILING_TOK: &str = "E-041";
 pub const ERR_CODE_MULTIPLE_INNER_CLASS: &str = "E-042";
 pub const ERR_CODE_MULTIPLE_OUTER_CLASS: &str = "E-043";
 pub const ERR_CODE_MULTIPLE_INNER_NAME: &str = "E-044";
+pub const ERR_CODE_PACKAGE_NON_CLASS_CONFLICT: &str = "E-045";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DiagnosticLabel {

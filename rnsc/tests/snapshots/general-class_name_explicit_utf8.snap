@@ -1,0 +1,20 @@
+---
+source: rnsc/tests/rns_test.rs
+expression: "&snapshot_content"
+---
+----- DISASSEMBLED -----
+.class public ClassUtf8
+.super java/lang/Object
+
+.class_end
+----- INPUT -----
+; Tests that .class @utf8 creates Utf8 CP entry instead of Class.
+; Expected: success, javap shows Utf8 entry for this_class
+
+.class public @utf8 ClassUtf8
+.super java/lang/Object
+.class_end
+----- STDERR -----
+
+----- JAVAP -----
+javap failed
